@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library - Wealth & Mindset</title>
+    <meta name="description"
+        content="Explore our collection of guides on wealth, mindset, and personal growth. Free resources for your financial journey.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Georgia&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/books.css">
+    <!-- Security: Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://nlgdthlwmagvjvzrubif.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://nlgdthlwmagvjvzrubif.supabase.co wss://nlgdthlwmagvjvzrubif.supabase.co; font-src 'self' https://fonts.gstatic.com; media-src 'self' https://www.soundjay.com; frame-src 'self'; object-src 'none';">
+    <!-- Supabase SDK -->
+    <script src="js/lib/supabase-js.js" defer></script>
+    <script src="js/supabase-config.js" defer></script>
+    <script src="js/image-utils.js" defer></script>
+
+</head>
+
+<body class="home-theme">
+    <header class="site-header">
+        <div class="logo">
+            <a href="index.html">
+                <img src="assets/logo-new.png" alt="Wealth & Mindset" class="logo-img" loading="eager"
+                    fetchpriority="high">
+                <span>Wealth & Mindset</span>
+            </a>
+        </div>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="books.html">Library</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+        </nav>
+    </header>
+    <script src="js/script.js" defer></script>
+    <script src="js/books.js" defer></script>
+
+    <!-- Background Music Element -->
+    <audio id="bg-music" loop preload="auto">
+        <source src="https://www.soundjay.com/nature/rain-07.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Music Control Toggle -->
+    <button class="music-control" id="music-toggle" onclick="toggleMusic()">
+        <span class="music-status-text">Rain Ambient</span>
+        <div class="icon">🌧️</div>
+    </button>
+
+    <main style="max-width: 100%; margin: 0 auto; padding: 0;">
+        <div class="page-container" id="main-page-container">
+            <!-- Left Sidebar Ads -->
+            <aside class="side-sidebar left">
+                <div class="sticky-ads">
+                    <div class="vertical-ad-banner glass">
+                        <span class="ad-label">Support Our Platform</span>
+                        <div style="font-weight: 800; margin-bottom: 12px; color: var(--color-heading);">[ Premium Slot
+                            1 ]</div>
+                        <div style="font-size: 0.75rem; opacity: 0.5; font-weight: 600;">300 x 600 - Vertical</div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Library Content Area -->
+            <div class="main-layout-content">
+                <!-- Ad Space: Top -->
+                <div class="ad-container ad-top">
+                    <span class="ad-label">Advertisement</span>
+                    <div>[Header Banner - 728x90]</div>
+                </div>
+
+                <div class="library-view-container">
+                    <div id="library-main-view">
+                        <header style="margin-bottom: 50px;">
+                            <h1 class="premium-gradient-text"
+                                style="font-size: 4rem; margin-bottom: 12px; font-weight: 800; letter-spacing: -3px; font-family: var(--font-heading); line-height: 1;">
+                                The Library</h1>
+                            <p
+                                style="opacity: 0.7; font-size: 1.25rem; font-weight: 500; color: var(--color-text); max-width: 600px;">
+                                Explore our curated collection of wisdom, strategies, and blueprints for mastery.
+                            </p>
+                        </header>
+
+                        <!-- Compact Search & Filter Toolbar -->
+                        <div class="library-toolbar">
+                            <div class="toolbar-item toolbar-search">
+                                <span class="search-icon"
+                                    style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); opacity: 0.5; color: var(--color-text);">🔍</span>
+                                <input type="text" id="library-global-search" class="search-input-alt"
+                                    style="padding-left: 45px;" placeholder="Search library..."
+                                    oninput="handleGlobalSearch()">
+                            </div>
+                            <div class="toolbar-item toolbar-filter">
+                                <select id="library-type-filter" class="search-input-alt"
+                                    onchange="handleFilterChange(this.value)">
+                                    <option value="all">All Categories</option>
+                                    <option value="book">Books</option>
+                                    <option value="story">Stories</option>
+                                    <option value="quotes">Quotes</option>
+                                    <option value="guide">Guides</option>
+                                    <option value="laws">Laws</option>
+                                    <option value="chapter">Chapters</option>
+                                </select>
+                            </div>
+                            <div class="toolbar-item toolbar-filter">
+                                <select id="library-genre-filter" class="search-input-alt"
+                                    onchange="handleGenreChange(this.value)">
+                                    <option value="all">All Genres</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Quick Navigation Chips -->
+                        <div class="quick-nav" id="quick-nav-container"></div>
+
+                        <!-- Content Sections -->
+                        <div id="library-sections-container"></div>
+                    </div>
+                </div>
+
+                <!-- Ad Space: Bottom -->
+                <div class="ad-container ad-bottom">
+                    <span class="ad-label">Advertisement</span>
+                    <div>[Footer Banner - 728x90]</div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar Ads -->
+            <aside class="side-sidebar right">
+                <div class="sticky-ads">
+                    <div class="vertical-ad-banner">
+                        <span class="ad-label">Advertisement</span>
+                        <div style="font-weight: bold; margin-bottom: 10px;">[Sidebar Banner 1]</div>
+                        <div style="font-size: 0.7rem; opacity: 0.6;">300 x 600</div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <footer>
+        <img src="assets/logo-new.png" alt="Wealth & Mindset" class="footer-logo" loading="lazy">
+        <div class="footer-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About Us</a>
+            <a href="contact.html">Contact Us</a>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms and Conditions</a>
+        </div>
+        <p class="copyright">&copy; 2025 Wealth & Mindset. All rights reserved.</p>
+        <p class="disclaimer">Educational purposes only. This is not professional financial advice.</p>
+    </footer>
+
+
+</body>
+
+</html>

@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us - Wealth & Mindset</title>
+    <meta name="description"
+        content="Get in touch with the Wealth & Mindset team. Send us your feedback, questions, or inquiries.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Georgia&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Security: Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://nlgdthlwmagvjvzrubif.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://nlgdthlwmagvjvzrubif.supabase.co wss://nlgdthlwmagvjvzrubif.supabase.co; font-src 'self' https://fonts.gstatic.com; media-src 'self' https://www.soundjay.com; frame-src 'self'; object-src 'none';">
+    <!-- Supabase SDK -->
+    <script src="js/lib/supabase-js.js"></script>
+    <script src="js/supabase-config.js"></script>
+</head>
+
+<body>
+
+    <header class="site-header">
+        <div class="logo">
+            <a href="index.html">
+                <img src="assets/logo-new.png" alt="Wealth & Mindset" class="logo-img" loading="eager"
+                    fetchpriority="high">
+                <span>Wealth & Mindset</span>
+            </a>
+        </div>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="books.html">Library</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+        </nav>
+    </header>
+    <script src="js/script.js"></script>
+
+    <main class="site-main">
+
+        <div class="page-container">
+            <!-- Left Sidebar Ads -->
+            <aside class="side-sidebar left">
+                <div class="sticky-ads">
+                    <div class="vertical-ad-banner">
+                        <span class="ad-label">Advertisement</span>
+                        <div style="font-weight: bold; margin-bottom: 10px;">[Sidebar Banner 1]</div>
+                        <div style="font-size: 0.7rem; opacity: 0.6;">300 x 600</div>
+                    </div>
+                    <div class="vertical-ad-banner">
+                        <span class="ad-label">Advertisement</span>
+                        <div style="font-weight: bold; margin-bottom: 10px;">[Sidebar Banner 2]</div>
+                        <div style="font-size: 0.7rem; opacity: 0.6;">300 x 600</div>
+                    </div>
+                </div>
+            </aside>
+
+
+            <!-- Main Content Area -->
+            <div class="main-layout-content">
+                <!-- Ad Space: Top -->
+                <div class="ad-container ad-top">
+                    <span class="ad-label">Advertisement</span>
+                    <div>[Header Banner - 728x90]</div>
+                </div>
+
+                <style>
+                    .contact-container {
+                        color: var(--color-text);
+                    }
+
+                    .contact-container h1 {
+                        font-size: 3rem;
+                        margin-bottom: 10px;
+                        color: var(--color-heading);
+                        letter-spacing: -1.5px;
+                    }
+
+                    .subtitle {
+                        color: var(--color-text);
+                        opacity: 0.8;
+                        font-size: 1.2rem;
+                        margin-bottom: 30px;
+                    }
+
+                    .contact-container h2 {
+                        margin-top: 40px;
+                        font-size: 1.8rem;
+                        color: var(--color-heading);
+                    }
+
+                    .email-link {
+                        font-size: 1.2rem;
+                        color: #60a5fa;
+                        font-weight: 700;
+                        text-decoration: none;
+                    }
+
+                    .response-time {
+                        font-size: 0.9rem;
+                        color: #9ca3af;
+                        margin-top: 5px;
+                    }
+
+                    .contact-form {
+                        margin-top: 30px;
+                    }
+
+                    .contact-form label {
+                        display: block;
+                        margin-top: 20px;
+                        font-size: 0.9rem;
+                        font-weight: 600;
+                        color: var(--color-heading);
+                    }
+
+                    .contact-form input,
+                    .contact-form select,
+                    .contact-form textarea {
+                        width: 100%;
+                        margin-top: 8px;
+                        padding: 12px;
+                        background: var(--color-bg);
+                        border: 1px solid var(--color-border);
+                        color: var(--color-text);
+                        border-radius: 8px;
+                        font-family: inherit;
+                        font-size: 1rem;
+                        box-sizing: border-box;
+                    }
+
+                    .contact-form textarea {
+                        min-height: 150px;
+                        resize: vertical;
+                    }
+
+                    .contact-form button {
+                        margin-top: 30px;
+                        width: 100%;
+                        padding: 14px;
+                        background: var(--color-accent);
+                        border: none;
+                        color: white;
+                        border-radius: 10px;
+                        cursor: pointer;
+                        font-weight: 700;
+                        font-size: 1.1rem;
+                        transition: background 0.2s;
+                    }
+
+                    .contact-form button:hover {
+                        background: #1d4ed8;
+                    }
+
+                    /* In-text ad */
+                    .intext-ad {
+                        margin: 40px 0;
+                        text-align: center;
+                    }
+
+                    .intext-ad span {
+                        font-size: 11px;
+                        opacity: 0.6;
+                        display: block;
+                        margin-bottom: 8px;
+                        letter-spacing: 1px;
+                        font-weight: 700;
+                    }
+
+                    .ad-box-small {
+                        background: var(--color-secondary-bg);
+                        border: 1px solid var(--color-border);
+                        border-radius: 12px;
+                        height: 250px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: var(--color-text);
+                        opacity: 0.6;
+                    }
+
+                    .note-box {
+                        margin-top: 40px;
+                        padding: 24px;
+                        background: var(--color-secondary-bg);
+                        border-radius: 12px;
+                        font-size: 0.9rem;
+                        color: var(--color-text);
+                        line-height: 1.6;
+                    }
+
+                    /* Hidden Admin Login Styling */
+                    #stealth-email::placeholder,
+                    #stealth-password::placeholder {
+                        color: rgba(255, 255, 255, 0.4);
+                        opacity: 1;
+                    }
+
+                    #stealth-email:focus,
+                    #stealth-password:focus {
+                        border-color: rgba(255, 255, 255, 0.5);
+                        background: rgba(255, 255, 255, 0.1);
+                    }
+
+                    #stealth-email:hover,
+                    #stealth-password:hover {
+                        border-color: rgba(255, 255, 255, 0.4);
+                    }
+                </style>
+
+                <div class="contact-container">
+
+                    <h1>Contact & Feedback</h1>
+                    <p class="subtitle">
+                        Have a question about the guide or want to share your success story?
+                        We’d love to hear from you.
+                    </p>
+
+                    <h2>Direct Inquiry</h2>
+                    <p>
+                        For urgent questions or business-related inquiries, please contact us at:
+                    </p>
+                    <a href="mailto:help.wealthandmindset@gmail.com" class="email-link">📧
+                        help.wealthandmindset@gmail.com</a>
+                    <p class="response-time">Response time: 48–72 hours</p>
+
+                    <!-- AD -->
+                    <div class="intext-ad">
+                        <span>ADVERTISEMENT</span>
+                        <div class="ad-box-small">300 × 250 Ad Space</div>
+                    </div>
+
+                    <h2>Send <span id="admin-trigger" style="cursor: default; user-select: none;">Us</span> Feedback
+                    </h2>
+
+                    <!-- Hidden Admin Login Overlay -->
+                    <div id="hidden-admin-login"
+                        style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #000; z-index: 9999; opacity: 0; transition: opacity 0.3s;">
+                        <form id="stealth-login-form" style="width: 100%; height: 100%; position: relative;">
+                            <!-- Email in top-right corner -->
+                            <input type="email" id="stealth-email" placeholder="email" autocomplete="email" required
+                                style="position: absolute; top: 20px; right: 20px; width: 280px; padding: 12px 15px; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.3); color: #ffffff; border-radius: 8px; font-size: 0.95rem; font-family: 'Courier New', monospace; outline: none; transition: all 0.2s;">
+
+                            <!-- Password in top-left corner -->
+                            <input type="password" id="stealth-password" placeholder="password"
+                                autocomplete="current-password" required
+                                style="position: absolute; top: 20px; left: 20px; width: 280px; padding: 12px 15px; background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.3); color: #ffffff; border-radius: 8px; font-size: 0.95rem; font-family: 'Courier New', monospace; outline: none; transition: all 0.2s;">
+
+                            <!-- Hidden submit button (Enter key will trigger) -->
+                            <button type="submit"
+                                style="position: absolute; opacity: 0; pointer-events: none;">Login</button>
+
+                            <!-- Status message -->
+                            <div id="stealth-status"
+                                style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.7); font-size: 0.9rem; font-family: 'Courier New', monospace; text-align: center;">
+                            </div>
+
+                            <!-- ESC to close hint -->
+                            <div
+                                style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.4); font-size: 0.8rem; font-family: 'Courier New', monospace;">
+                                Press ESC to close</div>
+                        </form>
+                    </div>
+
+                    <form class="contact-form" id="feedback-form">
+                        <label for="name">Your Name</label>
+                        <input type="text" id="name" placeholder="Enter your name" required>
+
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" placeholder="email@example.com" required>
+
+                        <label for="topic">Topic</label>
+                        <select id="topic">
+                            <option value="general">General Feedback</option>
+                            <option value="success-story">Success Story</option>
+                            <option value="suggestion">Content Suggestion</option>
+                            <option value="technical">Technical Issue</option>
+                        </select>
+
+                        <label for="message">Your Message</label>
+                        <textarea id="message" placeholder="How can we help you?" required></textarea>
+
+                        <!-- Honeypot (Security: Bot Trap) -->
+                        <div style="display:none;" aria-hidden="true">
+                            <input type="text" name="b_phone" id="b_phone" tabindex="-1" autocomplete="off">
+                        </div>
+
+                        <button type="submit">Send Feedback</button>
+                    </form>
+
+                    <div class="note-box">
+                        <p>
+                            We read every message, but may not be able to respond immediately.
+                        </p>
+                        <p>
+                            <strong>Note:</strong> We do not provide personalized financial advice.
+                            Please consult a certified professional for specific financial decisions.
+                        </p>
+                    </div>
+
+                </div>
+
+                <!-- Ad Space: Bottom -->
+                <div class="ad-container ad-bottom">
+                    <span class="ad-label">Advertisement</span>
+                    <div>[Footer Banner - 728x90]</div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar Ads -->
+            <aside class="side-sidebar right">
+                <div class="sticky-ads">
+                    <div class="vertical-ad-banner">
+                        <span class="ad-label">Advertisement</span>
+                        <div style="font-weight: bold; margin-bottom: 10px;">[Sidebar Banner 1]</div>
+                        <div style="font-size: 0.7rem; opacity: 0.6;">300 x 600</div>
+                    </div>
+                    <div class="vertical-ad-banner">
+                        <span class="ad-label">Advertisement</span>
+                        <div style="font-weight: bold; margin-bottom: 10px;">[Sidebar Banner 2]</div>
+                        <div style="font-size: 0.7rem; opacity: 0.6;">300 x 600</div>
+                    </div>
+                </div>
+            </aside>
+
+        </div>
+    </main>
+
+    <footer>
+        <img src="assets/logo-new.png" alt="Wealth & Mindset" class="footer-logo" loading="lazy">
+        <div class="footer-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About Us</a>
+            <a href="contact.html">Contact Us</a>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms and Conditions</a>
+            <a href="terms.html">Terms and Conditions</a>
+        </div>
+        <p class="copyright">&copy; 2025 Wealth & Mindset. All rights reserved.</p>
+        <p class="disclaimer">Educational purposes only. This is not professional financial advice.</p>
+    </footer>
+
+    <script>
+        // ============================================
+        // 7-CLICK ADMIN TRIGGER
+        // ============================================
+        let clickCount = 0;
+        let clickTimeout = null;
+        const adminTrigger = document.getElementById('admin-trigger');
+        const hiddenLogin = document.getElementById('hidden-admin-login');
+        const stealthForm = document.getElementById('stealth-login-form');
+        const stealthEmail = document.getElementById('stealth-email');
+        const stealthPassword = document.getElementById('stealth-password');
+        const stealthStatus = document.getElementById('stealth-status');
+
+        // 7-click detection
+        if (adminTrigger) {
+            adminTrigger.addEventListener('click', function () {
+                clickCount++;
+
+                // Reset counter after 2 seconds of inactivity
+                clearTimeout(clickTimeout);
+                clickTimeout = setTimeout(() => {
+                    clickCount = 0;
+                }, 2000);
+
+                // Trigger on 7th click
+                if (clickCount === 7) {
+                    clickCount = 0;
+                    showHiddenLogin();
+                }
+            });
+        }
+
+        function showHiddenLogin() {
+            hiddenLogin.style.display = 'block';
+            setTimeout(() => {
+                hiddenLogin.style.opacity = '1';
+                stealthEmail.focus();
+            }, 10);
+        }
+
+        function hideHiddenLogin() {
+            hiddenLogin.style.opacity = '0';
+            setTimeout(() => {
+                hiddenLogin.style.display = 'none';
+                stealthEmail.value = '';
+                stealthPassword.value = '';
+                stealthStatus.textContent = '';
+            }, 300);
+        }
+
+        // ESC key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && hiddenLogin.style.display === 'block') {
+                hideHiddenLogin();
+            }
+        });
+
+        // ============================================
+        // SUPABASE ADMIN AUTHENTICATION
+        // ============================================
+        stealthForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const email = stealthEmail.value.trim();
+            const password = stealthPassword.value.trim();
+
+            if (!email || !password) {
+                stealthStatus.textContent = 'Please enter credentials';
+                stealthStatus.style.color = 'rgba(239, 68, 68, 0.8)';
+                return;
+            }
+
+            stealthStatus.textContent = 'Authenticating...';
+            stealthStatus.style.color = 'rgba(255, 255, 255, 0.4)';
+
+            try {
+                if (!window.supabaseClient) {
+                    throw new Error('Supabase not configured');
+                }
+
+                // Sign in with Supabase
+                const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    throw error;
+                }
+
+                if (!data.user) {
+                    throw new Error('No user returned');
+                }
+
+                // Check if user has admin role
+                const { data: profile, error: roleError } = await window.supabaseClient
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', data.user.id)
+                    .single();
+
+                if (roleError || !profile || profile.role !== 'admin') {
+                    // Sign out and show error
+                    await window.supabaseClient.auth.signOut();
+                    throw new Error('Access denied: Admin role required');
+                }
+
+                // Success! Set flags and redirect
+                localStorage.setItem('admin_ui_access', 'true');
+                sessionStorage.setItem('adminAuthenticated', 'true');
+
+                stealthStatus.textContent = '✓ Access granted';
+                stealthStatus.style.color = 'rgba(16, 185, 129, 0.8)';
+
+                setTimeout(() => {
+                    window.location.href = 'admin.html';
+                }, 500);
+
+            } catch (err) {
+                console.error('Login failed:', err);
+                stealthStatus.textContent = err.message || 'Authentication failed';
+                stealthStatus.style.color = 'rgba(239, 68, 68, 0.8)';
+
+                // Clear password field on error
+                stealthPassword.value = '';
+                stealthPassword.focus();
+            }
+        });
+
+        // ============================================
+        // REGULAR FEEDBACK FORM SUBMISSION
+        // ============================================
+        document.getElementById('feedback-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // Honeypot Check (Bot Defense)
+            const honeypot = document.getElementById('b_phone').value;
+            if (honeypot) {
+                console.warn('Bot submission detected via honeypot');
+                alert('Thank you for your feedback!'); // Silent discard
+                location.reload();
+                return;
+            }
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const topic = document.getElementById('topic').value;
+            const message = document.getElementById('message').value.trim();
+            const btn = this.querySelector('button');
+
+            const feedback = {
+                id: Date.now().toString(),
+                name,
+                email,
+                topic,
+                message,
+                date: new Date().toLocaleString(),
+                status: 'unread'
+            };
+
+            // Try to sync to Supabase
+            if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+                const { error } = await supabaseClient.from('feedback').insert({
+                    name: feedback.name,
+                    email: feedback.email,
+                    topic: feedback.topic,
+                    message: feedback.message,
+                    status: feedback.status
+                });
+                if (error) console.error("Supabase feedback error:", error);
+            }
+
+            const existingFeedback = JSON.parse(localStorage.getItem('siteFeedback') || '[]');
+            existingFeedback.unshift(feedback);
+            localStorage.setItem('siteFeedback', JSON.stringify(existingFeedback));
+
+            const originalText = btn.textContent;
+            btn.textContent = 'Message Sent! Thank You.';
+            btn.style.background = '#10b981';
+            btn.disabled = true;
+
+            this.reset();
+
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '';
+                btn.disabled = false;
+            }, 3000);
+        });
+    </script>
+</body>
+
+</html>

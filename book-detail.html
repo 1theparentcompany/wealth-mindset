@@ -1,0 +1,4149 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Details - Wealth & Mindset</title>
+    <meta name="description" content="Book details and preview">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Georgia&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Security: Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://nlgdthlwmagvjvzrubif.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://nlgdthlwmagvjvzrubif.supabase.co wss://nlgdthlwmagvjvzrubif.supabase.co; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; media-src 'self' https://www.soundjay.com; frame-src 'self'; object-src 'none';">
+    <!-- Supabase SDK -->
+    <script src="js/lib/supabase-js.js"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/image-utils.js"></script>
+    <script src="js/modal-utils.js"></script>
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+        /* --- Reference Style Overrides --- */
+        body {
+            margin: 0;
+            background: var(--color-bg);
+            color: var(--color-text);
+            font-family: 'Inter', sans-serif;
+        }
+
+        main {
+            max-width: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        .detail-hero-ref {
+            --detail-bg-overlay: linear-gradient(to right, rgba(6, 11, 25, 0.95), rgba(6, 11, 25, 0.7));
+            --detail-bg-url: url('https://wallpapers.com/images/hd/dark-gradient-background-1920-x-1080-87-l12a781.jpg');
+            background-image: var(--detail-bg-overlay), var(--detail-bg-url);
+            background-size: cover;
+            background-position: center;
+            padding: 80px 0 60px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .detail-hero-ref::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 70% 30%, rgba(37, 99, 235, 0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .hero-content-wrapper {
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 var(--spacing-unit);
+            box-sizing: border-box;
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .hero-cover {
+            width: clamp(180px, 25vw, 240px);
+            flex-shrink: 0;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            transition: var(--transition-smooth);
+        }
+
+        .hero-cover:hover {
+            transform: scale(1.02);
+        }
+
+        .hero-cover img {
+            width: 100%;
+            display: block;
+            aspect-ratio: 2/3;
+            object-fit: cover;
+        }
+
+        .cover-overlay-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            box-sizing: border-box;
+            line-height: 1.2;
+        }
+
+        .cover-overlay-title {
+            font-size: 1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .cover-overlay-subtitle {
+            font-size: 0.7rem;
+            font-weight: 400;
+            opacity: 0.9;
+        }
+
+        .hero-info {
+            flex: 1;
+            padding-top: 5px;
+        }
+
+        .status-badge {
+            background: #fff;
+            color: #000;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #detail-title {
+            font-size: var(--font-size-h2);
+            font-weight: 700;
+            margin: 10px 0;
+            line-height: 1.1;
+            color: var(--color-heading);
+            letter-spacing: -1px;
+        }
+
+        .hero-stats-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: var(--color-text);
+            opacity: 0.9;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .hero-stats-row span {
+            font-weight: 600;
+        }
+
+        .hero-author-row {
+            color: var(--color-text);
+            opacity: 0.60;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .hero-synopsis {
+            color: var(--color-text);
+            opacity: 0.85;
+            font-size: var(--font-size-p);
+            line-height: 1.6;
+            max-width: 800px;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+
+        .free-timer-ref {
+            background: rgba(40, 50, 65, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 20px;
+            padding: 8px 15px;
+            margin-bottom: 25px;
+            color: #60a5fa;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .btn-start-reading {
+            background: #0066ff;
+            color: #fff;
+            padding: 14px 0;
+            width: 240px;
+            text-align: center;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            text-decoration: none;
+            display: inline-block;
+            transition: 0.2s;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .btn-start-reading:hover {
+            background: #0052cc;
+        }
+
+        /* content tabs container */
+        .content-body-ref {
+            width: 100%;
+            max-width: var(--max-width);
+            margin: 30px auto;
+            padding: 0 var(--spacing-unit);
+            box-sizing: border-box;
+        }
+
+        .tabs-nav-ref {
+            display: flex;
+            gap: 12px;
+            border-bottom: 1px solid var(--color-border);
+            padding: 10px 0;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .tabs-nav-ref::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            font-size: 0.95rem;
+            font-weight: 700;
+            padding: 10px 24px;
+            border-radius: 100px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        .tab-btn.active {
+            background: var(--color-accent);
+            color: #fff;
+            border-color: var(--color-accent);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+        }
+
+        .meta-grid-ref {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px 80px;
+            margin-bottom: 30px;
+        }
+
+        .meta-row-break {
+            flex-basis: 100%;
+            height: 0;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .meta-item label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .meta-item span {
+            color: var(--color-heading);
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .genre-tags-ref {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .genre-tags-ref span {
+            background: #222;
+            color: #ccc;
+            padding: 5px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 4px;
+            border: 1px solid #333;
+        }
+
+        .divider-line {
+            height: 1px;
+            background: var(--color-border);
+            width: 100%;
+            display: block;
+            margin: 20px 0;
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            color: var(--color-heading);
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        /* Reviews */
+        .reviews-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .review-item-ref {
+            background: var(--color-secondary-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .ri-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            background-color: #333;
+        }
+
+        .ri-content {
+            flex: 1;
+        }
+
+        .ri-header {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 10px;
+        }
+
+        .ri-user {
+            font-weight: 700;
+            color: var(--color-heading);
+            font-size: 0.95rem;
+        }
+
+        .ri-date {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .badge-editor {
+            background: #b91c1c;
+            color: #fff;
+            font-size: 0.65rem;
+            padding: 1px 4px;
+            border-radius: 2px;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+
+        .ri-rec {
+            color: #10b981;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .ri-text {
+            color: var(--color-text);
+            opacity: 0.9;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .ri-actions {
+            display: flex;
+            gap: 20px;
+            color: #888;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        @media (max-width: 900px) {
+            .hero-content-wrapper {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .hero-actions {
+                display: flex;
+                justify-content: center;
+            }
+
+            .meta-grid-ref {
+                gap: 30px;
+                justify-content: center;
+            }
+
+            .hero-synopsis {
+                text-align: center;
+                margin: 0 auto 20px;
+            }
+
+            /* Reset Sidebar for mobile */
+            .detail-content-grid {
+                display: block;
+            }
+
+            .sidebar-column {
+                display: none;
+                /* Hide sidebar on small screens for cleaner view */
+            }
+        }
+
+        /* --- Review System Styles --- */
+        .reviews-split-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: stretch;
+        }
+
+        .reviews-left-col {
+            min-width: 0;
+        }
+
+        .review-card-new {
+            background: #111;
+            /* Darker card background */
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .rc-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 4px;
+            flex-shrink: 0;
+            background-color: #333;
+            object-fit: cover;
+        }
+
+        .rc-content {
+            flex: 1;
+        }
+
+        .rc-header {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+            gap: 10px;
+        }
+
+        .rc-user {
+            font-weight: 700;
+            color: #fff;
+            /* White text for user */
+            font-size: 1rem;
+        }
+
+        .rc-time {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .rc-badge {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .badge-vip {
+            background: #fff;
+            color: #000;
+        }
+
+        .badge-editor {
+            background: #b91c1c;
+            color: #fff;
+        }
+
+        .rc-recommend-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .rc-rec-icon {
+            font-size: 1.1rem;
+        }
+
+        .rc-rec-text {
+            color: #10b981;
+            /* Green for recommended */
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .rc-text {
+            color: #ccc;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .rc-show-more {
+            color: #666;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        .rc-actions {
+            display: flex;
+            gap: 20px;
+            border-top: 1px solid #222;
+            padding-top: 15px;
+        }
+
+        .rc-action-btn {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .rc-action-btn:hover {
+            opacity: 0.8;
+        }
+
+        .rc-action-btn.active.helpful {
+            color: #3b82f6 !important;
+        }
+
+        .rc-action-btn.active.unhelpful {
+            color: #ef4444 !important;
+        }
+
+        /* Right Column Form Styles */
+        .review-form-container {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .form-toggle-btn {
+            background: #2563eb;
+            color: #fff;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+            margin-bottom: 15px;
+        }
+
+        .form-toggle-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .hidden-form {
+            display: none;
+        }
+
+
+        .rating-input {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .star-box {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #444;
+            transition: 0.2s;
+        }
+
+        .star-box.active {
+            color: #fbbf24;
+        }
+
+        .review-textarea {
+            width: 100%;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+            margin-bottom: 15px;
+        }
+
+        .btn-submit-review {
+            background: var(--color-accent);
+            color: #fff;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-submit-review:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .reviews-list-container {
+            margin-top: 30px;
+        }
+
+        /* Sidebar layout */
+        .detail-content-grid {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            gap: 40px;
+            align-items: start;
+        }
+
+        .main-column {
+            min-width: 0;
+        }
+
+        /* Flex/Grid child fix */
+
+        /* New Tool Rows */
+        .hero-tools {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tool-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ccc;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .tool-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        /* Community System Styles */
+        .community-container {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 20px;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            min-height: 500px;
+            overflow: hidden;
+            margin-top: 20px;
+        }
+
+        .community-sidebar {
+            background: var(--color-secondary-bg);
+            border-right: 1px solid var(--color-border);
+            padding: 20px;
+        }
+
+        .community-sidebar h4 {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .topic-item {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #aaa;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .topic-item:hover {
+            background: var(--color-accent);
+            color: #fff;
+        }
+
+        .topic-item.active {
+            background: var(--color-accent);
+            color: #fff;
+            border: 1px solid var(--color-accent);
+        }
+
+        .community-main {
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+        }
+
+        .community-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .community-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        .messages-viewport {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--color-border) var(--color-bg);
+        }
+
+        .message-card {
+            background: var(--color-secondary-bg);
+            border: 1px solid var(--color-border);
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 85%;
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+
+        .message-user {
+            color: #3b82f6;
+            font-weight: 700;
+        }
+
+        .message-date {
+            color: #666;
+        }
+
+        .message-content {
+            color: #e2e8f0;
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .message-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .msg-action-btn {
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 600;
+            padding: 0;
+        }
+
+        .msg-action-btn:hover {
+            color: #aaa;
+        }
+
+        .community-footer {
+            padding: 20px;
+            border-top: 1px solid var(--color-border);
+            background: var(--color-secondary-bg);
+        }
+
+        .message-input-wrapper {
+            display: flex;
+            gap: 10px;
+        }
+
+        .community-input {
+            flex: 1;
+            background: var(--color-bg);
+            border: 1px solid var(--color-border);
+            color: var(--color-text);
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .community-input:focus {
+            border-color: #3b82f6;
+        }
+
+        .btn-send {
+            background: #3b82f6;
+            color: #fff;
+            border: none;
+            padding: 0 20px;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .community-container {
+                grid-template-columns: 1fr;
+            }
+
+            .community-sidebar {
+                display: none;
+                /* Simplification for mobile */
+            }
+        }
+
+        .related-card {
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s ease;
+        }
+
+        .related-card:hover {
+            transform: translateY(-8px);
+        }
+
+        .related-cover-container {
+            aspect-ratio: 2/3;
+            background: #1a1a1a;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            margin-bottom: 15px;
+        }
+
+        /* Book Spine Effect - Accurate to image */
+        .related-cover-container::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 10px;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.2) 50%, transparent 100%);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            pointer-events: none;
+        }
+
+        .related-status-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(30, 30, 30, 0.85);
+            backdrop-filter: blur(8px);
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 4px;
+            text-transform: capitalize;
+            z-index: 2;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .related-clock-icon {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            background: #000;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .related-rating {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--color-text);
+            opacity: 0.8;
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .related-title {
+            color: var(--color-heading);
+            margin: 0;
+            font-size: 1.05rem;
+            font-weight: 700;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Sidebar Banner Styling */
+        .sidebar-promo-banner {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            border-radius: 12px;
+            padding: 25px;
+            color: white;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(37, 99, 235, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-promo-banner::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .sidebar-promo-banner h4 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            margin: 0 0 10px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .sidebar-promo-banner p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            line-height: 1.5;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .promo-btn {
+            background: #fff;
+            color: #2563eb;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-block;
+            transition: 0.3s;
+            position: relative;
+            z-index: 1;
+            border: none;
+            cursor: pointer;
+        }
+
+        /* --- Header Styling Fix --- */
+        .header-ref {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            background: var(--color-nav-bg);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--color-border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-ref .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--color-heading);
+            font-weight: 800;
+            font-size: 1.25rem;
+            letter-spacing: -0.5px;
+        }
+
+        .header-ref .logo img {
+            height: 40px;
+            width: auto;
+            display: block;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 25px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--color-text);
+            font-weight: 600;
+            font-size: 0.95rem;
+            opacity: 0.8;
+            transition: 0.2s;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--color-accent);
+            opacity: 1;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .search-box-ref {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 5px 10px;
+        }
+
+        .search-box-ref input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            padding: 5px;
+            outline: none;
+            width: 150px;
+        }
+    </style>
+</head>
+
+<body>
+    <header class="header-ref">
+        <a href="index.html" class="logo">
+            <img src="assets/logo-new.png" alt="Wealth & Mindset" loading="eager" fetchpriority="high">
+            <span>Wealth & Mindset</span>
+        </a>
+        <nav class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="books.html" class="active">Library</a>
+            <a href="community.html">Community</a>
+        </nav>
+        <div class="header-actions">
+            <div class="search-box-ref">
+                <input type="text" placeholder="Search titles, authors...">
+                <button>🔍</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="detail-hero-ref">
+            <div class="hero-content-wrapper">
+                <div class="hero-cover">
+                    <!-- Cover Design Overlay (Optional for V2 Designer) -->
+                    <div id="cover-overlay" class="cover-overlay-text" style="display: none;">
+                        <span id="cover-overlay-title" class="cover-overlay-title"></span>
+                        <span id="cover-overlay-subtitle" class="cover-overlay-subtitle"></span>
+                    </div>
+                    <img id="detail-cover" src="assets/logo-new.png" alt="Book Cover" loading="eager"
+                        fetchpriority="high">
+                </div>
+                <div class="hero-details">
+                    <div class="hero-tags">
+                        <span class="hero-badge badge-premium">Premium</span>
+                        <span class="hero-badge badge-new">New</span>
+                    </div>
+                    <h1 class="hero-title" id="detail-title">Loading...</h1>
+                    <div class="hero-meta">
+                        <span class="meta-author" id="detail-author">--</span>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat-bubble">
+                            <span class="stat-value" id="detail-rating-pct">--%</span>
+                            <span class="stat-label">Liked</span>
+                        </div>
+                        <div class="stat-bubble">
+                            <span class="stat-value"><span id="detail-chapters-count-hero">--</span></span>
+                            <span class="stat-label">Chapters</span>
+                        </div>
+                    </div>
+
+                    <!-- New Interaction Row -->
+                    <div class="hero-tools">
+                        <button class="tool-btn" id="btn-like" onclick="toggleLike()" title="Like this book">
+                            <i class="fa-regular fa-thumbs-up"></i> Like <span id="like-count"
+                                style="margin-left:5px; opacity:0.7; font-size:0.8rem;">0</span>
+                        </button>
+                        <button class="tool-btn" id="btn-dislike" onclick="toggleDislike()" title="Dislike this book">
+                            <i class="fa-regular fa-thumbs-down"></i> Dislike <span id="dislike-count"
+                                style="margin-left:5px; opacity:0.7; font-size:0.8rem;">0</span>
+                        </button>
+                        <button class="tool-btn" id="btn-comment" onclick="jumpToComments()" title="Go to reviews">
+                            <span>💬</span>Comment <span id="comment-count"
+                                style="margin-left:5px; opacity:0.7; font-size:0.8rem;">0</span>
+                        </button>
+                        <button class="tool-btn" id="btn-bookmark" onclick="toggleBookmark()" title="Add to Library">
+                            <span>☆</span>Save
+                        </button>
+                        <button class="tool-btn" id="btn-share" onclick="shareBook()" title="Share this book">
+                            <span>🔗</span>Share
+                        </button>
+                        <button class="tool-btn" id="btn-report" onclick="toggleReport()" title="Report this book">
+                            <span>🚩</span>Report
+                        </button>
+                        <button class="tool-btn" id="btn-progress" onclick="customAlert('Progress tracked!', 'success')"
+                            title="View your reading progress">
+                            <span>📊</span>Progress
+                        </button>
+                    </div>
+
+                    <div class="hero-synopsis" id="synopsis-div">
+                        <span id="detail-description-short"></span>
+                    </div>
+                    <a id="show-more-btn" onclick="toggleDescription()"
+                        style="display:inline-block; margin-bottom: 20px; color: #3b82f6; cursor: pointer; font-size: 0.9rem;">
+                        Show more ⌄
+                    </a>
+                    <div class="hero-actions">
+                        <a id="read-btn" href="#" class="btn-start-reading">START READING</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- CONTENT TABS & SIDEBAR GRID -->
+        <div class="content-body-ref detail-content-grid">
+            <!-- LEFT COLUMN -->
+            <div class="main-column">
+                <div class="tabs-nav-ref"><button class="tab-btn active"
+                        onclick="switchTab('about')">About</button><button class="tab-btn"
+                        onclick="switchTab('chapters')">Chapters</button><button class="tab-btn"
+                        onclick="switchTab('community')">Community</button><button class="tab-btn"
+                        onclick="switchTab('reviews')">Reviews</button><button class="tab-btn"
+                        onclick="switchTab('author')">Author</button></div>
+                <div class="divider-line"></div>
+                <!-- ABOUT TAB -->
+                <div id="tab-about" class="tab-content-ref">
+                    <div class="meta-grid-ref">
+                        <div class="meta-item"><label>Average Rating</label><span id="stat-rating-stars">⭐
+                                -- / 5.0</span></div>
+                        <div class="meta-item"><label>Total Likes</label><span id="stat-likes-pct">👍 --%
+                                Community Score</span></div>
+                        <div class="meta-item"><label>User Reviews</label><span id="stat-reviews-count">💬 0
+                                verified reviews</span></div>
+                        <div class="meta-row-break"></div>
+                        <div class="meta-item"><label>Content Length</label><span id="stat-chapters-count">0
+                                Chapters</span></div>
+                        <div class="meta-item"><label>Publisher</label><span id="stat-license">Wealth &
+                                Mindset Press</span></div>
+                        <div class="meta-item"><label>Primary Language</label><span id="stat-lang">English
+                                (Global)</span></div>
+                        <div class="meta-item"><label>Publish Date</label><span id="stat-release">Jan
+                                2024</span></div>
+                    </div>
+
+                    <!-- Action Quick Settings Boxes -->
+                    <div class="action-boxes-grid"
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px;">
+                        <div class="action-box"
+                            style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 18px; border-radius: 12px; transition: all 0.3s; cursor: pointer;"
+                            onclick="const btn = document.getElementById('read-btn'); if(btn) btn.click();"
+                            onmouseover="this.style.background='rgba(239, 68, 68, 0.05)'; this.style.borderColor='rgba(239, 68, 68, 0.2)';"
+                            onmouseout="this.style.background='rgba(255,255,255,0.02)'; this.style.borderColor='rgba(255,255,255,0.05)';">
+                            <div
+                                style="color: #ef4444; font-weight: 800; margin-bottom: 6px; font-size: 0.85rem; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+                                📚 READ</div>
+                            <div style="color: #94a3b8; font-size: 0.8rem; line-height: 1.5;">Access the full content of
+                                this book and start your reading journey today.</div>
+                        </div>
+                        <div class="action-box"
+                            style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 18px; border-radius: 12px; transition: all 0.3s; cursor: pointer;"
+                            onclick="shareBook()"
+                            onmouseover="this.style.background='rgba(16, 185, 129, 0.05)'; this.style.borderColor='rgba(16, 185, 129, 0.2)';"
+                            onmouseout="this.style.background='rgba(255,255,255,0.02)'; this.style.borderColor='rgba(255,255,255,0.05)';">
+                            <div
+                                style="color: #10b981; font-weight: 800; margin-bottom: 6px; font-size: 0.85rem; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+                                🔗 SHARE</div>
+                            <div style="color: #94a3b8; font-size: 0.8rem; line-height: 1.5;">Invite your friends to
+                                explore
+                                these insights by sharing the book link.</div>
+                        </div>
+                        <div class="action-box"
+                            style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 18px; border-radius: 12px; transition: all 0.3s; cursor: pointer;"
+                            onclick="switchTab('community')"
+                            onmouseover="this.style.background='rgba(245, 158, 11, 0.05)'; this.style.borderColor='rgba(245, 158, 11, 0.2)';"
+                            onmouseout="this.style.background='rgba(255,255,255,0.02)'; this.style.borderColor='rgba(255,255,255,0.05)';">
+                            <div
+                                style="color: #f59e0b; font-weight: 800; margin-bottom: 6px; font-size: 0.85rem; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+                                👥 COMMUNITY</div>
+                            <div style="color: #94a3b8; font-size: 0.8rem; line-height: 1.5;">Engage with other readers
+                                in
+                                the community and share your unique perspective.</div>
+                        </div>
+                        <div class="action-box"
+                            style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 18px; border-radius: 12px; transition: all 0.3s; cursor: pointer;"
+                            onclick="switchTab('reviews')"
+                            onmouseover="this.style.background='rgba(139, 92, 246, 0.05)'; this.style.borderColor='rgba(139, 92, 246, 0.2)';"
+                            onmouseout="this.style.background='rgba(255,255,255,0.02)'; this.style.borderColor='rgba(255,255,255,0.05)';">
+                            <div
+                                style="color: #8b5cf6; font-weight: 800; margin-bottom: 6px; font-size: 0.85rem; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;">
+                                ✍️ GIVE REVIEW</div>
+                            <div style="color: #94a3b8; font-size: 0.8rem; line-height: 1.5;">Your feedback matters!
+                                Leave a
+                                review to help others find great content.</div>
+                        </div>
+                    </div>
+                    <div class="divider-line" style="margin: 30px 0;"></div>
+                    <!-- Platform Features (Dynamic) -->
+                    <div id="common-platform-features-section" style="display: none;">
+                        <h3 class="section-title">✨ Platform Features</h3>
+                        <div id="common-features-container"
+                            style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                            <!-- Features loaded from common settings -->
+                        </div>
+                    </div>
+                    <!-- Global Review Highlight (Dynamic) -->
+                    <div id="common-review-highlight-section" style="display: none; margin-bottom: 30px;">
+                        <h3 class="section-title">💬 Reader Spotlight</h3>
+                        <div
+                            style="background: rgba(37, 99, 235, 0.05); border: 1px dashed rgba(37, 99, 235, 0.3); padding: 25px; border-radius: 16px; position: relative;">
+                            <span
+                                style="position: absolute; top: -15px; left: 20px; background: #1a73e8; color: white; padding: 4px 12px; border-radius: 100px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">Featured
+                                Review</span>
+                            <p id="common-review-text-display"
+                                style="font-style: italic; color: #e2e8f0; font-size: 1rem; line-height: 1.6; margin-bottom: 15px;">
+                                "This library changed how I think about my finances. Simple, clear,
+                                and effective." </p>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div
+                                    style="width: 30px; height: 30px; border-radius: 50%; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 0.8rem;">
+                                    👤</div><span id="common-review-author-display"
+                                    style="color: #94a3b8; font-size: 0.9rem; font-weight: 600;">Alex
+                                    M.,
+                                    Investor</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="divider-line" style="margin: 30px 0;"></div>
+                    <!-- Book Specific Details - Keep this as a section -->
+                    <h3 class="section-title">Synopsis & Details</h3>
+                    <div id="detail-description-details"
+                        style="color:#888; margin-top:10px; line-height: 1.6; margin-bottom: 20px;">
+                        .</div>
+                    <div class="genre-tags-ref">
+                        <!-- Dynamic Genre Tags -->
+                    </div>
+                    <div class="divider-line" style="margin: 40px 0;"></div>
+                </div>
+                <!-- Close About Tab -->
+                <!-- COMMUNITY TAB -->
+                <div id="tab-community" class="tab-content-ref" style="display:none;">
+                    <div class="community-container">
+                        <aside class="community-sidebar">
+                            <h4>Discussion Topics</h4>
+                            <div id="community-topics-list">
+                                <!-- Populated by JS -->
+                            </div>
+                        </aside>
+                        <main class="community-main">
+                            <header class="community-header">
+                                <h3 id="current-topic-title">Select a Topic</h3>
+                                <div style="font-size: 0.8rem; color: #666;">Book-Centric Discussion
+                                </div>
+                            </header>
+                            <div class="messages-viewport" id="topic-messages-container">
+                                <div style="text-align: center; padding: 40px; color: #666;">Select
+                                    a topic from the sidebar to view discussions. </div>
+                            </div>
+                            <footer class="community-footer">
+                                <div class="message-input-wrapper"><input type="text" id="community-message-input"
+                                        class="community-input" placeholder="Type your thoughts here..."><button
+                                        class="btn-send" onclick="CommunitySystem.postMessage()">Send</button></div>
+                                <div style="font-size: 0.7rem; color: #444; margin-top: 10px; text-align: center;">
+                                    All community messages are user opinions. Respect others and
+                                    stay on topic. </div>
+                            </footer>
+                        </main>
+                    </div>
+                </div>
+                <!-- REVIEWS TAB -->
+                <div id="tab-reviews" class="tab-content-ref" style="display:none;">
+                    <div class="reviews-header">
+                        <h3 class="section-title" style="margin:0;">User Reviews</h3>
+                        <div style="font-size: 1rem; font-weight: 700; display:flex; gap:10px; align-items:center;">
+                            <span>👍 <span id="review-rating-pct-tab">--%</span></span><span
+                                style="font-size:0.9rem; font-weight:400; color:#888;">(<span
+                                    id="review-total-count">0</span>)</span>
+                        </div>
+                    </div>
+                    <div class="reviews-split-layout">
+                        <!-- Top Row: Add Review Form -->
+                        <div class="reviews-right-col"><button id="btn-write-review" class="form-toggle-btn"
+                                onclick="toggleReviewForm()">Write a
+                                Review</button>
+                            <div id="review-submission-form" class="review-form-container hidden-form">
+                                <h4 style="margin: 0 0 15px 0; color: #fff;">Share your
+                                    thoughts</h4><input type="text" id="review-name" class="community-input"
+                                    placeholder="Your Name"
+                                    style="width: 100%; margin-bottom: 15px; border-radius: 8px; background: #222; border: 1px solid #333; color: #fff;">
+                                <div class="rating-input" id="rating-input-stars"><span class="star-box" data-value="1"
+                                        onclick="setRating(1)">★</span><span class="star-box" data-value="2"
+                                        onclick="setRating(2)">★</span><span class="star-box" data-value="3"
+                                        onclick="setRating(3)">★</span><span class="star-box" data-value="4"
+                                        onclick="setRating(4)">★</span><span class="star-box" data-value="5"
+                                        onclick="setRating(5)">★</span></div><textarea id="review-comment"
+                                    class="review-textarea" placeholder="Write your review here..."></textarea><button
+                                    class="btn-submit-review" style="width:100%;" onclick="submitReview()">Post
+                                    Review</button>
+                            </div>
+                        </div>
+                        <!-- Bottom Row: Reviews List -->
+                        <div class="reviews-left-col">
+                            <div id="reviews-list-container" class="reviews-list-container" style="margin-top: 0;">
+                                <p style="color: #666; text-align: center; padding: 40px;">
+                                    Loading reviews...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- AUTHOR TAB -->
+                <div id="tab-author" class="tab-content-ref" style="display:none;">
+                    <h3 class="section-title">About the Author</h3>
+                    <div
+                        style="display: flex; gap: 30px; background: rgba(255,255,255,0.03); padding: 30px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                        <div
+                            style="width: 120px; height: 120px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 3px solid #2563eb;">
+                            <img id="author-avatar" src="assets/logo-new.png" alt="Author" loading="lazy">
+                            style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <div>
+                            <h4 id="author-name-tab" style="font-size: 1.5rem; margin: 0 0 10px 0; color: #fff;">
+                                Unknown Author</h4>
+                            <p style="color: #2563eb; font-weight: 600; margin-bottom: 15px;">
+                                Elite Creator • 15 Titles </p>
+                            <p id="author-bio" style="color: #aaa; line-height: 1.6; margin: 0;">This
+                                author has dedicated their life to crafting intricate worlds
+                                and compelling narratives. With a focus on wealth,
+                                mindset,
+                                and personal growth,
+                                their works have inspired thousands of readers globally.</p>
+                            <div style="display: flex; gap: 20px; margin-top: 20px;">
+                                <div style="text-align: center;"><span
+                                        style="display: block; font-size: 1.2rem; font-weight: 700; color: #fff;">1.2M</span><span
+                                        style="font-size: 0.8rem; color: #666; text-transform: uppercase;">Followers</span>
+                                </div>
+                                <div style="text-align: center;"><span
+                                        style="display: block; font-size: 1.2rem; font-weight: 700; color: #fff;">4.9
+                                        ★</span><span
+                                        style="font-size: 0.8rem; color: #666; text-transform: uppercase;">Avg
+                                        Rating</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- CHAPTERS TAB -->
+                <div id="tab-chapters" class="tab-content-ref" style="display:none;">
+                    <div id="chapters-list-container">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                            <h3 class="section-title" style="margin:0;">Table of
+                                Contents</h3><span
+                                style="font-size: 0.9rem; color: #666; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 20px;"
+                                id="chapters-count-badge">0 Chapters</span>
+                        </div>
+                        <div id="chapters-grid"
+                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                            <!-- Chapters will be loaded here -->
+                        </div>
+                    </div>
+                    <div id="no-chapters-message"
+                        style="display: none; padding: 60px 40px; text-align:center; color:#888; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
+                        <div style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;">
+                            📖</div>
+                        <h4 style="color: #fff; margin-bottom: 10px;">No chapters found
+                        </h4>
+                        <p style="margin-bottom: 25px;">The chapter list is currently
+                            being updated for this book.</p><a id="chapter-list-link-2" href="#"
+                            class="btn-start-reading" style="padding: 12px 30px; font-size: 1rem; width: auto;">Go
+                            to Reader</a>
+                    </div>
+                </div>
+            </div>
+            <!-- End of main-column -->
+            <!-- RIGHT SIDEBAR (ADS & PROMOS) -->
+            <aside class="sidebar-column">
+                <div class="sidebar-ad-box"><span
+                        style="display:block; margin-bottom: 10px; font-size: 0.7rem; color: #666; letter-spacing: 1px;">ADVERTISEMENT</span>
+                    <div
+                        style="width: 300px; height: 600px; background: rgba(0,0,0,0.3); border: 1px dashed #444; display: flex; align-items: center; justify-content: center; color: #666; font-weight: 700;">
+                        300 x 600 </div>
+                </div>
+                <div class="sidebar-ad-box">
+                    <div
+                        style="width: 300px; height: 250px; background: rgba(0,0,0,0.3); border: 1px dashed #444; display: flex; align-items: center; justify-content: center; color: #666; font-weight: 700;">
+                        300 x 250 </div>
+                </div>
+            </aside>
+        </div>
+        <!-- End of detail-content-grid -->
+        <!-- RELATED CONTENT SECTION (Full Width, Bottom) -->
+        <div class="content-body-ref">
+            <div class="divider-line" style="margin: 40px 0;"></div>
+            <div id="related-content-container">
+                <h3 id="related-heading" class="section-title" style="margin-bottom: 25px; font-size: 1.5rem;">Related
+                    Novels</h3>
+                <div id="recommended-books-grid"
+                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px;">
+                    <!-- Dynamically Populated -->
+                </div>
+            </div>
+        </div>
+        <!-- Admin Edit Icon & Panel (Only visible when admin authenticated) -->
+        <div id="admin-edit-controls" style="display: none;">
+            <!-- Floating Edit Button --><button id="floating-admin-edit" onclick="toggleAdminEditPanel()" style="
+ position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+            z-index: 9999;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            " onmouseover=" this.style.transform='scale(1.1) rotate(5deg)' "
+                onmouseout="this.style.transform='scale(1) rotate(0deg)'">✏️ </button>
+            <!-- Admin Edit Panel (Full-screen Overlay) -->
+            <div id="admin-edit-panel" style="
+ display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #050a14;
+            color: #e2e8f0;
+            z-index: 10000;
+            overflow-y: auto;
+            font-family: 'Outfit',
+                'Inter',
+                sans-serif;
+
+            ">
+                <style>
+                    #admin-edit-panel {
+                        scrollbar-width: thin;
+                        scrollbar-color: #3b82f6 #0f172a;
+                    }
+
+                    #admin-edit-panel::-webkit-scrollbar {
+                        width: 8px;
+                    }
+
+                    #admin-edit-panel::-webkit-scrollbar-track {
+                        background: #0f172a;
+                    }
+
+                    #admin-edit-panel::-webkit-scrollbar-thumb {
+                        background: #3b82f6;
+                        border-radius: 4px;
+                    }
+
+                    .editor-container {
+                        max-width: 1100px;
+                        margin: 40px auto;
+                        padding: 0 20px;
+                    }
+
+                    .editor-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        margin-bottom: 30px;
+                    }
+
+                    .editor-title {
+                        font-size: 1.8rem;
+                        font-weight: 800;
+                        color: #fff;
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                    }
+
+                    .back-btn {
+                        background: #1e293b;
+                        color: #fff;
+                        border: 1px solid #334155;
+                        padding: 8px 16px;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-weight: 600;
+                        transition: 0.3s;
+                    }
+
+                    .back-btn:hover {
+                        background: #334155;
+                    }
+
+                    .editor-card {
+                        background: #0f172a;
+                        border: 1px solid #1e293b;
+                        border-radius: 12px;
+                        padding: 24px;
+                        margin-bottom: 24px;
+                    }
+
+                    .editor-card h3 {
+                        margin: 0 0 20px 0;
+                        font-size: 1.1rem;
+                        color: #fff;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        border-bottom: 1px solid #1e293b;
+                        padding-bottom: 12px;
+                    }
+
+                    .editor-grid {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 24px;
+                    }
+
+                    .admin-label {
+                        display: block;
+                        color: #94a3b8;
+                        font-size: 0.85rem;
+                        margin-bottom: 6px;
+                        font-weight: 600;
+                        text-transform: capitalize;
+                    }
+
+                    .admin-input,
+                    .admin-select {
+                        width: 100%;
+                        background: #0a0f1e;
+                        border: 1px solid #334155;
+                        color: #fff;
+                        padding: 12px;
+                        border-radius: 8px;
+                        margin-bottom: 16px;
+                        font-family: inherit;
+                        transition: 0.2s;
+                    }
+
+                    .admin-input:focus {
+                        border-color: #3b82f6;
+                        outline: none;
+                    }
+
+                    .admin-textarea {
+                        min-height: 100px;
+                        resize: vertical;
+                    }
+
+                    .stats-metrics-grid {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 12px;
+                    }
+
+                    .icons-grid {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 20px;
+                        background: rgba(255, 255, 255, 0.02);
+                        padding: 20px;
+                        border-radius: 12px;
+                    }
+
+                    .icon-check {
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        color: #cbd5e1;
+                        font-size: 0.9rem;
+                        cursor: pointer;
+                    }
+
+                    .tab-item-row {
+                        background: #0a0f1e;
+                        border: 1px solid #1e293b;
+                        padding: 12px 16px;
+                        border-radius: 8px;
+                        margin-bottom: 8px;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    }
+
+                    .tab-drag-handle {
+                        cursor: grab;
+                        color: #475569;
+                    }
+
+                    .btn-action {
+                        padding: 6px 12px;
+                        border-radius: 6px;
+                        font-size: 0.8rem;
+                        font-weight: 700;
+                        cursor: pointer;
+                        border: none;
+                        transition: 0.2s;
+                    }
+
+                    .btn-edit {
+                        background: #2563eb;
+                        color: #fff;
+                    }
+
+                    .btn-remove {
+                        background: #ef4444;
+                        color: #fff;
+                    }
+
+                    .btn-primary {
+                        background: #3b82f6;
+                        color: #fff;
+                        padding: 14px 28px;
+                        border-radius: 8px;
+                        font-weight: 700;
+                        border: none;
+                        cursor: pointer;
+                        width: 100%;
+                        font-size: 1rem;
+                        box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+                    }
+
+                    .color-picker-row {
+                        display: flex;
+                        gap: 12px;
+                        margin-bottom: 20px;
+                    }
+
+                    .color-picker-item {
+                        flex: 1;
+                    }
+
+                    .admin-color {
+                        height: 45px;
+                        padding: 4px;
+                        cursor: pointer;
+                    }
+                </style>
+
+                <div class="editor-container">
+                    <div class="editor-header">
+                        <div class="editor-title">✍️ Detail Page Editor</div>
+                        <button class="back-btn" onclick="toggleAdminEditPanel()">←
+                            Back</button>
+                    </div>
+
+                    <!-- Custom Confirmation Modal -->
+                    <div id="confirm-modal" class="modal" style="z-index: 9999;">
+                        <div class="modal-content"
+                            style="max-width: 400px; text-align: center; padding: 30px; background: #1e293b; border: 1px solid #334155;">
+                            <div id="confirm-icon" style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
+                            <h3 id="confirm-title" style="margin: 0 0 10px 0; color: #fff;">Are
+                                you sure?</h3>
+                            <p id="confirm-message"
+                                style="color: #94a3b8; font-size: 0.95rem; line-height: 1.5; margin-bottom: 25px;">
+                                This action cannot be undone.</p>
+                            <div style="display: flex; gap: 12px; justify-content: center;">
+                                <button id="confirm-cancel-btn" class="btn-primary"
+                                    style="background: #334155; margin: 0; flex: 1;">Cancel</button>
+                                <button id="confirm-ok-btn" class="btn-success"
+                                    style="background: #ef4444; margin: 0; flex: 1;">Confirm</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Alert Modal -->
+                    <div id="alert-modal" class="modal" style="z-index: 9999;">
+                        <div class="modal-content"
+                            style="max-width: 400px; text-align: center; padding: 30px; background: #1e293b; border: 1px solid #334155;">
+                            <div id="alert-icon" style="font-size: 3rem; margin-bottom: 20px;">
+                                ℹ️</div>
+                            <h3 id="alert-title" style="margin: 0 0 10px 0; color: #fff;">Notice
+                            </h3>
+                            <p id="alert-message"
+                                style="color: #94a3b8; font-size: 0.95rem; line-height: 1.5; margin-bottom: 25px;">
+                                This is an alert message.</p>
+                            <div style="display: flex; justify-content: center;">
+                                <button id="alert-ok-btn" class="btn-primary"
+                                    style="background: #3b82f6; margin: 0; min-width: 120px;">OK</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Prompt Modal -->
+                    <div id="prompt-modal" class="modal" style="z-index: 9999;">
+                        <div class="modal-content"
+                            style="max-width: 450px; text-align: center; padding: 30px; background: #1e293b; border: 1px solid #334155;">
+                            <div id="prompt-icon" style="font-size: 3rem; margin-bottom: 20px;">
+                                ✏️</div>
+                            <h3 id="prompt-title" style="margin: 0 0 10px 0; color: #fff;">Input
+                                Required</h3>
+                            <p id="prompt-message"
+                                style="color: #94a3b8; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px;">
+                                Please enter a value:</p>
+                            <input type="text" id="prompt-input"
+                                style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; font-size: 1rem; margin-bottom: 25px;">
+                            <div style="display: flex; gap: 12px; justify-content: center;">
+                                <button id="prompt-cancel-btn" class="btn-primary"
+                                    style="background: #334155; margin: 0; flex: 1;">Cancel</button>
+                                <button id="prompt-ok-btn" class="btn-success"
+                                    style="background: #3b82f6; margin: 0; flex: 1;">OK</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="editor-card">
+                        <label class="admin-label">Select Book to Customize</label>
+                        <select id="admin-book-selector" class="admin-select"
+                            style="font-size: 1.1rem; font-weight: 700; border-color: #3b82f6; margin-bottom: 20px;">
+                            <!-- Dynamically populated -->
+                        </select>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <label class="admin-label">Book Title</label>
+                                <input type="text" id="admin-edit-title" class="admin-input"
+                                    placeholder="Wealth & Mindset...">
+                            </div>
+                            <div>
+                                <label class="admin-label">Cover Image URL</label>
+                                <input type="text" id="admin-edit-cover" class="admin-input"
+                                    placeholder="assets/logo-new.png">
+                            </div>
+                        </div>
+                        <label class="admin-label">Main Summary (Description)</label>
+                        <textarea id="admin-edit-description" class="admin-input admin-textarea"
+                            style="min-height: 80px;" placeholder="Brief synopsis for card displays..."></textarea>
+                    </div>
+
+                    <div class="editor-grid">
+                        <!-- LEFT COLUMN -->
+                        <div class="editor-column">
+                            <div class="editor-card">
+                                <h3>📋 Tabs Management</h3>
+                                <label class="admin-label">Active Tabs (Drag to Reorder)</label>
+                                <div id="admin-tabs-list">
+                                    <!-- Populated via JS -->
+                                </div>
+                                <div style="display: flex; gap: 8px; margin-top: 20px;">
+                                    <input type="text" id="admin-new-tab" class="admin-input"
+                                        placeholder="Tab Name (e.g., Summary)" style="margin:0;">
+                                    <button class="btn-action btn-edit" onclick="addAdminTab()"
+                                        style="white-space:nowrap; padding: 12px 20px;">+ Add
+                                        Tab</button>
+                                </div>
+                            </div>
+
+                            <div class="editor-card">
+                                <h3>🎯 Features & Badges</h3>
+                                <label class="admin-label">Genre Tags (comma separated)</label>
+                                <input type="text" id="admin-edit-genres" class="admin-input"
+                                    placeholder="Finance, Mindset">
+
+                                <label class="admin-label">Stats & Metrics</label>
+                                <div class="stats-metrics-grid">
+                                    <input type="text" id="admin-edit-rating" class="admin-input" placeholder="⭐ 4.8">
+                                    <input type="text" id="admin-edit-likes" class="admin-input" placeholder="👍 82%">
+                                    <input type="text" id="admin-edit-reviews" class="admin-input" placeholder="💬 139">
+                                    <input type="text" id="admin-edit-chapters" class="admin-input"
+                                        placeholder="3 Chapters">
+                                    <input type="text" id="admin-edit-license" class="admin-input"
+                                        placeholder="Wealth & Mindset">
+                                    <input type="text" id="admin-edit-lang" class="admin-input" placeholder="English">
+                                    <input type="text" id="admin-edit-release" class="admin-input" placeholder="2024"
+                                        style="grid-column: span 2;">
+                                </div>
+
+                                <label class="admin-label" style="margin-top: 10px;">Interactive
+                                    Icons (Check to
+                                    Enable)</label>
+                                <div class="icons-grid">
+                                    <label class="icon-check"><input type="checkbox" id="admin-icon-bookmark"> 🔖
+                                        Bookmark</label>
+                                    <label class="icon-check"><input type="checkbox" id="admin-icon-share"> 🔗
+                                        Share</label>
+                                    <label class="icon-check"><input type="checkbox" id="admin-icon-progress"> 📈
+                                        Progress</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT COLUMN -->
+                        <div class="editor-column">
+                            <div class="editor-card">
+                                <h3>👤 Author Information</h3>
+                                <label class="admin-label">Author Name</label>
+                                <input type="text" id="admin-edit-author" class="admin-input">
+
+                                <label class="admin-label">Author Bio</label>
+                                <textarea id="admin-edit-author-bio" class="admin-input admin-textarea"></textarea>
+
+                                <label class="admin-label">Author Photo URL</label>
+                                <input type="text" id="admin-edit-author-photo" class="admin-input"
+                                    placeholder="author.jpg">
+                            </div>
+
+                            <div class="editor-card">
+                                <h3>📖 About Tab Content</h3>
+                                <label class="admin-label">About Text</label>
+                                <textarea id="admin-edit-about-text" class="admin-input admin-textarea"
+                                    style="min-height: 150px;"></textarea>
+                            </div>
+
+                            <div class="editor-card">
+                                <h3>🎨 Visual Settings</h3>
+                                <label class="admin-label">Hero Background Gradient</label>
+                                <div class="color-picker-row">
+                                    <div class="color-picker-item"><input type="color" id="admin-gradient-start"
+                                            class="admin-input admin-color"></div>
+                                    <div class="color-picker-item"><input type="color" id="admin-gradient-end"
+                                            class="admin-input admin-color"></div>
+                                </div>
+
+                                <label class="admin-label">Primary Button Color</label>
+                                <input type="color" id="admin-button-color" class="admin-input admin-color"
+                                    style="width: 100%;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADVANCED OPTIONS (FULL WIDTH) -->
+                    <div class="editor-card">
+                        <h3>⚙️ Advanced Options</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                            <div>
+                                <label class="admin-label">Enable Reviews</label>
+                                <select id="admin-enable-reviews" class="admin-select">
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="admin-label">Enable Ad Placements</label>
+                                <select id="admin-enable-ads" class="admin-select">
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="admin-label">Show Related Books</label>
+                                <select id="admin-show-related" class="admin-select">
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <label class="admin-label">Custom CSS (Advanced Users Only)</label>
+                        <textarea id="admin-custom-css" class="admin-input admin-textarea"
+                            placeholder=".hero-section { ... }"></textarea>
+
+                        <label class="admin-label">Custom JavaScript (Advanced Users
+                            Only)</label>
+                        <textarea id="admin-custom-js" class="admin-input admin-textarea"
+                            placeholder="console.log('Detail page loaded');"></textarea>
+                    </div>
+
+                    <div style="padding-bottom: 80px;">
+                        <button class="btn-primary" onclick="saveAdminChanges()">💾 Save All
+                            Changes</button>
+                    </div>
+                </div>
+
+                <!-- Tab Content Editor Modal (Internal) -->
+                <div id="tab-content-modal"
+                    style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width: 700px; background:#0f172a; border: 2px solid #3b82f6; border-radius: 12px; z-index: 10001; padding: 30px; box-shadow: 0 0 50px rgba(0,0,0,0.9);">
+                    <h2 id="editing-tab-name" style="margin:0 0 20px 0; color:#3b82f6;">Edit Tab
+                        Content</h2>
+                    <label class="admin-label">Tab Heading</label>
+                    <input type="text" id="tab-heading" class="admin-input">
+                    <label class="admin-label">Tab Content (HTML Allowed)</label>
+                    <textarea id="tab-content" class="admin-input admin-textarea" style="min-height: 300px;"></textarea>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-primary" onclick="saveTabContent()">Save Tab
+                            Content</button>
+                        <button class="back-btn" onclick="closeTabModal()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <img src="assets/logo-new.png" alt="Wealth & Mindset" class="footer-logo" loading="lazy">
+        <div class="footer-links">
+            <a href="index.html">Home</a>
+            <a href="books.html">Library</a>
+            <a href="terms.html">Terms and Conditions</a>
+        </div>
+        <p class="copyright">&copy; 2025 Wealth & Mindset.</p>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script src="js/cache-utils.js"></script>
+    <script src="js/community.js"></script>
+    <script src="js/detail-commons.js"></script>
+    <script src="js/admin/sync.js"></script>
+    <script>
+        let currentBookId = null; // Global tracking for interactions
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+
+            if (!id) {
+                window.location.href = 'books.html';
+                return;
+            }
+
+            // Initialize currentBookId from URL
+            currentBookId = id;
+
+            // CommunitySystem.init will be called after item resolution
+
+            // --- Data Logic ---
+            const defaultItems = [
+                { id: 'wm-guide', title: 'Wealth & Mindset: The Complete Guide', type: 'book', description: 'The foundation for financial independence...', chapters: 12 },
+                { id: 'compounding-miracle', title: 'The 30-Year Compounding Miracle', type: 'story', description: 'A powerful story...', chapters: 25 },
+                { id: 'al-mizan-5', title: 'Al-Mizan Volume 5', type: 'book', description: 'Detailed exegesis of the Quran, Volume 5...', chapters: 3 },
+            ];
+
+            let stored = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+            let item = null;
+
+            // If Supabase is configured, try to fetch from cloud
+            if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured()) {
+                const cacheKey = `book_detail_${id}`;
+                const cachedData = CacheUtils.get(cacheKey);
+
+                if (cachedData) {
+                    item = cachedData;
+                } else if (typeof isValidUUID === 'function' && isValidUUID(id)) {
+                    try {
+                        const bookPromise = supabaseClient
+                            .from('books')
+                            .select('id, title, author, category, description, cover_image, is_featured, background_image, detail_settings')
+                            .eq('id', id)
+                            .single();
+
+                        const chaptersPromise = supabaseClient
+                            .from('chapters')
+                            .select('id, chapter_number, title')
+                            .eq('book_id', id)
+                            .order('chapter_number', { ascending: true });
+
+                        const [bookRes, chaptersRes] = await Promise.all([bookPromise, chaptersPromise]);
+
+                        const bookData = bookRes.data;
+                        const chaptersData = chaptersRes.data;
+
+                        if (bookData) {
+                            item = {
+                                id: bookData.id,
+                                title: bookData.title,
+                                author: bookData.author,
+                                type: bookData.category,
+                                description: bookData.description,
+                                image: bookData.cover_image,
+                                chapters: chaptersData || [],
+                                backgroundSettings: { detailUrl: bookData.background_image },
+                                isFeatured: bookData.is_featured,
+                                detailSettings: bookData.detail_settings,
+                                coverDesign: (bookData.detail_settings && bookData.detail_settings.coverDesign) || {}
+                            };
+
+                            // Cache for 1 hour
+                            CacheUtils.set(cacheKey, item, 60 * 60 * 1000);
+                        }
+                    } catch (e) {
+                        console.warn("Supabase load failed, using local fallback", e);
+                    }
+                } else {
+                    console.log("Skipping Supabase fetch for legacy/invalid ID:", id);
+                }
+            }
+
+            if (!item) {
+                const allItems = [...defaultItems, ...stored];
+                item = allItems.find(i => i.id === id);
+            }
+
+            if (item) {
+                const isAlMizan = item.title.toLowerCase().includes('al-mizan');
+                const coverImg = isAlMizan ?
+                    'assets/al_mizan_cover.png' :
+                    (item.image || 'assets/logo-new.png');
+
+                // Populate UI
+                document.getElementById('detail-title').textContent = item.title;
+                document.getElementById('detail-cover').src = window.getSupabaseImageUrl(coverImg);
+
+                const desc = item.description || 'No description available.';
+                document.getElementById('detail-description-short').textContent = desc;
+                document.getElementById('detail-description-details').innerHTML = window.fixSupabaseImagesInHtml(desc.repeat(3));
+
+                document.getElementById('read-btn').href = `reader.html?id=${item.id}`;
+                document.getElementById('chapter-list-link-2').href = `reader.html?id=${item.id}`;
+
+                let chapCount = 0;
+                if (Array.isArray(item.chapters)) chapCount = item.chapters.length;
+                else if (typeof item.chapters === 'number') chapCount = item.chapters;
+                else chapCount = item.chapter ? 1 : '--';
+
+                document.getElementById('stat-chapters-count').textContent = chapCount + ' Chapters';
+
+                // Populate Author Name Tab
+                if (item.author) {
+                    const authNameTab = document.getElementById('author-name-tab');
+                    if (authNameTab) authNameTab.textContent = item.author;
+                }
+
+                // Stats and interactions will be loaded via checkInteractionStatus and loadReviews
+
+                // Populate Chapters List if available
+                if (Array.isArray(item.chapters) && item.chapters.length > 0) {
+                    document.getElementById('chapters-list-container').style.display = 'block';
+                    document.getElementById('no-chapters-message').style.display = 'none';
+                    if (document.getElementById('chapters-count-badge')) {
+                        document.getElementById('chapters-count-badge').textContent = item.chapters.length + ' Chapters';
+                    }
+                    if (document.getElementById('stat-chapters-count')) {
+                        document.getElementById('stat-chapters-count').textContent = item.chapters.length + ' Chapters';
+                    }
+
+                    const grid = document.getElementById('chapters-grid');
+                    grid.innerHTML = item.chapters.slice(0, 24).map((chap, idx) => `
+                        <a href="reader.html?id=${item.id}&ch=${idx}" style="text-decoration:none;">
+                            <div style="background: rgba(255,255,255,0.03); padding: 18px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); color: #fff; transition: all 0.3s; display: flex; align-items: center; gap: 15px;" 
+                                 onmouseover="this.style.background='rgba(37, 99, 235, 0.15)'; this.style.borderColor='rgba(37, 99, 235, 0.3)'; this.style.transform='translateX(5px)'" 
+                                 onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.06)'; this.style.transform='translateX(0)'">
+                                <div style="width: 35px; height: 35px; background: rgba(37, 99, 235, 0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #3b82f6; font-weight: 800; font-size: 0.8rem;">${idx + 1}</div>
+                                <div>
+                                    <span style="color: #666; font-size: 0.75rem; display: block; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Chapter</span>
+                                    <span style="font-weight: 600; font-size: 0.95rem;">${chap.title || 'Untitled Chapter'}</span>
+                                </div>
+                            </div>
+                        </a>
+                    `).join('');
+                } else {
+                    document.getElementById('chapters-list-container').style.display = 'none';
+                    document.getElementById('no-chapters-message').style.display = 'block';
+                }
+
+                // Apply saved detail settings
+                const detailSettings = item.detailSettings || {};
+
+                // Apply author if saved
+                if (detailSettings.authorName) {
+                    document.getElementById('detail-author').textContent = detailSettings.authorName;
+                } else if (item.author) {
+                    document.getElementById('detail-author').textContent = item.author;
+                }
+
+                // Apply custom background image or gradient
+                const bgSettings = item.backgroundSettings || {};
+                const coverDesign = item.coverDesign || {};
+                const heroEl = document.querySelector('.detail-hero-ref');
+
+                if (heroEl) {
+                    let gradStart = coverDesign.heroColor1 || detailSettings.gradientStart || '#1e3a8a';
+                    let gradEnd = coverDesign.heroColor2 || detailSettings.gradientEnd || '#7c3aed';
+                    let finalBgUrl = coverDesign.heroBgUrl || bgSettings.detailUrl || item.background_image || item.backgroundImage;
+
+                    if (finalBgUrl) {
+                        heroEl.style.setProperty('--detail-bg-url', `url('${window.getSupabaseImageUrl(finalBgUrl)}')`);
+                    }
+
+                    if (gradStart && gradEnd) {
+                        heroEl.style.setProperty('--detail-bg-overlay', `linear-gradient(to right, ${gradStart}cc, ${gradEnd}cc)`);
+                    }
+
+                    if (finalBgUrl) {
+                        heroEl.style.backgroundSize = 'cover';
+                    }
+                }
+
+                // Apply Cover Overlay Design
+                if (coverDesign && coverDesign.title) {
+                    const overlay = document.getElementById('cover-overlay');
+                    const oTitle = document.getElementById('cover-overlay-title');
+                    const oSubtitle = document.getElementById('cover-overlay-subtitle');
+
+                    if (overlay && oTitle) {
+                        overlay.style.display = 'flex';
+                        overlay.style.justifyContent = coverDesign.valign || 'center';
+                        overlay.style.alignItems = coverDesign.align === 'center' ? 'center' : (coverDesign.align === 'right' ? 'flex-end' : 'flex-start');
+                        overlay.style.textAlign = coverDesign.align || 'center';
+
+                        oTitle.textContent = coverDesign.title;
+                        oTitle.style.color = coverDesign.textColor || '#ffffff';
+                        oTitle.style.textShadow = coverDesign.shadow || 'none';
+
+                        if (oSubtitle) {
+                            oSubtitle.textContent = coverDesign.subtitle || '';
+                            oSubtitle.style.color = coverDesign.textColor || '#ffffff';
+                            oSubtitle.style.textShadow = coverDesign.shadow || 'none';
+                        }
+
+                        // If designer URL is different from main image, update cover src
+                        if (coverDesign.url) {
+                            document.getElementById('detail-cover').src = window.getSupabaseImageUrl(coverDesign.url);
+                        }
+                    }
+                }
+
+                if (bgSettings.detailStyle && heroEl) {
+                    heroEl.style.backgroundSize = bgSettings.detailStyle;
+                }
+
+                // Apply button color
+                if (detailSettings.buttonColor) {
+                    document.querySelectorAll('.btn-start-reading').forEach(btn => {
+                        btn.style.background = detailSettings.buttonColor;
+                    });
+                }
+
+                // Apply genre tags
+                if (detailSettings.genres) {
+                    const genreTags = document.querySelector('.genre-tags-ref');
+                    if (genreTags) {
+                        genreTags.innerHTML = detailSettings.genres.split(',').map(g =>
+                            `<span>${g.trim()}</span>`
+                        ).join('');
+                    }
+                }
+
+                // --- Dynamic Stats Rendering (Antigravity Fix) ---
+                if (detailSettings.stats && Array.isArray(detailSettings.stats) && detailSettings.stats.length > 0) {
+                    const metaGrid = document.querySelector('.meta-grid-ref');
+                    if (metaGrid) {
+                        metaGrid.innerHTML = ''; // Clear default static content
+
+                        detailSettings.stats.forEach(stat => {
+                            const label = stat.label || '';
+                            const value = stat.value || '';
+                            let idAttr = '';
+
+                            // Map standard stats to legacy IDs for live updates and CSS consistency
+                            const lowerLabel = label.toLowerCase();
+                            if (lowerLabel.includes('rating')) idAttr = 'id="stat-rating-stars"';
+                            else if (lowerLabel.includes('likes')) idAttr = 'id="stat-likes-pct"';
+                            else if (lowerLabel.includes('review')) idAttr = 'id="stat-reviews-count"';
+                            else if (lowerLabel.includes('length') || lowerLabel.includes('chapters')) idAttr = 'id="stat-chapters-count"';
+                            else if (lowerLabel.includes('publisher') || lowerLabel.includes('license')) idAttr = 'id="stat-license"';
+                            else if (lowerLabel.includes('language')) idAttr = 'id="stat-lang"';
+                            else if (lowerLabel.includes('publish') || lowerLabel.includes('release')) idAttr = 'id="stat-release"';
+
+                            const div = document.createElement('div');
+                            div.className = 'meta-item';
+                            div.innerHTML = `<label>${label}</label><span ${idAttr}>${value}</span>`;
+                            metaGrid.appendChild(div);
+                        });
+                    }
+                }
+
+                // Render custom tabs
+                if (detailSettings.tabs && detailSettings.tabs.length > 0) {
+                    renderCustomTabs(detailSettings.tabs, item);
+                }
+
+                // Hide/show icons based on settings
+                if (detailSettings.icons) {
+                    if (!detailSettings.icons.bookmark) document.getElementById('btn-bookmark').style.display = 'none';
+                    if (!detailSettings.icons.share) document.getElementById('btn-share').style.display = 'none';
+                    if (!detailSettings.icons.listen) document.getElementById('btn-listen').style.display = 'none';
+                    if (!detailSettings.icons.progress) document.getElementById('btn-progress').style.display = 'none';
+                }
+
+                // Hide reviews if disabled
+                if (detailSettings.enableReviews === 'no') {
+                    const reviewsHeader = document.querySelector('.reviews-header');
+                    const reviewItems = document.querySelectorAll('.review-item-ref');
+                    if (reviewsHeader) reviewsHeader.style.display = 'none';
+                    reviewItems.forEach(r => r.style.display = 'none');
+                }
+
+                // Apply custom CSS
+                if (detailSettings.customCss) {
+                    const styleEl = document.createElement('style');
+                    styleEl.textContent = detailSettings.customCss;
+                    document.head.appendChild(styleEl);
+                }
+
+                // Apply custom JS
+                if (detailSettings.customJs) {
+                    try { eval(detailSettings.customJs); } catch (e) { console.error('Custom JS error:', e); }
+                }
+
+            } else {
+                document.getElementById('loading-state').textContent = 'Book not found.';
+            }
+
+            checkBookmarkStatus(id);
+            checkInteractionStatus(id);
+            if (typeof CommunitySystem !== 'undefined' && item) {
+                CommunitySystem.init(id, item.title);
+            }
+
+            renderCommonDetailPageSettings();
+            loadRecommendedBooks(id);
+            loadReviews(id, item ? item.title : null);
+        });
+
+        // --- Review System Logic ---
+        let currentRating = 0;
+
+        function toggleReviewForm() {
+            const form = document.getElementById('review-submission-form');
+            const btn = document.getElementById('btn-write-review');
+            if (form.classList.contains('hidden-form')) {
+                form.classList.remove('hidden-form');
+                btn.style.display = 'none'; // Hide button when form is open
+            } else {
+                form.classList.add('hidden-form');
+                btn.style.display = 'block';
+            }
+        }
+
+
+        function setRating(val) {
+            currentRating = val;
+            const stars = document.querySelectorAll('#rating-input-stars .star-box');
+            stars.forEach((star, idx) => {
+                if (idx < val) star.classList.add('active');
+                else star.classList.remove('active');
+            });
+        }
+
+        async function loadReviews(bookId, bookTitle) {
+            const container = document.getElementById('reviews-list-container');
+            if (!container) return;
+
+            try {
+                if (typeof isSupabaseConfigured !== 'function' || !isSupabaseConfigured()) {
+                    container.innerHTML = '<p style="color: #666; text-align: center;">Supabase not configured. Reviews unavailable.</p>';
+                    return;
+                }
+
+                // Resolve UUID if needed
+                let targetUuid = bookId;
+                const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookId);
+
+                if (!isUuid) {
+                    if (!bookTitle) {
+                        // Try to get title from DOM if not passed (fallback)
+                        const titleEl = document.getElementById('detail-title');
+                        bookTitle = titleEl ? titleEl.textContent : null;
+                    }
+
+                    if (!bookTitle) {
+                        container.innerHTML = '<p style="color: #666; text-align: center;">Cloud sync required for reviews (Title Unknown).</p>';
+                        return;
+                    }
+
+                    const { data: bookRef } = await supabaseClient.from('books').select('id').eq('title', bookTitle).single();
+                    if (!bookRef) {
+                        // Silent fail or message? User might default to local only.
+                        container.innerHTML = '<p style="color: #666; text-align: center;">Reviews are available for synced books only.</p>';
+                        return;
+                    }
+                    targetUuid = bookRef.id;
+                }
+
+                const { data, error } = await supabaseClient
+                    .from('book_reviews')
+                    .select('*')
+                    .eq('book_id', targetUuid)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                // Fetch comment counts from book_messages for specific book
+                const { data: messagesData } = await supabaseClient
+                    .from('book_messages')
+                    .select('id')
+                    .eq('book_id', targetUuid);
+
+                const totalMessages = messagesData ? messagesData.length : 0;
+                const totalReviews = data ? data.length : 0;
+                const totalInteractions = totalMessages + totalReviews;
+
+                renderReviews(data, totalMessages);
+                updateReviewStats(data, totalInteractions);
+            } catch (err) {
+                console.error("Error loading reviews:", err);
+                container.innerHTML = '<p style="color: #ef4444; text-align: center;">Failed to load reviews.</p>';
+            }
+        }
+
+        async function renderReviews(reviews, totalMessages = 0) {
+            const container = document.getElementById('reviews-list-container');
+            if (!container) return;
+
+            if (!reviews || reviews.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px; color: #666; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
+                        <div style="font-size: 3.5rem; margin-bottom: 20px; opacity: 0.2;">⭐</div>
+                        <h4 style="color: #fff; margin-bottom: 10px;">No reviews yet</h4>
+                        <p style="font-size: 0.95rem; max-width: 400px; margin: 0 auto 25px auto; line-height: 1.6;">Be the first to share your experience with this book. Your thoughts help other readers find their next great read!</p>
+                        <button class="btn-submit-review" style="width: auto; padding: 12px 30px;" onclick="toggleReviewForm()">Write First Review</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Fetch interaction counts for these reviews
+            const reviewIds = reviews.map(r => r.id);
+            const { data: interactionData } = await supabaseClient
+                .from('user_activity')
+                .select('activity_type, metadata')
+                .in('metadata->>review_id', reviewIds)
+                .in('activity_type', ['helpful_review', 'unhelpful_review']);
+
+            const totalComments = totalMessages;
+
+            const counts = {};
+            reviews.forEach(rev => {
+                counts[rev.id] = {
+                    helpful: rev.likes || 0,
+                    unhelpful: rev.dislikes || 0
+                };
+            });
+
+            if (interactionData) {
+                interactionData.forEach(act => {
+                    const rid = act.metadata.review_id;
+                    if (act.activity_type === 'helpful_review') counts[rid].helpful++;
+                    else if (act.activity_type === 'unhelpful_review') counts[rid].unhelpful++;
+                });
+            }
+
+            container.innerHTML = reviews.map(rev => {
+                // Dynamic Recommendation Logic
+                let recText = "Highly Recommended";
+                let recColor = "#10b981"; // Green
+                let recIcon = "✦";
+
+                if (rev.rating >= 4) {
+                    recText = "Highly Recommended";
+                    recColor = "#10b981";
+                } else if (rev.rating === 3) {
+                    recText = "Recommended";
+                    recColor = "#3b82f6"; // Blue
+                    recIcon = "👍";
+                } else if (rev.rating === 2) {
+                    recText = "Normal";
+                    recColor = "#94a3b8"; // Slate/Gray
+                    recIcon = "💬";
+                } else {
+                    recText = "Not Recommended";
+                    recColor = "#ef4444"; // Red
+                    recIcon = "⚠️";
+                }
+
+                const badges = [];
+
+                // Chapter badge if this is a chapter-specific review
+                if (rev.chapter_number && rev.chapter_title) {
+                    badges.push(`<span class="rc-badge" style="background: #6366f1; color: white;">📖 Ch ${rev.chapter_number}: ${rev.chapter_title}</span>`);
+                }
+
+                // Static badges for flair as requested/existing
+                if (Math.random() > 0.8) badges.push('<span class="rc-badge badge-vip">VIP</span>');
+                if (Math.random() > 0.9) badges.push('<span class="rc-badge badge-editor">Editor</span>');
+
+                return `
+                <div class="review-card-new" style="border-left: 4px solid ${recColor};">
+                    <img src="https://ui-avatars.com/api/?name=${rev.reviewer_name || rev.username || 'Anonymous'}&background=222&color=fff&bold=true" class="rc-avatar" alt="User">
+                    
+                    <div class="rc-content">
+                        <div class="rc-header" style="margin-bottom: 4px;">
+                            <span class="rc-user">${rev.reviewer_name || rev.username || 'Anonymous'}</span>
+                            ${badges.join('')}
+                            <span class="rc-time">• ${new Date(rev.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                        </div>
+
+                        <div class="rc-recommend-row" style="margin-bottom: 12px;">
+                            <span class="rc-rec-icon" style="color: ${recColor};">${recIcon}</span>
+                            <span class="rc-rec-text" style="color: ${recColor}; font-size: 0.85rem; opacity: 0.9;">${recText}</span>
+                        </div>
+                        
+                        <div class="rc-text">
+                            "${rev.comment}"
+                        </div>
+                        
+                        ${rev.admin_reply ? `
+                        <div class="rc-admin-reply" style="margin-top: 15px; padding: 12px 15px; background: rgba(59, 130, 246, 0.1); border-left: 3px solid #3b82f6; border-radius: 0 4px 4px 0;">
+                            <div style="font-size: 0.8rem; font-weight: 700; color: #60a5fa; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                                <span style="background: #3b82f6; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem;">ADMIN</span>
+                                <span>Response</span>
+                            </div>
+                            <div style="font-size: 0.9rem; color: #cbd5e1; line-height: 1.5;">${rev.admin_reply}</div>
+                        </div>` : ''}
+                        
+                        <div class="rc-actions" style="border-top: 1px solid rgba(255,255,255,0.05); margin-top: 15px; padding-top: 15px;">
+                            <button class="rc-action-btn interaction-btn-helpful" id="helpful-${rev.id}" onclick="toggleReviewInteraction('${rev.id}', 'helpful')">
+                                <i class="fa-regular fa-thumbs-up"></i> Helpful ( <span class="count">${counts[rev.id].helpful || 0}</span> )
+                            </button>
+                            <button class="rc-action-btn interaction-btn-unhelpful" id="unhelpful-${rev.id}" onclick="toggleReviewInteraction('${rev.id}', 'unhelpful')">
+                                <i class="fa-regular fa-thumbs-down"></i> ( <span class="count">${counts[rev.id].unhelpful || 0}</span> )
+                            </button>
+                            <button class="rc-action-btn" onclick="jumpToComments()" onmouseover="this.style.color='#8b5cf6'" onmouseout="this.style.color='#888'">
+                                <span>💬</span> Discuss (${totalComments})
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+
+            // Check if user already interacted with these reviews
+            checkReviewInteractions(reviewIds);
+        }
+
+        function updateReviewStats(reviews, totalInteractions = 0) {
+            let total = 0;
+            let avg = 0;
+            let pct = 0;
+
+            if (reviews && reviews.length > 0) {
+                total = reviews.length;
+                avg = reviews.reduce((sum, r) => sum + r.rating, 0) / total;
+                pct = Math.round((avg / 5) * 100);
+            }
+
+            // Update Review Tab stats
+            const reviewTotalCountEl = document.getElementById('review-total-count');
+            if (reviewTotalCountEl) reviewTotalCountEl.textContent = total;
+
+            const reviewRatingPctEl = document.getElementById('review-rating-pct-tab');
+            if (reviewRatingPctEl) reviewRatingPctEl.textContent = (total > 0 ? pct : '--') + '%';
+
+            // Update hero stats
+            const heroCount = document.getElementById('detail-rating-count');
+            if (heroCount) heroCount.textContent = total + ' Reviews >';
+
+            // Update interaction bar "Comment" count (Aggregated)
+            const commentCountBtnEl = document.getElementById('comment-count');
+            if (commentCountBtnEl) commentCountBtnEl.textContent = totalInteractions;
+
+            // Update About Tab stats
+            const statReviewsCountEl = document.getElementById('stat-reviews-count');
+            if (statReviewsCountEl) statReviewsCountEl.textContent = `💬 ${total} verified reviews`;
+
+            const statRatingStarsEl = document.getElementById('stat-rating-stars');
+            if (statRatingStarsEl) {
+                statRatingStarsEl.textContent = total > 0 ? `⭐ ${avg.toFixed(1)} / 5.0` : `⭐ -- / 5.0`;
+            }
+        }
+
+        async function submitReview() {
+            try {
+                const nameInput = document.getElementById('review-name');
+                const commentInput = document.getElementById('review-comment');
+
+                const name = nameInput.value.trim();
+                const comment = commentInput.value.trim();
+
+                if (currentRating === 0) {
+                    await customAlert("Please select a rating!", "warning");
+                    return;
+                }
+                if (!name) {
+                    await customAlert("Please enter your name!", "warning");
+                    nameInput.focus();
+                    return;
+                }
+                if (!comment) {
+                    await customAlert("Please enter a comment!", "warning");
+                    commentInput.focus();
+                    return;
+                }
+
+                // Save name for next time
+                localStorage.setItem('community_username', name);
+
+                // Check Supabase connection
+                if (typeof isSupabaseConfigured !== 'function' || !isSupabaseConfigured()) {
+                    await customAlert("Cloud features not configured. Cannot submit review.", "error");
+                    return;
+                }
+
+                // Resolve UUID for real insert
+                let targetUuid = currentBookId;
+                const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentBookId);
+
+                if (!isUuid) {
+                    // Try to resolve by title if we have it, or just fail for now if we can't find a link
+                    const titleEl = document.getElementById('detail-title');
+                    const bookTitle = titleEl ? titleEl.textContent : null;
+
+                    if (bookTitle) {
+                        const { data: bookRef } = await supabaseClient.from('books').select('id').eq('title', bookTitle).maybeSingle();
+                        if (bookRef) {
+                            targetUuid = bookRef.id;
+                        } else {
+                            await customAlert("This book is not synced to the cloud yet. Please sync it from the Admin Panel to post reviews.", "warning");
+                            return;
+                        }
+                    } else {
+                        await customAlert("Cannot identify book for cloud submission.", "error");
+                        return;
+                    }
+                }
+
+                const newReview = {
+                    book_id: targetUuid,
+                    username: name,
+                    rating: currentRating,
+                    comment: comment
+                };
+
+                const { data, error } = await supabaseClient.from('book_reviews').insert([newReview]).select();
+
+                if (error) throw error;
+
+                // Optimistic UI update (using returned data if available, or local)
+                const savedReview = data ? data[0] : { ...newReview, created_at: new Date().toISOString() };
+
+                const container = document.getElementById('reviews-list-container');
+                // Remove "No reviews" message if it exists
+                if (container.querySelector('p') && container.children.length === 1) {
+                    container.innerHTML = '';
+                }
+
+                // Dynamic Recommendation Logic for Optimistic UI
+                let recText = "Highly Recommended";
+                let recColor = "#10b981"; // Green
+                let recIcon = "✦";
+
+                if (savedReview.rating >= 4) {
+                    recText = "Highly Recommended";
+                    recColor = "#10b981";
+                } else if (savedReview.rating === 3) {
+                    recText = "Recommended";
+                    recColor = "#3b82f6"; // Blue
+                    recIcon = "👍";
+                } else if (savedReview.rating === 2) {
+                    recText = "Normal";
+                    recColor = "#94a3b8"; // Slate/Gray
+                    recIcon = "💬";
+                } else {
+                    recText = "Not Recommended";
+                    recColor = "#ef4444"; // Red
+                    recIcon = "⚠️";
+                }
+
+                const html = `
+                <div class="review-card-new" style="border-left: 4px solid ${recColor};">
+                    <img src="assets/avatars/default.png" onerror="this.src='https://ui-avatars.com/api/?name=${savedReview.username}&background=333&color=fff'" class="rc-avatar" alt="User">
+                    
+                    <div class="rc-content">
+                        <div class="rc-header" style="margin-bottom: 4px;">
+                            <span class="rc-user">${savedReview.username}</span>
+                            <span class="rc-time"> • Just Now</span>
+                        </div>
+
+                        <div class="rc-recommend-row" style="margin-bottom: 12px;">
+                            <span class="rc-rec-icon" style="color: ${recColor};">${recIcon}</span>
+                            <span class="rc-rec-text" style="color: ${recColor}; font-size: 0.85rem; opacity: 0.9;">${recText}</span>
+                        </div>
+                        
+                        <div class="rc-text">
+                            ${savedReview.comment}
+                        </div>
+                        
+                        <div class="rc-actions">
+                            <button class="rc-action-btn">
+                                <span>👍</span> 0
+                            </button>
+                            <button class="rc-action-btn">
+                                <span>👎</span>
+                            </button>
+                            <button class="rc-action-btn">
+                                <span>💬</span> 0
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+                container.insertAdjacentHTML('afterbegin', html);
+
+                // Reset Form
+                commentInput.value = '';
+                setRating(0);
+                toggleReviewForm(); // Close form after submit
+                await customAlert("Review submitted successfully!", "success");
+
+                // Update stats locally
+                const countEl = document.getElementById('review-total-count');
+                const currentCount = parseInt(countEl.textContent.replace(/\D/g, '')) || 0;
+                countEl.textContent = currentCount + 1;
+
+                if (document.getElementById('stat-reviews-count')) {
+                    document.getElementById('stat-reviews-count').textContent = '💬 ' + (currentCount + 1);
+                }
+
+                const commentCountBtnEl = document.getElementById('comment-count');
+                if (commentCountBtnEl) {
+                    const currentInterCount = parseInt(commentCountBtnEl.textContent) || 0;
+                    commentCountBtnEl.textContent = currentInterCount + 1;
+                }
+
+            } catch (err) {
+                console.error("Error submitting review:", err);
+                await customAlert("Failed to submit review. " + (err.message || ""), "error");
+            }
+        }
+
+        async function loadRecommendedBooks(currentId) {
+            const grid = document.getElementById('recommended-books-grid');
+            const heading = document.getElementById('related-heading');
+            if (!grid) return;
+
+            let library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+            const currentItem = library.find(i => i.id === currentId) || { type: 'book' };
+            const typeKey = currentItem.type || 'book';
+
+            // Set Heading Based on Type
+            if (heading) {
+                let plural = typeKey.charAt(0).toUpperCase() + typeKey.slice(1);
+                if (typeKey.toLowerCase() === 'story') plural = 'Stories';
+                else if (typeKey.toLowerCase() === 'laws') plural = 'Laws';
+                else if (!plural.endsWith('s')) plural += 's';
+
+                heading.textContent = `Related ${plural}`;
+            }
+
+            // Filter by same type, excluding current
+            let filtered = library.filter(item => item.id !== currentId && item.type === typeKey);
+
+            // If none of same type, fallback to any type excluding current
+            if (filtered.length === 0) {
+                filtered = library.filter(item => item.id !== currentId);
+            }
+
+            // Shuffle and pick 5
+            const shuffled = filtered.sort(() => 0.5 - Math.random()).slice(0, 5);
+
+            grid.innerHTML = shuffled.map(book => {
+                const rating = Math.floor(Math.random() * (98 - 40) + 40);
+                const statusHtml = (Math.random() > 0.4)
+                    ? `<div class="related-status-badge">Completed</div>`
+                    : `<div class="related-status-badge">Ongoing</div>`;
+
+                return `
+                <a href="book-detail.html?id=${book.id}" class="related-card">
+                    <div class="related-cover-container">
+                        ${statusHtml}
+                        <img src="${book.image || 'assets/logo-new.png'}" alt="${book.title}" 
+                             style="width: 100%; height: 100%; object-fit: cover;">
+                        <div class="related-clock-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        </div>
+                    </div>
+                    <div class="related-info">
+                        <div class="related-rating">
+                            <span style="color: #64748b; font-size: 1rem;">👍</span> ${rating}%
+                        </div>
+                        <h4 class="related-title">${book.title}</h4>
+                    </div>
+                </a>
+            `}).join('');
+        }
+
+        function renderCommonDetailPageSettings() {
+            const detailCommons = JSON.parse(localStorage.getItem('siteDetailCommons') || '{}');
+
+            // 1. Platform Features
+            const featuresContainer = document.getElementById('common-features-container');
+            const featuresSection = document.getElementById('common-platform-features-section');
+            if (featuresContainer && detailCommons.features && detailCommons.features.some(f => f.title)) {
+                featuresContainer.innerHTML = '';
+                detailCommons.features.forEach((feat, idx) => {
+                    if (!feat.title) return;
+                    const icons = ['🚀', '🎧', '📱', '💬'];
+                    const color = feat.color || '#3b82f6';
+                    featuresContainer.innerHTML += `
+                        <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            <h4 style="color: ${color}; margin: 0 0 10px 0; font-size: 1rem;">${icons[idx] || '✨'} ${feat.title}</h4>
+                            <p style="color: #888; font-size: 0.85rem; margin: 0; line-height: 1.5;">${feat.desc}</p>
+                        </div>
+                    `;
+                });
+                featuresSection.style.display = 'block';
+            } else if (featuresSection) {
+                // If no common features set, show the section (will use defaults if hardcoded elsewhere, but here we show if data exists)
+                // If data is missing but we want defaults, we can define them here.
+                // For now, if empty, we hide it to let the admin control it.
+                featuresSection.style.display = 'none';
+
+                // FALLBACK: If nothing in localStorage, show the default static ones (re-injected)
+                if (!detailCommons.features) {
+                    const defaults = [
+                        { title: 'Smart Sync', desc: 'Pick up right where you left off on any device.', color: '#3b82f6' },
+                        { title: 'Audio Mode', desc: 'Listen to your favorite stories with high-quality narration.', color: '#10b981' },
+                        { title: 'Offline Access', desc: 'Download content to read later without internet.', color: '#f59e0b' },
+                        { title: 'Community', desc: 'Join thousands of readers in our discussion forums.', color: '#8b5cf6' }
+                    ];
+                    featuresContainer.innerHTML = defaults.map((f, i) => `
+                        <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                            <h4 style="color: ${f.color}; margin: 0 0 10px 0; font-size: 1rem;">${['🚀', '🎧', '📱', '💬'][i]} ${f.title}</h4>
+                            <p style="color: #888; font-size: 0.85rem; margin: 0; line-height: 1.5;">${f.desc}</p>
+                        </div>
+                   `).join('');
+                    featuresSection.style.display = 'block';
+                }
+            }
+
+            // 2. Review Highlight
+            const reviewSection = document.getElementById('common-review-highlight-section');
+            if (reviewSection) {
+                if (detailCommons.showReviewSnippet === 'yes' && detailCommons.reviewText) {
+                    document.getElementById('common-review-text-display').textContent = `"${detailCommons.reviewText}"`;
+                    document.getElementById('common-review-author-display').textContent = detailCommons.reviewAuthor || 'Anonymous';
+                    reviewSection.style.display = 'block';
+                } else {
+                    reviewSection.style.display = 'none';
+                }
+            }
+        }
+
+        // --- IP & Supabase Interaction Logic ---
+
+        async function getIpAddress() {
+            try {
+                // Try caching IP in session storage to avoid spamming the API
+                let ip = sessionStorage.getItem('user_ip');
+                if (ip) return ip;
+
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                ip = data.ip;
+                sessionStorage.setItem('user_ip', ip);
+                return ip;
+            } catch (e) {
+                console.warn("Could not get IP", e);
+            }
+        }
+
+        function getActiveBookId() {
+            if (typeof currentBookId !== 'undefined' && currentBookId) return currentBookId;
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        }
+
+        async function checkInteractionStatus(bookId) {
+            // 1. Apply Local Cache Interactions Immediately
+            const interactions = JSON.parse(localStorage.getItem('userInteractions') || '{}');
+            const bookInter = interactions[bookId] || {};
+
+            const btnLike = document.getElementById('btn-like');
+            const btnDislike = document.getElementById('btn-dislike');
+            const btnReport = document.getElementById('btn-report');
+
+            if (bookInter.liked) {
+                if (btnLike) {
+                    btnLike.style.color = '#3b82f6';
+                    btnLike.style.borderColor = '#3b82f6';
+                    const icon = btnLike.querySelector('i');
+                    if (icon) { icon.classList.remove('fa-regular'); icon.classList.add('fa-solid'); }
+                }
+            } else if (bookInter.disliked) {
+                if (btnDislike) {
+                    btnDislike.style.color = '#ef4444';
+                    btnDislike.style.borderColor = '#ef4444';
+                    const icon = btnDislike.querySelector('i');
+                    if (icon) { icon.classList.remove('fa-regular'); icon.classList.add('fa-solid'); }
+                }
+            }
+
+            if (bookInter.reported) {
+                if (btnReport) {
+                    btnReport.innerHTML = '<span>🚩</span> Reported';
+                    btnReport.style.color = '#ef4444';
+                }
+            }
+
+            // Check Supabase for total counts
+            if (typeof supabaseClient === 'undefined' || !supabaseClient) return;
+
+            const ip = await getIpAddress();
+
+            // 2. Resolve UUID early for sub-tables
+            let resolvedUuid = null;
+            const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookId);
+            if (isUuid) {
+                resolvedUuid = bookId;
+            } else {
+                // Try to resolve from CommunitySystem or DB
+                if (typeof CommunitySystem !== 'undefined' && CommunitySystem.currentBookUuid) {
+                    resolvedUuid = CommunitySystem.currentBookUuid;
+                } else {
+                    const { data: bData } = await supabaseClient.from('books').select('id').eq('id', bookId).maybeSingle();
+                    if (bData) {
+                        resolvedUuid = bData.id;
+                    } else {
+                        const titleEl = document.getElementById('detail-title');
+                        const title = titleEl ? titleEl.textContent : null;
+                        if (title) {
+                            const { data: bData2 } = await supabaseClient.from('books').select('id').eq('title', title).maybeSingle();
+                            if (bData2) resolvedUuid = bData2.id;
+                        }
+                    }
+                }
+            }
+
+            // 3. Fetch global counts for the book (Aggregated)
+            // We search user_activity for BOTH the ID/slug and the UUID to be thorough
+            const searchIds = [bookId];
+            if (resolvedUuid && resolvedUuid !== bookId) searchIds.push(resolvedUuid);
+
+            const { data: globalData } = await supabaseClient
+                .from('user_activity')
+                .select('activity_type')
+                .in('metadata->>book_id', searchIds)
+                .in('activity_type', ['like_book', 'dislike_book', 'like_chapter', 'helpful_review']);
+
+            const bookLikes = globalData ? globalData.filter(a => a.activity_type === 'like_book').length : 0;
+            const chapterLikes = globalData ? globalData.filter(a => a.activity_type === 'like_chapter').length : 0;
+            const reviewInteractionLikes = globalData ? globalData.filter(a => a.activity_type === 'helpful_review').length : 0;
+
+            // Fetch base likes from book_reviews columns (Admin edits)
+            let reviewBaseLikes = 0;
+            if (resolvedUuid) {
+                const { data: revStats } = await supabaseClient
+                    .from('book_reviews')
+                    .select('likes')
+                    .eq('book_id', resolvedUuid);
+
+                if (revStats) reviewBaseLikes = revStats.reduce((sum, r) => sum + (r.likes || 0), 0);
+            }
+
+            const reviewLikes = reviewInteractionLikes + reviewBaseLikes;
+
+            // Dislikes: ONLY Book-level dislikes per user request
+            const totalDislikes = globalData ? globalData.filter(a => a.activity_type === 'dislike_book').length : 0;
+
+            // 4. Fetch community message likes (sum of likes_count)
+            let communityLikes = 0;
+            if (resolvedUuid) {
+                try {
+                    const { data: messagesData } = await supabaseClient
+                        .from('book_messages')
+                        .select('likes_count')
+                        .eq('book_id', resolvedUuid);
+
+                    if (messagesData) {
+                        communityLikes = messagesData.reduce((sum, msg) => sum + (msg.likes_count || 0), 0);
+                    }
+                } catch (e) {
+                    console.warn("Community likes sum failed", e);
+                }
+            }
+
+            // TOTAL LIKES: Sum of all components
+            const totalLikes = bookLikes + chapterLikes + reviewLikes + communityLikes;
+
+            const countLike = document.getElementById('like-count');
+            const countDislike = document.getElementById('dislike-count');
+
+            if (countLike) countLike.innerText = totalLikes;
+            if (countDislike) countDislike.innerText = totalDislikes;
+
+            // Re-apply current interactive state (in case they were changed by the fetch)
+            if (bookInter.liked) {
+                if (btnLike) {
+                    btnLike.style.color = '#3b82f6';
+                    btnLike.style.borderColor = '#3b82f6';
+                    const icon = btnLike.querySelector('i');
+                    if (icon) { icon.classList.remove('fa-regular'); icon.classList.add('fa-solid'); }
+                }
+            } else if (bookInter.disliked) {
+                if (btnDislike) {
+                    btnDislike.style.color = '#ef4444';
+                    btnDislike.style.borderColor = '#ef4444';
+                    const icon = btnDislike.querySelector('i');
+                    if (icon) { icon.classList.remove('fa-regular'); icon.classList.add('fa-solid'); }
+                }
+            }
+
+            // 5. Fetch and update aggregated comment/review count
+            if (resolvedUuid) {
+                try {
+                    const messagesPromise = supabaseClient
+                        .from('book_messages')
+                        .select('id', { count: 'exact', head: true })
+                        .eq('book_id', resolvedUuid);
+
+                    const reviewsPromise = supabaseClient
+                        .from('book_reviews')
+                        .select('id', { count: 'exact', head: true })
+                        .eq('book_id', resolvedUuid);
+
+                    const [messagesRes, reviewsRes] = await Promise.all([messagesPromise, reviewsPromise]);
+
+                    const totalMessages = messagesRes.count || 0;
+                    const totalReviews = reviewsRes.count || 0;
+                    const totalInteractions = totalMessages + totalReviews;
+
+                    const commentCountEl = document.getElementById('comment-count');
+                    if (commentCountEl) commentCountEl.textContent = totalInteractions;
+
+                    // Also sync About Tab if it fell behind
+                    const statReviewsCountEl = document.getElementById('stat-reviews-count');
+                    if (statReviewsCountEl) statReviewsCountEl.textContent = `💬 ${totalReviews} verified reviews`;
+                } catch (e) {
+                    console.warn("Aggregated count sync failed", e);
+                }
+            }
+
+            // Update rating indicators
+            let pct = 0;
+            if (totalLikes + totalDislikes > 0) {
+                pct = Math.round((totalLikes / (totalLikes + totalDislikes)) * 100);
+            }
+
+            const ratingPctEl = document.getElementById('detail-rating-pct');
+            if (ratingPctEl) ratingPctEl.textContent = pct + '%';
+
+            const reviewRatingPctTabEl = document.getElementById('review-rating-pct-tab');
+            if (reviewRatingPctTabEl) reviewRatingPctTabEl.textContent = pct + '%';
+
+            const statLikesEl = document.getElementById('stat-likes-pct');
+            if (statLikesEl) statLikesEl.textContent = `👍 ${pct}% Likes`;
+        }
+
+        // Shared helper to enforce single active reaction
+        function applyReviewReactionState(rid, type) {
+            ['helpful', 'unhelpful'].forEach(t => {
+                const b = document.getElementById(`${t}-${rid}`);
+                if (b) {
+                    b.classList.remove('active', 'helpful', 'unhelpful');
+                    const icon = b.querySelector('i');
+                    if (icon) { icon.classList.remove('fa-solid'); icon.classList.add('fa-regular'); }
+                }
+            });
+            if (type) {
+                const btn = document.getElementById(`${type}-${rid}`);
+                if (btn) {
+                    btn.classList.add('active', type);
+                    const icon = btn.querySelector('i');
+                    if (icon) { icon.classList.remove('fa-regular'); icon.classList.add('fa-solid'); }
+                }
+            }
+        }
+
+        async function toggleReviewInteraction(reviewId, type) {
+            const ip = await getIpAddress();
+            if (!ip) {
+                await customAlert("Unable to verify network identity.", "error");
+                return;
+            }
+
+            const interactions = JSON.parse(localStorage.getItem('userInteractions') || '{}');
+            if (!interactions.reviews) interactions.reviews = {};
+
+            const isHelpful = type === 'helpful';
+            const actionType = isHelpful ? 'helpful_review' : 'unhelpful_review';
+            const oppositeType = isHelpful ? 'unhelpful_review' : 'helpful_review';
+
+            const btn = document.getElementById(`${type}-${reviewId}`);
+            if (!btn) return;
+
+            const isActive = interactions.reviews[reviewId] === type;
+            const bookId = getActiveBookId();
+
+            // Optimistic UI Update
+            if (isActive) {
+                // Deactivate
+                applyReviewReactionState(reviewId, null);
+                const countEl = btn.querySelector('.count');
+                if (countEl) {
+                    let val = parseInt(countEl.textContent.replace(/[^0-9]/g, '')) || 0;
+                    countEl.textContent = Math.max(0, val - 1);
+                }
+            } else {
+                // Handle opposite decrement if needed
+                const prevType = interactions.reviews[reviewId];
+                if (prevType) {
+                    const oppBtn = document.getElementById(`${prevType}-${reviewId}`);
+                    if (oppBtn) {
+                        const oppCountEl = oppBtn.querySelector('.count');
+                        if (oppCountEl) {
+                            let val = parseInt(oppCountEl.textContent.replace(/[^0-9]/g, '')) || 0;
+                            oppCountEl.textContent = Math.max(0, val - 1);
+                        }
+                    }
+                }
+
+                // Activate
+                applyReviewReactionState(reviewId, type);
+                const countEl = btn.querySelector('.count');
+                if (countEl) {
+                    let val = parseInt(countEl.textContent.replace(/[^0-9]/g, '')) || 0;
+                    countEl.textContent = val + 1;
+                }
+            }
+
+            try {
+                if (isActive) {
+                    // Remove interaction
+                    await supabaseClient
+                        .from('user_activity')
+                        .delete()
+                        .eq('ip_address', ip)
+                        .eq('metadata->>review_id', reviewId)
+                        .eq('activity_type', actionType);
+
+                    delete interactions.reviews[reviewId];
+                } else {
+                    const wasOpposite = (interactions.reviews[reviewId] && interactions.reviews[reviewId] !== type);
+
+                    // Remove opposite if exists in Supabase
+                    await supabaseClient
+                        .from('user_activity')
+                        .delete()
+                        .eq('ip_address', ip)
+                        .eq('metadata->>review_id', reviewId)
+                        .eq('activity_type', oppositeType);
+
+                    // Add new interaction
+                    await supabaseClient
+                        .from('user_activity')
+                        .insert([{
+                            ip_address: ip,
+                            activity_type: actionType,
+                            metadata: { review_id: reviewId, book_id: bookId },
+                            page_url: window.location.href
+                        }]);
+
+                    interactions.reviews[reviewId] = type;
+                }
+                localStorage.setItem('userInteractions', JSON.stringify(interactions));
+                window._lastInteraction = Date.now();
+                if (typeof checkInteractionStatus === 'function') {
+                    if (bookId) setTimeout(() => checkInteractionStatus(bookId), 2000);
+                }
+            } catch (err) {
+                console.error("Review interaction failed", err);
+            }
+        }
+
+        async function checkReviewInteractions(reviewIds) {
+            const interactions = JSON.parse(localStorage.getItem('userInteractions') || '{}');
+            const reviewCache = interactions.reviews || {};
+
+            reviewIds.forEach(rid => applyReviewReactionState(rid, reviewCache[rid]));
+
+            // Sync with Supabase in background
+            const ip = await getIpAddress();
+            if (!ip) return;
+
+            const { data } = await supabaseClient
+                .from('user_activity')
+                .select('activity_type, metadata')
+                .eq('ip_address', ip)
+                .in('metadata->>review_id', reviewIds)
+                .in('activity_type', ['helpful_review', 'unhelpful_review']);
+
+            if (data) {
+                let updated = false;
+                // Use a map to handle only one reaction per review (latest if multiple exist)
+                const latestMap = {};
+                data.forEach(act => { latestMap[act.metadata.review_id] = act.activity_type === 'helpful_review' ? 'helpful' : 'unhelpful'; });
+
+                Object.keys(latestMap).forEach(rid => {
+                    const type = latestMap[rid];
+                    if (reviewCache[rid] !== type) {
+                        reviewCache[rid] = type;
+                        updated = true;
+                        applyReviewReactionState(rid, type);
+                    }
+                });
+
+                if (updated) {
+                    interactions.reviews = reviewCache;
+                    localStorage.setItem('userInteractions', JSON.stringify(interactions));
+                }
+            }
+        }
+
+        async function toggleLike() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (!id) return;
+
+            const btnLike = document.getElementById('btn-like');
+            const btnDislike = document.getElementById('btn-dislike');
+            const countLike = document.getElementById('like-count');
+            const countDislike = document.getElementById('dislike-count');
+
+            const interactions = JSON.parse(localStorage.getItem('userInteractions') || '{}');
+            if (!interactions[id]) interactions[id] = {};
+
+            const isLiked = interactions[id].liked === true;
+            const isDisliked = interactions[id].disliked === true;
+
+            const ip = await getIpAddress();
+            if (!ip) {
+                await customAlert("Unable to verify network identity.", "error");
+                return;
+            }
+
+            // Optimistic UI update
+            if (isLiked) {
+                btnLike.style.color = '';
+                btnLike.style.borderColor = '';
+                const icon = btnLike.querySelector('i');
+                if (icon) { icon.classList.remove('fa-solid'); icon.classList.add('fa-regular'); }
+                if (countLike) countLike.innerText = Math.max(0, (parseInt(countLike.innerText) || 0) - 1);
+            } else {
+                if (isDisliked) {
+                    btnDislike.style.color = '';
+                    btnDislike.style.borderColor = '';
+                    const icon = btnDislike.querySelector('i');
+                    if (icon) { icon.classList.remove('fa-solid'); icon.classList.add('fa-regular'); }
+                    if (countDislike) countDislike.innerText = Math.max(0, (parseInt(countDislike.innerText) || 0) - 1);
+                }
+                btnLike.style.color = '#3b82f6';
+                btnLike.style.borderColor = '#3b82f6';
+                const icon = btnLike.querySelector('i');
+                if (icon) { icon.classList.remove('fa-regular'); icon.classList.add('fa-solid'); }
+                if (countLike) countLike.innerText = (parseInt(countLike.innerText) || 0) + 1;
+            }
+
+            try {
+                if (isLiked) {
+                    // Unlike
+                    await supabaseClient
+                        .from('user_activity')
+                        .delete()
+                        .eq('ip_address', ip)
+                        .eq('metadata->>book_id', id)
+                        .eq('activity_type', 'like_book');
+
+                    interactions[id].liked = false;
+                } else {
+                    // Like
+                    if (isDisliked) {
+                        await supabaseClient
+                            .from('user_activity')
+                            .delete()
+                            .eq('ip_address', ip)
+                            .eq('metadata->>book_id', id)
+                            .eq('activity_type', 'dislike_book');
+
+                        interactions[id].disliked = false;
+                    }
+
+                    await supabaseClient
+                        .from('user_activity')
+                        .insert([{
+                            ip_address: ip,
+                            activity_type: 'like_book',
+                            metadata: { book_id: id },
+                            page_url: window.location.href
+                        }]);
+
+                    interactions[id].liked = true;
+                }
+                localStorage.setItem('userInteractions', JSON.stringify(interactions));
+                window._lastInteraction = Date.now();
+                // Wait a bit for Supabase to reflect changes before re-fetching counts
+                setTimeout(() => checkInteractionStatus(id), 2000);
+            } catch (err) {
+                console.error("Like toggle failed", err);
+            }
+        }
+
+        async function toggleDislike() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (!id) return;
+
+            const btnLike = document.getElementById('btn-like');
+            const btnDislike = document.getElementById('btn-dislike');
+            const countLike = document.getElementById('like-count');
+            const countDislike = document.getElementById('dislike-count');
+
+            const interactions = JSON.parse(localStorage.getItem('userInteractions') || '{}');
+            if (!interactions[id]) interactions[id] = {};
+
+            const isLiked = interactions[id].liked === true;
+            const isDisliked = interactions[id].disliked === true;
+
+            const ip = await getIpAddress();
+            if (!ip) {
+                await customAlert("Unable to verify network identity.", "error");
+                return;
+            }
+
+            // Optimistic UI update
+            if (isDisliked) {
+                btnDislike.style.color = '';
+                btnDislike.style.borderColor = '';
+                const icon = btnDislike.querySelector('i');
+                if (icon) { icon.classList.remove('fa-solid'); icon.classList.add('fa-regular'); }
+                if (countDislike) countDislike.innerText = Math.max(0, (parseInt(countDislike.innerText) || 0) - 1);
+            } else {
+                if (isLiked) {
+                    btnLike.style.color = '';
+                    btnLike.style.borderColor = '';
+                    const icon = btnLike.querySelector('i');
+                    if (icon) { icon.classList.remove('fa-solid'); icon.classList.add('fa-regular'); }
+                    if (countLike) countLike.innerText = Math.max(0, (parseInt(countLike.innerText) || 0) - 1);
+                }
+                btnDislike.style.color = '#ef4444';
+                btnDislike.style.borderColor = '#ef4444';
+                const icon = btnDislike.querySelector('i');
+                if (icon) { icon.classList.remove('fa-regular'); icon.classList.add('fa-solid'); }
+                if (countDislike) countDislike.innerText = (parseInt(countDislike.innerText) || 0) + 1;
+            }
+
+            try {
+                if (isDisliked) {
+                    // Remove Dislike
+                    await supabaseClient
+                        .from('user_activity')
+                        .delete()
+                        .eq('ip_address', ip)
+                        .eq('metadata->>book_id', id)
+                        .eq('activity_type', 'dislike_book');
+
+                    interactions[id].disliked = false;
+                } else {
+                    // Dislike
+                    if (isLiked) {
+                        await supabaseClient
+                            .from('user_activity')
+                            .delete()
+                            .eq('ip_address', ip)
+                            .eq('metadata->>book_id', id)
+                            .eq('activity_type', 'like_book');
+
+                        interactions[id].liked = false;
+                    }
+
+                    await supabaseClient
+                        .from('user_activity')
+                        .insert([{
+                            ip_address: ip,
+                            activity_type: 'dislike_book',
+                            metadata: { book_id: id },
+                            page_url: window.location.href
+                        }]);
+
+                    interactions[id].disliked = true;
+                }
+                localStorage.setItem('userInteractions', JSON.stringify(interactions));
+                window._lastInteraction = Date.now();
+                setTimeout(() => checkInteractionStatus(id), 2000);
+            } catch (err) {
+                console.error("Dislike toggle failed", err);
+            }
+        }
+
+        function toggleReport() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (!id) return;
+
+            let interactions = JSON.parse(localStorage.getItem('userInteractions') || '{}');
+            if (!interactions[id]) interactions[id] = {};
+
+            const btn = document.getElementById('btn-report');
+
+            if (interactions[id].reported) {
+                delete interactions[id].reported;
+                if (btn) {
+                    btn.innerHTML = '<span>🚩</span> Report';
+                    btn.style.color = '';
+                }
+            } else {
+                if (confirm('Are you sure you want to report this book for content issues?')) {
+                    interactions[id].reported = true;
+                    if (btn) {
+                        btn.innerHTML = '<span>🚩</span> Reported';
+                        btn.style.color = '#ef4444';
+                    }
+                    alert('Thank you for your report. We will review it shortly.');
+                }
+            }
+            localStorage.setItem('userInteractions', JSON.stringify(interactions));
+        }
+
+        function jumpToComments() {
+            switchTab('reviews');
+            document.querySelector('.tabs-nav-ref').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Existing Tab Elements for switching logic
+        const tabsNav = document.querySelector('.tabs-nav-ref');
+        const existingAbout = document.getElementById('tab-about');
+        const existingChapters = document.getElementById('tab-chapters');
+        const existingReviews = document.getElementById('tab-reviews');
+        const existingAuthor = document.getElementById('tab-author');
+
+        function renderCustomTabs(tabs, item) {
+            if (!tabsNav) return;
+
+            // Hide the default tabs initially (they will be shown by switchTab if needed)
+            if (existingAbout) existingAbout.style.display = 'none';
+            if (existingChapters) existingChapters.style.display = 'none';
+            if (existingReviews) existingReviews.style.display = 'none';
+            if (existingAuthor) existingAuthor.style.display = 'none';
+
+            // Function to render custom tab content
+            function createCustomTabContent(tab, id) {
+                const existing = document.getElementById(id);
+                if (existing) existing.remove();
+
+                const tabContent = document.createElement('div');
+                tabContent.id = id;
+                tabContent.className = 'tab-content-ref';
+                tabContent.style.display = 'none';
+
+                let contentHtml = '';
+
+                // Image
+                if (tab.image) {
+                    const iWidth = tab.imageWidth || '100%';
+                    contentHtml += `<div style="margin-bottom: 25px;"><img src="${tab.image}" style="width: ${iWidth}; max-width: 100%; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);"></div>`;
+                }
+
+                // Heading
+                if (tab.heading) {
+                    const hWeight = tab.headingWeight || '700';
+                    contentHtml += `<h3 class="section-title" style="font-weight: ${hWeight}; margin-bottom: 12px;">${tab.heading}</h3>`;
+                }
+
+                // Subheading
+                if (tab.subheading) {
+                    const sWeight = tab.subheadingWeight || '400';
+                    contentHtml += `<h4 style="color: #94a3b8; font-size: 1.1rem; margin: 0 0 25px 0; font-weight: ${sWeight}; line-height: 1.5;">${tab.subheading}</h4>`;
+                }
+
+                // Content
+                if (tab.content) {
+                    contentHtml += `<div style="color: #aaa; line-height: 1.7;">${tab.content}</div>`;
+                } else {
+                    contentHtml += `<p style="color: #666;">No content added for this tab yet.</p>`;
+                }
+
+                tabContent.innerHTML = contentHtml;
+                const divider = document.querySelector('.divider-line');
+                if (divider) divider.insertAdjacentElement('afterend', tabContent);
+                return tabContent;
+            }
+
+            // Clear existing tab buttons
+            tabsNav.innerHTML = '';
+
+            // Create tab buttons and map them
+            tabs.forEach((tab, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'tab-btn' + (index === 0 ? ' active' : '');
+
+                // Handle emoji and extract clean name
+                const displayName = tab.name.includes(' ') ? tab.name.split(' ').slice(1).join(' ') : tab.name;
+                btn.textContent = displayName;
+
+                const nameLower = displayName.toLowerCase();
+                let targetId = '';
+
+                if (nameLower === 'about') targetId = 'about';
+                else if (nameLower.includes('chapter')) targetId = 'chapters';
+                else if (nameLower.includes('review')) targetId = 'reviews';
+                else if (nameLower.includes('author')) targetId = 'author';
+
+                if (targetId) {
+                    btn.onclick = (e) => {
+                        window.switchTab(targetId);
+                        // Ensure this button is marked active
+                        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                    };
+                    // If first tab, show it
+                    if (index === 0) {
+                        const target = document.getElementById('tab-' + targetId);
+                        if (target) target.style.display = 'block';
+                    }
+                } else {
+                    // It's a truly custom tab
+                    const customId = 'custom-tab-' + index;
+                    createCustomTabContent(tab, customId);
+                    btn.onclick = (e) => {
+                        window.switchTab(customId, true);
+                        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                    };
+                    if (index === 0) {
+                        const target = document.getElementById(customId);
+                        if (target) target.style.display = 'block';
+                    }
+                }
+
+                tabsNav.appendChild(btn);
+            });
+        }
+
+        // --- Tool Functions ---
+
+        function checkBookmarkStatus(bookId) {
+            const favs = JSON.parse(localStorage.getItem('userFavorites') || '[]');
+            const btn = document.getElementById('btn-bookmark');
+            if (favs.includes(bookId)) {
+                btn.innerHTML = '<span>⭐</span> Saved';
+                btn.style.color = '#fbbf24';
+                btn.style.borderColor = '#fbbf24';
+            }
+        }
+
+        function toggleBookmark() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (!id) return;
+
+            let favs = JSON.parse(localStorage.getItem('userFavorites') || '[]');
+            const btn = document.getElementById('btn-bookmark');
+
+            if (favs.includes(id)) {
+                favs = favs.filter(fid => fid !== id);
+                btn.innerHTML = '<span>☆</span> Bookmark';
+                btn.style.color = '#ccc';
+            } else {
+                favs.push(id);
+                btn.innerHTML = '<span>⭐</span> Saved';
+                btn.style.color = '#fbbf24';
+                btn.style.borderColor = '#fbbf24';
+            }
+            localStorage.setItem('userFavorites', JSON.stringify(favs));
+        }
+
+        function shareBook() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                const btn = document.getElementById('btn-share');
+                const original = btn.innerHTML;
+                btn.innerHTML = '<span>✅</span> Copied!';
+                setTimeout(() => btn.innerHTML = original, 2000);
+            });
+        }
+
+        function toggleListenMode() {
+            customAlert('Audio Listen Mode active! (Demo)', 'info');
+        }
+
+        function toggleAudio() {
+            alert('Background music toggled');
+        }
+
+        function toggleBackground() {
+            document.body.style.background = document.body.style.background === 'black' ? '#121212' : 'black';
+        }
+
+        window.switchTab = function (tabId, isCustomId = false) {
+            const tabs = document.querySelectorAll('.tab-content-ref');
+
+            // Update buttons
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active');
+                if (!isCustomId && b.getAttribute('onclick') && b.getAttribute('onclick').includes(`'${tabId}'`)) {
+                    b.classList.add('active');
+                }
+            });
+
+            tabs.forEach(c => {
+                c.style.display = 'none';
+                c.classList.remove('fade-in-up');
+            });
+
+            const finalId = isCustomId ? tabId : 'tab-' + tabId;
+            const target = document.getElementById(finalId);
+            if (target) {
+                target.style.display = 'block';
+                target.classList.add('fade-in-up');
+            } else {
+                console.warn('Tab target not found:', finalId);
+            }
+        }
+
+        function toggleDescription() {
+            const shortDesc = document.getElementById('synopsis-div');
+            const btn = document.getElementById('show-more-btn');
+
+            if (shortDesc.style.webkitLineClamp === 'unset') {
+                shortDesc.style.webkitLineClamp = '3';
+                btn.textContent = 'Show more ⌄';
+            } else {
+                shortDesc.style.webkitLineClamp = 'unset';
+                btn.textContent = 'Show less ^';
+            }
+        }
+
+        // --- Admin Editing Functions ---
+
+        // Check if admin is authenticated and show edit button
+        if (sessionStorage.getItem('adminAuthenticated')) {
+            document.getElementById('admin-edit-controls').style.display = 'block';
+        }
+
+        function toggleAdminEditPanel() {
+            const panel = document.getElementById('admin-edit-panel');
+            const isVisible = panel.style.display !== 'none';
+
+            if (isVisible) {
+                panel.style.display = 'none';
+                document.body.style.overflow = ''; // Enable scroll
+            } else {
+                panel.style.display = 'block';
+                document.body.style.overflow = 'hidden'; // Disable scroll
+                populateBookSelector();
+                loadAdminEditData();
+            }
+        }
+
+        function populateBookSelector() {
+            const selector = document.getElementById('admin-book-selector');
+            if (!selector) return;
+
+            const defaultItems = [
+                { id: 'wm-guide', title: 'Wealth & Mindset: The Complete Guide' },
+                { id: 'compounding-miracle', title: 'The 30-Year Compounding Miracle' },
+                { id: 'al-mizan-5', title: 'Al-Mizan Volume 5' },
+            ];
+            const stored = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+            const allItems = [...defaultItems, ...stored];
+
+            selector.innerHTML = allItems.map(item =>
+                `<option value="${item.id}" ${item.id === currentBookId ? 'selected' : ''}>${item.title}</option>`
+            ).join('');
+
+            selector.onchange = (e) => {
+                currentBookId = e.target.value;
+                loadAdminEditData();
+            };
+        }
+
+        function loadAdminEditData() {
+            const id = currentBookId;
+            if (!id) return;
+
+            // Set current book display in header
+            const titleEl = document.getElementById('detail-title');
+            if (titleEl && document.getElementById('admin-current-book-display')) {
+                document.getElementById('admin-current-book-display').textContent = titleEl.textContent;
+            }
+
+            const defaultItems = [
+                { id: 'wm-guide', title: 'Wealth & Mindset: The Complete Guide', type: 'book', description: 'The foundation for financial independence...', chapters: 12 },
+                { id: 'compounding-miracle', title: 'The 30-Year Compounding Miracle', type: 'story', description: 'A powerful story...', chapters: 25 },
+                { id: 'al-mizan-5', title: 'Al-Mizan Volume 5', type: 'book', description: 'Detailed exegesis...', chapters: 3 },
+            ];
+
+            const stored = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+            const allItems = [...defaultItems, ...stored];
+            const item = allItems.find(i => i.id === id);
+
+            if (item) {
+                const detailSettings = item.detailSettings || {};
+
+                // Populate basic info
+                document.getElementById('admin-edit-title').value = item.title || '';
+                document.getElementById('admin-edit-cover').value = item.image || 'assets/logo-new.png';
+                document.getElementById('admin-edit-description').value = item.description || '';
+
+                // Initialize tabsData from settings
+                tabsData = detailSettings.tabs || [
+                    { name: '📖 About', heading: 'About This Book', content: item.description || '' },
+                    { name: '📚 Chapters', heading: 'Chapter List', content: 'Chapters available in reader.' },
+                    { name: '⭐ Reviews', heading: 'Reader Reviews', content: 'See what others say.' }
+                ];
+
+                // Render tabs list
+                renderAdminTabsList();
+
+                // Populate Features & Badges
+                document.getElementById('admin-edit-genres').value = detailSettings.genres || 'Finance, Mindset';
+                document.getElementById('admin-edit-rating').value = detailSettings.rating || '⭐ 4.8';
+                document.getElementById('admin-edit-likes').value = detailSettings.likes || '👍 82%';
+                document.getElementById('admin-edit-reviews').value = detailSettings.reviews || '💬 139';
+                document.getElementById('admin-edit-chapters').value = detailSettings.chapters || '3 Chapters';
+                document.getElementById('admin-edit-license').value = detailSettings.license || 'Wealth & Mindset';
+                document.getElementById('admin-edit-lang').value = detailSettings.language || 'English';
+                document.getElementById('admin-edit-release').value = detailSettings.release || '2024';
+
+                // Populate Author Info
+                document.getElementById('admin-edit-author').value = item.author || 'Wealth Team';
+                document.getElementById('admin-edit-author-bio').value = detailSettings.authorBio || '';
+                document.getElementById('admin-edit-author-photo').value = detailSettings.authorPhoto || 'assets/logo-new.png';
+
+                // Populate About Text
+                document.getElementById('admin-edit-about-text').value = detailSettings.aboutText || item.description || '';
+
+                // Populate icons
+                const icons = detailSettings.icons || {};
+                document.getElementById('admin-icon-bookmark').checked = icons.bookmark !== false;
+                document.getElementById('admin-icon-share').checked = icons.share !== false;
+                document.getElementById('admin-icon-progress').checked = icons.progress !== false;
+
+                // Populate visual settings
+                document.getElementById('admin-gradient-start').value = detailSettings.gradientStart || '#1e3a8a';
+                document.getElementById('admin-gradient-end').value = detailSettings.gradientEnd || '#7c3aed';
+                document.getElementById('admin-button-color').value = detailSettings.buttonColor || '#0066ff';
+
+                // Populate options
+                document.getElementById('admin-enable-reviews').value = detailSettings.enableReviews || 'yes';
+                document.getElementById('admin-enable-ads').value = detailSettings.enableAds || 'yes';
+                document.getElementById('admin-show-related').value = detailSettings.showRelated || 'yes';
+                document.getElementById('admin-custom-css').value = detailSettings.customCss || '';
+                document.getElementById('admin-custom-js').value = detailSettings.customJs || '';
+            }
+        }
+
+        let currentEditingTabIndex = null;
+        let tabsData = []; // Store all tab data including content
+
+        function renderAdminTabsList() {
+            const tabsList = document.getElementById('admin-tabs-list');
+            tabsList.innerHTML = '';
+            tabsData.forEach((tab, index) => {
+                const tabDiv = document.createElement('div');
+                tabDiv.className = 'tab-item-row';
+                tabDiv.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span style="font-weight:700; color:#fff;">${tab.name}</span>
+                        <span style="font-size:0.75rem; color:#94a3b8;">(${tab.heading || 'No Heading'})</span>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                        <button class="btn-action" style="background:transparent; color:#64748b; padding:4px;" onclick="moveAdminTab(${index}, -1)" ${index === 0 ? 'disabled' : ''}>↑</button>
+                        <button class="btn-action" style="background:transparent; color:#64748b; padding:4px;" onclick="moveAdminTab(${index}, 1)" ${index === tabsData.length - 1 ? 'disabled' : ''}>↓</button>
+                        <button class="btn-action btn-edit" onclick="editTabContent(${index})">Edit</button>
+                        <button class="btn-action btn-remove" onclick="removeAdminTab(${index})">×</button>
+                    </div>
+                `;
+                tabsList.appendChild(tabDiv);
+            });
+        }
+
+        function moveAdminTab(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= tabsData.length) return;
+
+            const temp = tabsData[index];
+            tabsData[index] = tabsData[newIndex];
+            tabsData[newIndex] = temp;
+
+            renderAdminTabsList();
+        }
+
+        function addAdminTab() {
+            const tabName = document.getElementById('admin-new-tab').value.trim();
+            if (!tabName) {
+                alert('Please enter a tab name');
+                return;
+            }
+
+            const newTab = {
+                name: `✨ ${tabName}`,
+                heading: tabName,
+                content: 'Add content for your new tab here...'
+            };
+
+            tabsData.push(newTab);
+            renderAdminTabsList();
+
+            document.getElementById('admin-new-tab').value = '';
+        }
+
+        function editTabContent(tabIndex) {
+            currentEditingTabIndex = tabIndex;
+            const tab = tabsData[tabIndex];
+            document.getElementById('editing-tab-name').textContent = `Editing: ${tab.name}`;
+            document.getElementById('tab-heading').value = tab.heading || '';
+            document.getElementById('tab-content').value = tab.content || '';
+            document.getElementById('tab-content-modal').style.display = 'block';
+        }
+
+        function saveTabContent() {
+            if (currentEditingTabIndex === null) return;
+
+            const heading = document.getElementById('tab-heading').value;
+            const content = document.getElementById('tab-content').value;
+
+            // Update tab data
+            if (tabsData[currentEditingTabIndex]) {
+                tabsData[currentEditingTabIndex].heading = heading;
+                tabsData[currentEditingTabIndex].content = content;
+            }
+
+            alert('✓ Tab content saved! Remember to click "Save All Changes" to persist.');
+            closeTabModal();
+            renderAdminTabsList(); // Re-render to update heading display
+        }
+
+        function closeTabModal() {
+            document.getElementById('tab-content-modal').style.display = 'none';
+            currentEditingTabIndex = null;
+        }
+
+        function removeAdminTab(tabIndex) {
+            if (!confirm('Remove this tab permanently?')) return;
+            tabsData.splice(tabIndex, 1);
+            renderAdminTabsList();
+        }
+
+        async function saveAdminChanges() {
+            if (!currentBookId) {
+                await customAlert('No book selected!', 'warning');
+                return;
+            }
+
+            await customAlert("Saving changes...");
+
+            // Build settings object using tabsData (which includes content)
+            const detailSettings = {
+                tabs: tabsData,
+                genres: document.getElementById('admin-edit-genres').value,
+                rating: document.getElementById('admin-edit-rating').value,
+                likes: document.getElementById('admin-edit-likes').value,
+                reviews: document.getElementById('admin-edit-reviews').value,
+                chapters: document.getElementById('admin-edit-chapters').value,
+                license: document.getElementById('admin-edit-license').value,
+                language: document.getElementById('admin-edit-lang').value,
+                release: document.getElementById('admin-edit-release').value,
+                authorBio: document.getElementById('admin-edit-author-bio').value,
+                authorPhoto: document.getElementById('admin-edit-author-photo').value,
+                aboutText: document.getElementById('admin-edit-about-text').value,
+                icons: {
+                    bookmark: document.getElementById('admin-icon-bookmark').checked,
+                    share: document.getElementById('admin-icon-share').checked,
+                    progress: document.getElementById('admin-icon-progress').checked
+                },
+                gradientStart: document.getElementById('admin-gradient-start').value,
+                gradientEnd: document.getElementById('admin-gradient-end').value,
+                buttonColor: document.getElementById('admin-button-color').value,
+                enableReviews: document.getElementById('admin-enable-reviews').value,
+                enableAds: document.getElementById('admin-enable-ads').value,
+                showRelated: document.getElementById('admin-show-related').value,
+                customCss: document.getElementById('admin-custom-css').value,
+                customJs: document.getElementById('admin-custom-js').value
+            };
+
+            // Update in library
+            let stored = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+
+            // Find the item in stored, or create a new entry if it's a default item being overridden
+            let storedItem = stored.find(i => i.id === currentBookId);
+
+            if (!storedItem) {
+                const defaultItems = [
+                    { id: 'wm-guide', title: 'Wealth & Mindset: The Complete Guide', author: 'Wealth Team', image: 'assets/logo-new.png', description: 'The foundation for financial independence...' },
+                    { id: 'compounding-miracle', title: 'The 30-Year Compounding Miracle', author: 'Wealth Team', image: 'assets/logo-new.png', description: 'A powerful story...' },
+                    { id: 'al-mizan-5', title: 'Al-Mizan Volume 5', author: 'Wealth Team', image: 'assets/logo-new.png', description: 'Detailed exegesis...' }
+                ];
+                const dItem = defaultItems.find(di => di.id === currentBookId);
+                if (dItem) {
+                    storedItem = { ...dItem };
+                    stored.push(storedItem);
+                } else {
+                    await customAlert('Book not found in default items or stored library.', 'error');
+                    return;
+                }
+            }
+
+            // Apply fields from the form to the storedItem
+            storedItem.title = document.getElementById('admin-edit-title').value;
+            storedItem.author = document.getElementById('admin-edit-author').value;
+            storedItem.image = document.getElementById('admin-edit-cover').value;
+            storedItem.description = document.getElementById('admin-edit-description').value;
+            storedItem.detailSettings = detailSettings;
+
+            localStorage.setItem('siteLibrary', JSON.stringify(stored));
+
+            // Apply live changes to the UI
+            applyAdminChanges();
+
+            // Sync to Cloud
+            if (typeof window.syncToCloud === 'function') {
+                const btn = document.querySelector('button[onclick="saveAdminChanges()"]');
+                const originalText = btn ? btn.textContent : 'Save';
+                if (btn) btn.textContent = '☁️ Syncing...';
+
+                await window.syncToCloud('book', storedItem);
+
+                if (btn) btn.textContent = originalText;
+            }
+
+            await customAlert('🚀 Successfully saved and synced changes for ' + (storedItem.title || currentBookId) + '!', 'success');
+        }
+
+        function applyAdminChanges() {
+            // Apply title
+            document.getElementById('detail-title').textContent = document.getElementById('admin-edit-title').value;
+
+            // Apply cover
+            document.getElementById('detail-cover').src = window.getSupabaseImageUrl(document.getElementById('admin-edit-cover').value);
+            if (document.getElementById('hero-cover')) document.getElementById('hero-cover').src = window.getSupabaseImageUrl(document.getElementById('admin-edit-cover').value);
+
+            // Apply description
+            const desc = document.getElementById('admin-edit-description').value;
+            const shortDescEl = document.getElementById('detail-description-short');
+            const detailsDescEl = document.getElementById('detail-description-details');
+            if (shortDescEl) shortDescEl.textContent = desc;
+            if (detailsDescEl) detailsDescEl.textContent = desc;
+
+            // Apply gradient
+            const gradStart = document.getElementById('admin-gradient-start').value;
+            const gradEnd = document.getElementById('admin-gradient-end').value;
+            const heroEl = document.querySelector('.detail-hero-ref');
+            if (heroEl) {
+                heroEl.style.backgroundImage = `
+                    linear-gradient(to right, ${gradStart}cc, ${gradEnd}cc),
+                    url('https://wallpapers.com/images/hd/dark-gradient-background-1920-x-1080-87-l12a781.jpg')
+                `;
+            }
+
+            // Apply stats & metrics
+            const stats = [
+                { id: 'admin-edit-rating', el: 'stat-rating-stars' },
+                { id: 'admin-edit-likes', el: 'stat-likes-pct' },
+                { id: 'admin-edit-reviews', el: 'stat-reviews-count' },
+                { id: 'admin-edit-chapters', el: 'stat-chapters-count' },
+                { id: 'admin-edit-license', el: 'stat-license' },
+                { id: 'admin-edit-lang', el: 'stat-lang' },
+                { id: 'admin-edit-release', el: 'stat-release' }
+            ];
+
+            stats.forEach(stat => {
+                const val = document.getElementById(stat.id).value.trim();
+                const displayEl = document.getElementById(stat.el);
+                if (displayEl) {
+                    displayEl.textContent = val;
+                    const parent = displayEl.closest('.meta-item');
+                    if (parent) parent.style.display = val ? 'flex' : 'none';
+                }
+            });
+
+            // Update hero likes/reviews
+            if (document.getElementById('detail-rating-pct')) document.getElementById('detail-rating-pct').textContent = document.getElementById('admin-edit-likes').value;
+            if (document.getElementById('detail-rating-count')) document.getElementById('detail-rating-count').textContent = document.getElementById('admin-edit-reviews').value + ' Reviews >';
+
+            // Apply Author Info UI
+            const authName = document.getElementById('admin-edit-author').value;
+            const authBio = document.getElementById('admin-edit-author-bio').value;
+            const authPhoto = document.getElementById('admin-edit-author-photo').value;
+            if (document.getElementById('detail-author')) document.getElementById('detail-author').textContent = authName;
+            if (document.getElementById('author-name-tab')) document.getElementById('author-name-tab').textContent = authName;
+            if (document.getElementById('author-bio')) document.getElementById('author-bio').textContent = authBio;
+            if (document.getElementById('author-avatar')) document.getElementById('author-avatar').src = window.getSupabaseImageUrl(authPhoto);
+
+            // Apply About Tab content
+            const aboutText = document.getElementById('admin-edit-about-text').value;
+            if (document.getElementById('detail-description-details')) document.getElementById('detail-description-details').textContent = aboutText;
+
+            // Hide/show icons
+            const bookmarkIcon = document.getElementById('btn-bookmark');
+            if (bookmarkIcon) bookmarkIcon.style.display = document.getElementById('admin-icon-bookmark').checked ? 'flex' : 'none';
+
+            const shareIcon = document.getElementById('btn-share');
+            if (shareIcon) shareIcon.style.display = document.getElementById('admin-icon-share').checked ? 'flex' : 'none';
+
+            const progressIcon = document.getElementById('btn-progress');
+            if (progressIcon) progressIcon.style.display = document.getElementById('admin-icon-progress').checked ? 'flex' : 'none';
+
+            // Apply button color
+            const btnColor = document.getElementById('admin-button-color').value;
+            document.querySelectorAll('.btn-start-reading').forEach(btn => {
+                btn.style.background = btnColor;
+            });
+
+            // Hide/show reviews
+            const enableReviews = document.getElementById('admin-enable-reviews').value;
+            const reviewsSection = document.querySelector('.section-title');
+            if (reviewsSection && enableReviews === 'no') {
+                const nextEl = reviewsSection.nextElementSibling;
+                if (nextEl) nextEl.style.display = 'none';
+            }
+
+            // Apply custom CSS
+            const customCss = document.getElementById('admin-custom-css').value;
+            if (customCss) {
+                let styleEl = document.getElementById('admin-custom-styles');
+                if (!styleEl) {
+                    styleEl = document.createElement('style');
+                    styleEl.id = 'admin-custom-styles';
+                    document.head.appendChild(styleEl);
+                }
+                styleEl.textContent = customCss;
+            }
+
+            // Apply custom JS
+            const customJs = document.getElementById('admin-custom-js').value;
+            if (customJs) {
+                try {
+                    eval(customJs);
+                } catch (e) {
+                    console.error('Custom JS error:', e);
+                }
+            }
+        }
+
+
+        function closeTabModal() {
+            document.getElementById('tab-content-modal').style.display = 'none';
+        }
+
+        // --- Cloud-First Initialization Logic ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            if (!id) return;
+
+            // Helper to resolve Supabase Image URL
+            function getImageUrl(path) {
+                if (!path) return 'assets/logo-new.png';
+                if (path.startsWith('http')) return path;
+                // Assuming supabase project url is available in config, but if not we can rely on relative or standard logic
+                if (typeof window.publicSupabaseUrl !== 'undefined') {
+                    return `${window.publicSupabaseUrl}/storage/v1/object/public/book-covers/${path}`;
+                }
+                return path; // Fallback
+            }
+
+            // Ensure we have the correct resolver
+            const resolveImg = (typeof window.getSupabaseImageUrl === 'function') ? window.getSupabaseImageUrl : getImageUrl;
+
+            async function fetchAndRenderBook() {
+                let bookData = null;
+
+                // 1. Try Supabase
+                if (typeof supabaseClient !== 'undefined') {
+                    try {
+                        // Check if ID is UUID
+                        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+                        let query = supabaseClient.from('books').select('*');
+
+                        if (isUuid) {
+                            query = query.eq('id', id);
+                        } else {
+                            // Try ID column first
+                            query = query.eq('id', id);
+                        }
+
+                        const { data, error } = await query.maybeSingle();
+
+                        if (data && !error) {
+                            bookData = data;
+                            // Normalize naming
+                            bookData.image = bookData.cover_image;
+                            bookData.detailSettings = bookData.detail_settings;
+                            console.log('Loaded book from Cloud:', bookData.title);
+                        }
+                    } catch (e) {
+                        console.warn('Cloud fetch failed:', e);
+                    }
+                }
+
+                // 2. Fallback to LocalStorage
+                if (!bookData) {
+                    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+                    bookData = library.find(b => b.id === id);
+                    if (bookData) console.log('Loaded book from LocalStorage:', bookData.title);
+                }
+
+                // 3. Render
+                if (bookData) {
+                    renderBookUI(bookData, resolveImg);
+
+                    // Also load related books if logic exists
+                    if (typeof loadRecommendedBooks === 'function') {
+                        loadRecommendedBooks(id);
+                    }
+                }
+            }
+
+            // Trigger fetch
+            await fetchAndRenderBook();
+        });
+
+        function renderBookUI(item, resolveImg) {
+            const detailSettings = item.detailSettings || {};
+
+            // Title & Meta
+            const titleEl = document.getElementById('detail-title');
+            if (titleEl) titleEl.textContent = item.title;
+
+            // Cover
+            const coverEl = document.getElementById('detail-cover');
+            if (coverEl) coverEl.src = resolveImg(item.image);
+
+            const heroCoverEl = document.getElementById('hero-cover');
+            if (heroCoverEl) heroCoverEl.src = resolveImg(item.image);
+
+            // Description
+            const shortDesc = document.getElementById('detail-description-short');
+            if (shortDesc) shortDesc.textContent = item.description || '';
+            const fullDesc = document.getElementById('detail-description-details');
+            if (fullDesc) fullDesc.textContent = detailSettings.aboutText || item.description || '';
+
+            // Author
+            if (document.getElementById('detail-author')) document.getElementById('detail-author').textContent = item.author;
+            if (document.getElementById('author-name-tab')) document.getElementById('author-name-tab').textContent = item.author;
+            if (document.getElementById('author-bio') && detailSettings.authorBio) document.getElementById('author-bio').textContent = detailSettings.authorBio;
+            if (document.getElementById('author-avatar') && detailSettings.authorPhoto) document.getElementById('author-avatar').src = resolveImg(detailSettings.authorPhoto);
+
+            // Stats
+            if (document.getElementById('stat-rating-stars') && detailSettings.rating) document.getElementById('stat-rating-stars').textContent = detailSettings.rating;
+            if (document.getElementById('stat-likes-pct') && detailSettings.likes) document.getElementById('stat-likes-pct').textContent = detailSettings.likes;
+            if (document.getElementById('stat-reviews-count') && detailSettings.reviews) document.getElementById('stat-reviews-count').textContent = detailSettings.reviews;
+            if (document.getElementById('stat-chapters-count') && detailSettings.chapters) document.getElementById('stat-chapters-count').textContent = detailSettings.chapters;
+            if (document.getElementById('stat-license') && detailSettings.license) document.getElementById('stat-license').textContent = detailSettings.license;
+            if (document.getElementById('stat-lang') && detailSettings.language) document.getElementById('stat-lang').textContent = detailSettings.language;
+            if (document.getElementById('stat-release') && detailSettings.release) document.getElementById('stat-release').textContent = detailSettings.release;
+
+            // Updated Hero Stats
+            if (document.getElementById('detail-rating-pct') && detailSettings.likes) document.getElementById('detail-rating-pct').textContent = detailSettings.likes;
+            if (document.getElementById('detail-rating-count') && detailSettings.reviews) document.getElementById('detail-rating-count').textContent = detailSettings.reviews + ' >';
+
+
+            // Gradient Background
+            if (detailSettings.gradientStart && detailSettings.gradientEnd) {
+                const heroEl = document.querySelector('.detail-hero-ref');
+                if (heroEl) {
+                    heroEl.style.backgroundImage = `
+                         linear-gradient(to right, ${detailSettings.gradientStart}cc, ${detailSettings.gradientEnd}cc),
+                         url('https://wallpapers.com/images/hd/dark-gradient-background-1920-x-1080-87-l12a781.jpg')
+                     `;
+                }
+            }
+
+            // Buttons Color
+            if (detailSettings.buttonColor) {
+                document.querySelectorAll('.btn-start-reading').forEach(btn => {
+                    btn.style.background = detailSettings.buttonColor;
+                });
+            }
+
+            // Tabs
+            if (typeof renderCustomTabs === 'function' && detailSettings.tabs && Array.isArray(detailSettings.tabs)) {
+                renderCustomTabs(detailSettings.tabs, item);
+            }
+
+            // Custom CSS
+            if (detailSettings.customCss) {
+                let styleEl = document.getElementById('dynamic-custom-styles');
+                if (!styleEl) {
+                    styleEl = document.createElement('style');
+                    styleEl.id = 'dynamic-custom-styles';
+                    document.head.appendChild(styleEl);
+                }
+                styleEl.textContent = detailSettings.customCss;
+            }
+        }
+    </script>
+</body>
+
+</html>

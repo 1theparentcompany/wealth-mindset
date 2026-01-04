@@ -1,0 +1,2910 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Space | Wealth & Mindset</title>
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;1,700&family=Outfit:wght@600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Supabase SDK -->
+    <script src="js/lib/supabase-js.js"></script>
+    <script src="js/supabase-config.js"></script>
+    <script src="js/image-utils.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+
+<body class="home-theme">
+    <!-- Authentication is now handled by js/admin/launcher.js via Supabase session -->
+
+    <main>
+        <!-- Main Dashboard View -->
+        <div id="dashboard-view" class="admin-dashboard">
+            <div class="admin-header">
+                <div>
+                    <h1>Admin Space</h1>
+                    <p>Welcome back, Admin</p>
+                </div>
+                <!-- Supabase Admin Login Information -->
+                <div id="admin-login-info"
+                    style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; margin-left: auto; display: flex; flex-direction: column; gap: 5px; align-items: flex-end;">
+                    <p style="margin: 0; font-size: 0.85rem; color: #94a3b8;">Authenticated via Supabase</p>
+                    <button onclick="logoutAdmin()" class="btn-primary"
+                        style="padding: 5px 12px; font-size: 0.8rem; background: #64748b;">Unauthenticate
+                        Session</button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number">1,284</span>
+                    <span class="stat-label">Total Readers</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">45</span>
+                    <span class="stat-label">New Feedbacks</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">12.5%</span>
+                    <span class="stat-label">Retention Rate</span>
+                </div>
+            </div>
+
+            <h2>Quick Actions</h2>
+            <div class="admin-actions">
+                <div class="action-card admin-action" onclick="startNewContent()"
+                    style="pointer-events: none; opacity: 0.5;">
+                    <h3><span>📝</span> New Content</h3>
+                    <p>Upload and create new books, auto-split chapters with AI precision.</p>
+                </div>
+                <div class="action-card" onclick="showSection('content-editor')">
+                    <h3><span>✍️</span> Content Editor</h3>
+                    <p>Edit chapter details, background images, music, and story content for each chapter.</p>
+                </div>
+                <div class="action-card" onclick="showSection('library-manager')">
+                    <h3><span>📚</span> Library Manager</h3>
+                    <p>View, edit, or delete published books and guides in your library.</p>
+                </div>
+                <div class="action-card" onclick="showSection('feedback-inbox')">
+                    <h3><span>📥</span> Feedback Inbox</h3>
+                    <p>Review and respond to messages sent via the contact form.</p>
+                </div>
+                <div class="action-card" onclick="showSection('site-analytics')">
+                    <h3><span>📊</span> Site Analytics</h3>
+                    <p>Track visitor behavior, popular chapters, and ad performance.</p>
+                </div>
+                <div class="action-card" onclick="showSection('site-settings')">
+                    <h3><span>⚙️</span> Site Settings</h3>
+                    <p>Manage SEO, ad configurations, and general site information.</p>
+                </div>
+                <div class="action-card" onclick="showSection('metadata-manager')">
+                    <h3><span>🏷️</span> Book Metadata</h3>
+                    <p>Manage metadata for Books and other Articles separately with expanded options.</p>
+                </div>
+                <div class="action-card" onclick="showSection('detail-page-editor')">
+                    <h3><span>✍️</span> Detail Page Editor</h3>
+                    <p>Customize detail pages - add/remove tabs, edit features, author info and more.</p>
+                </div>
+                <div class="action-card" onclick="showSection('taxonomy-ads-manager')">
+                    <h3><span>🌍</span> Translation Studio</h3>
+                    <p>Manage multi-language support. Translate existing books and manage chapters.</p>
+                </div>
+                <div class="action-card" onclick="showSection('homepage-manager')">
+                    <h3><span>🏠</span> Homepage Manager</h3>
+                    <p>Control featured books, popular items, custom sections, and hero text.</p>
+                </div>
+                <div class="action-card"
+                    onclick="showSection('supabase-manager'); if(typeof renderMigrationIndicators === 'function') renderMigrationIndicators();"
+                    style="border-color: #00e676;">
+                    <h3><span>🌩️</span> Supabase Manager</h3>
+                    <p>Connect to Supabase, migrate LocalStorage data, and manage cloud database.</p>
+                </div>
+                <div class="action-card" onclick="showSection('common-settings')">
+                    <h3><span>⚡</span> Common Settings</h3>
+                    <p>Global configuration for carousel, banners, tips, branding, and detail page defaults.</p>
+                </div>
+                <div class="action-card" onclick="showSection('community-manager')">
+                    <h3><span>💬</span> Community Manager</h3>
+                    <p>Manage book discussion topics, moderate messages, and delete spam.</p>
+                </div>
+                <div class="action-card" onclick="showSection('review-manager')">
+                    <h3><span>⭐</span> Review Manager</h3>
+                    <p>Moderate book reviews, view ratings, and delete inappropriate content.</p>
+                </div>
+                <div class="action-card" onclick="showSection('detail-page-commons')">
+                    <h3><span>✨</span> Detail Page Commons</h3>
+                    <p>Manage global elements like Platform Features and Highlighted Review.</p>
+                </div>
+                <!-- NEW: Daily Mindset Manager Card -->
+                <div class="action-card" onclick="showSection('daily-mindset-manager')" style="border-color: #fbbf24;">
+                    <h3><span>☀️</span> Daily Mindset Manager</h3>
+                    <p>Schedule daily inspiration content, manage dates, and add rich media links.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Mindset Manager Section -->
+        <div id="daily-mindset-manager" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">☀️</span> Daily Mindset Manager
+                </h2>
+                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">←
+                    Back</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; max-width: 1200px; margin: 0 auto;">
+                <!-- Left: Add/Edit Form -->
+                <div class="config-panel">
+                    <h3>📅 Schedule Insight</h3>
+                    <div class="form-group-admin">
+                        <label>Target Date</label>
+                        <input type="date" id="mindset-date" onchange="loadMindsetForDate()"
+                            style="font-size: 1.1rem; padding: 12px;">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Main Title</label>
+                        <input type="text" id="mindset-title" placeholder="e.g. The Psychology of Discipline">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Inspiration Content</label>
+                        <textarea id="mindset-content" rows="10"
+                            placeholder="Write the main message here..."></textarea>
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Read More Link (Optional)</label>
+                        <input type="text" id="mindset-link" placeholder="e.g. books.html?id=123">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Header Image URL (Optional)</label>
+                        <input type="text" id="mindset-image" placeholder="e.g. assets/daily/nature.jpg">
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button class="btn-success admin-action" disabled onclick="saveDailyMindset()"
+                            style="width: 100%; padding: 15px;">💾
+                            Save Daily Insight</button>
+                    </div>
+                </div>
+
+                <!-- Right: Recent History -->
+                <div class="config-panel">
+                    <h3>📜 Recent Insights (Last 15 Days)</h3>
+                    <div id="mindset-history-list"
+                        style="max-height: 600px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+                        <!-- JS Dynamic Content -->
+                        <div style="text-align: center; padding: 40px; color: #64748b;">Loading history...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="metadata-manager" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">🏷️</span> Metadata Manager
+                </h2>
+                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">←
+                    Back</button>
+            </div>
+
+            <!-- Redesigned Metadata UI: Split Pane -->
+            <div id="meta-manager-layout"
+                style="display: grid; grid-template-columns: 350px 1fr; gap: 25px; min-height: 700px;">
+                <!-- Left Pane: List & Filters -->
+                <div class="action-card"
+                    style="cursor: default; padding: 20px; display: flex; flex-direction: column; gap: 15px;">
+                    <div id="meta-items-grid"
+                        style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto; max-height: 800px; padding-right: 5px;">
+                        <!-- JS Dynamic Content -->
+                        <div style="text-align: center; color: #64748b; padding: 40px;">Loading items...</div>
+                    </div>
+                </div>
+
+                <!-- Right Pane: Preview & Detailed Editor -->
+                <div id="meta-preview-container" class="action-card"
+                    style="cursor: default; padding: 0; display: none; overflow: hidden; border: none; background: transparent;">
+                    <!-- JS Dynamic Content -->
+                </div>
+
+                <!-- Placeholder for No Selection -->
+                <div id="meta-no-selection" class="action-card"
+                    style="cursor: default; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 60px; color: #64748b; background: rgba(15, 23, 42, 0.4); border: 2px dashed rgba(255,255,255,0.05);">
+                    <span
+                        style="font-size: 3.5rem; display: block; margin-bottom: 20px; filter: grayscale(1);">🏷️</span>
+                    <h3 style="margin: 0 0 10px 0; color: #e2e8f0;">No Item Selected</h3>
+                    <p style="margin: 0; max-width: 300px;">Choose a book or article from the list on the left to manage
+                        its metadata and page settings.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Page Editor Section -->
+        <div id="detail-page-editor" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">✍️</span> Detail Page Editor
+                </h2>
+                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">←
+                    Back</button>
+            </div>
+
+            <div style="max-width: 1200px; margin: 0 auto;">
+                <!-- Book Selection -->
+                <div class="config-panel" style="margin-bottom: 25px;">
+                    <div class="form-group-admin">
+                        <label>Select Book to Customize</label>
+                        <select id="detail-book-select" onchange="loadDetailPageSettings()"
+                            style="font-size: 1.1rem; padding: 12px;">
+                            <option value="">-- Select a Book --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Editor Content -->
+                <div id="detail-editor-content" style="display: none;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+
+                        <!-- Left Column: Tabs & Features -->
+                        <div class="action-card" style="cursor: default;">
+                            <h3 style="margin-top: 0;">📋 Tabs Management</h3>
+
+                            <div class="form-group-admin">
+                                <label>Active Tabs (Drag to Reorder)</label>
+                                <div id="active-tabs-list"
+                                    style="background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; padding: 15px; min-height: 150px;">
+                                    <!-- Tabs will be listed here -->
+                                    <div class="tab-item" draggable="true"
+                                        style="background: #1e293b; padding: 10px; border-radius: 6px; margin-bottom: 8px; cursor: move; display: flex; justify-content: space-between; align-items: center;">
+                                        <span>📖 About</span>
+                                        <button class="toolbar-btn" onclick="removeTab(this)"
+                                            style="background: #ef4444; border-color: #ef4444; color: white; padding: 4px 10px;">Remove</button>
+                                    </div>
+                                    <div class="tab-item" draggable="true"
+                                        style="background: #1e293b; padding: 10px; border-radius: 6px; margin-bottom: 8px; cursor: move; display: flex; justify-content: space-between; align-items: center;">
+                                        <span>📚 Chapters</span>
+                                        <button class="toolbar-btn" onclick="removeTab(this)"
+                                            style="background: #ef4444; border-color: #ef4444; color: white; padding: 4px 10px;">Remove</button>
+                                    </div>
+                                    <div class="tab-item" draggable="true"
+                                        style="background: #1e293b; padding: 10px; border-radius: 6px; margin-bottom: 8px; cursor: move; display: flex; justify-content: space-between; align-items: center;">
+                                        <span>⭐ Reviews</span>
+                                        <button class="toolbar-btn" onclick="removeTab(this)"
+                                            style="background: #ef4444; border-color: #ef4444; color: white; padding: 4px 10px;">Remove</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group-admin">
+                                <label>Add New Tab</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="text" id="new-tab-name" placeholder="Tab Name (e.g., Summary)"
+                                        style="flex: 1;">
+                                    <button class="btn-primary admin-action" disabled onclick="addNewTab()">+ Add
+                                        Tab</button>
+                                </div>
+                            </div>
+
+                            <hr style="border: none; border-top: 1px solid #1e293b; margin: 25px 0;">
+
+                            <h3>🎯 Features & Badges</h3>
+                            <div class="form-group-admin">
+                                <label>Genre Tags (comma separated)</label>
+                                <input type="text" id="detail-genres" placeholder="e.g., Finance, Self-Help, Business">
+                            </div>
+
+                            <div class="form-group-admin">
+                                <label>Stats & Metrics (Book Wise)</label>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <input type="text" id="detail-rating" placeholder="Rating (e.g., ⭐ 4.8)">
+                                    <input type="text" id="detail-likes" placeholder="Likes (e.g., 👍 80%)">
+                                    <input type="text" id="detail-reviews" placeholder="Reviews (e.g., 💬 139)">
+                                    <input type="text" id="detail-chapters-count"
+                                        placeholder="Chapters (e.g., 3 Chapters)">
+                                    <input type="text" id="detail-readers" placeholder="Readers (e.g., 12.5K)">
+                                    <input type="text" id="detail-pages" placeholder="Pages (e.g., 320)">
+                                </div>
+                                <div
+                                    style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px;">
+                                    <input type="text" id="detail-license"
+                                        placeholder="License (e.g. Wealth & Mindset)">
+                                    <input type="text" id="detail-lang" placeholder="Language (e.g. English)">
+                                    <input type="text" id="detail-release" placeholder="Release (e.g. 2024)">
+                                </div>
+                            </div>
+
+                            <div class="form-group-admin">
+                                <label>Interactive Icons (Check to Enable)</label>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <label style="display: flex; align-items: center; gap: 8px; color: #e2e8f0;">
+                                        <input type="checkbox" id="icon-bookmark" checked> 🔖 Bookmark
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; color: #e2e8f0;">
+                                        <input type="checkbox" id="icon-share" checked> 🔗 Share
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; color: #e2e8f0;">
+                                        <input type="checkbox" id="icon-listen" checked> 🎧 Listen
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; color: #e2e8f0;">
+                                        <input type="checkbox" id="icon-progress" checked> 📈 Progress
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; color: #e2e8f0;">
+                                        <input type="checkbox" id="icon-report" checked> 🚫 Report
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 8px; color: #e2e8f0;">
+                                        <input type="checkbox" id="icon-audio" checked> 🔊 Audio Toggle
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Author & Content -->
+                        <div class="action-card" style="cursor: default;">
+                            <h3 style="margin-top: 0;">👤 Author Information</h3>
+
+                            <div class="form-group-admin">
+                                <label>Author Name</label>
+                                <input type="text" id="detail-author-name" placeholder="e.g., Morgan Housel">
+                            </div>
+
+                            <div class="form-group-admin">
+                                <label>Author Bio</label>
+                                <textarea id="detail-author-bio" rows="4" placeholder="Brief author biography..."
+                                    style="resize: vertical;"></textarea>
+                            </div>
+
+                            <div class="form-group-admin">
+                                <label>Author Photo URL</label>
+                                <input type="text" id="detail-author-photo" placeholder="e.g., author-morgan.jpg">
+                            </div>
+
+                            <hr style="border: none; border-top: 1px solid #1e293b; margin: 25px 0;">
+
+                            <h3>📖 About Tab Content</h3>
+                            <div class="form-group-admin">
+                                <label>About Text</label>
+                                <textarea id="detail-about-content" rows="8"
+                                    placeholder="Full about/description content..."
+                                    style="resize: vertical;"></textarea>
+                            </div>
+
+                            <hr style="border: none; border-top: 1px solid #1e293b; margin: 25px 0;">
+
+                            <h3>🎨 Visual Settings</h3>
+                            <div class="form-group-admin">
+                                <label>Hero Background Gradient</label>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <input type="color" id="detail-gradient-start" value="#1e3a8a"
+                                        style="height: 40px;">
+                                    <input type="color" id="detail-gradient-end" value="#7c3aed" style="height: 40px;">
+                                </div>
+                            </div>
+
+                            <div class="form-group-admin">
+                                <label>Primary Button Color</label>
+                                <input type="color" id="detail-button-color" value="#3b82f6"
+                                    style="height: 40px; width: 100%;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Full Width: Advanced Options -->
+                    <div class="action-card" style="cursor: default; margin-top: 25px;">
+                        <h3 style="margin-top: 0;">⚙️ Advanced Options</h3>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                            <div class="form-group-admin">
+                                <label>Enable Reviews</label>
+                                <select id="detail-enable-reviews">
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group-admin">
+                                <label>Enable Ad Placements</label>
+                                <select id="detail-enable-ads">
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group-admin">
+                                <label>Show Related Books</label>
+                                <select id="detail-show-related">
+                                    <option value="yes">Yes</option>
+                                    <option value="no">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group-admin" style="margin-top: 20px;">
+                            <label>Custom CSS (Advanced Users Only)</label>
+                            <textarea id="detail-custom-css" rows="6"
+                                placeholder="/* Add custom CSS for this detail page */&#10;.hero-section {&#10;  /* Your styles here */&#10;}"
+                                style="font-family: 'Courier New', monospace; font-size: 0.9rem; resize: vertical;"></textarea>
+                        </div>
+
+                        <div class="form-group-admin">
+                            <label>Custom JavaScript (Advanced Users Only)</label>
+                            <textarea id="detail-custom-js" rows="6"
+                                placeholder="// Add custom JavaScript for this detail page&#10;// Example: console.log('Detail page loaded');"
+                                style="font-family: 'Courier New', monospace; font-size: 0.9rem; resize: vertical;"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Save Button -->
+                    <div style="text-align: right; margin-top: 25px;">
+                        <button class="btn-success admin-action" disabled onclick="saveDetailPageSettings()"
+                            style="padding: 15px 40px; font-size: 1.1rem;">
+                            💾 Save All Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detail Page Commons (Global) -->
+        <div id="detail-page-commons" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">✨</span> Detail Page Commons
+                </h2>
+                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">←
+                    Back</button>
+            </div>
+
+            <div class="config-panel"
+                style="max-width: 1100px; margin: 0 auto; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.05); padding: 30px; border-radius: 16px;">
+                <p style="color: #94a3b8; margin-bottom: 25px;">Manage global elements that appear on
+                    <strong>EVERY</strong> book detail page (e.g., in the About tab). Overrides may be possible per-book
+                    in the future.
+                </p>
+
+                <!-- Platform Features -->
+                <div class="action-card" style="cursor: default; margin-bottom: 30px;">
+                    <h3>🚀 Platform Features (About Tab)</h3>
+                    <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">Define 4 key features to
+                        highlight your platform's capabilities.</p>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <!-- Feature 1 -->
+                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                            <h4 style="margin:0 0 10px 0; color: #fff;">Feature 1</h4>
+                            <div class="form-group-admin">
+                                <label>Title</label>
+                                <input type="text" id="common-feat-1-title" placeholder="e.g. Smart Sync">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Description</label>
+                                <input type="text" id="common-feat-1-desc" placeholder="Brief description...">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Icon Color</label>
+                                <input type="color" id="common-feat-1-color" value="#3b82f6"
+                                    style="width: 50px; height: 30px; padding: 0;">
+                            </div>
+                        </div>
+
+                        <!-- Feature 2 -->
+                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                            <h4 style="margin:0 0 10px 0; color: #fff;">Feature 2</h4>
+                            <div class="form-group-admin">
+                                <label>Title</label>
+                                <input type="text" id="common-feat-2-title" placeholder="e.g. Audio Mode">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Description</label>
+                                <input type="text" id="common-feat-2-desc" placeholder="Brief description...">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Icon Color</label>
+                                <input type="color" id="common-feat-2-color" value="#10b981"
+                                    style="width: 50px; height: 30px; padding: 0;">
+                            </div>
+                        </div>
+
+                        <!-- Feature 3 -->
+                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                            <h4 style="margin:0 0 10px 0; color: #fff;">Feature 3</h4>
+                            <div class="form-group-admin">
+                                <label>Title</label>
+                                <input type="text" id="common-feat-3-title" placeholder="e.g. Offline Access">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Description</label>
+                                <input type="text" id="common-feat-3-desc" placeholder="Brief description...">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Icon Color</label>
+                                <input type="color" id="common-feat-3-color" value="#f59e0b"
+                                    style="width: 50px; height: 30px; padding: 0;">
+                            </div>
+                        </div>
+
+                        <!-- Feature 4 -->
+                        <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                            <h4 style="margin:0 0 10px 0; color: #fff;">Feature 4</h4>
+                            <div class="form-group-admin">
+                                <label>Title</label>
+                                <input type="text" id="common-feat-4-title" placeholder="e.g. Community">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Description</label>
+                                <input type="text" id="common-feat-4-desc" placeholder="Brief description...">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Icon Color</label>
+                                <input type="color" id="common-feat-4-color" value="#8b5cf6"
+                                    style="width: 50px; height: 30px; padding: 0;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Global Review Highlight -->
+                <div class="action-card" style="cursor: default;">
+                    <h3>💬 Global Review Highlight</h3>
+                    <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">Show a featured review snippet in
+                        the About tab for all books.</p>
+
+                    <div class="form-group-admin" style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="common-review-show" style="width: auto;">
+                        <label for="common-review-show" style="margin: 0; cursor: pointer;">Show Featured Review
+                            Snippet?</label>
+                    </div>
+
+                    <div class="form-group-admin">
+                        <label>Featured Review Text</label>
+                        <textarea id="common-review-text" rows="3"
+                            placeholder="Enter a generic positive review quote..."></textarea>
+                    </div>
+
+                    <div class="form-group-admin">
+                        <label>Reviewer Name</label>
+                        <input type="text" id="common-review-name" placeholder="e.g. John D., Top Reader">
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <div style="text-align: right; margin-top: 25px;">
+                    <button class="btn-success admin-action" disabled onclick="saveDetailCommons()"
+                        style="padding: 15px 40px; font-size: 1.1rem;">
+                        💾 Save Commons
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Translation Studio -->
+        <div id="taxonomy-ads-manager" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">🌍</span> Translation Studio
+                </h2>
+                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">←
+                    Back</button>
+            </div>
+
+            <div class="config-panel" style="max-width: 1200px; margin: 0 auto;">
+                <div style="display: grid; grid-template-columns: 350px 1fr; gap: 30px;">
+                    <!-- Left: Configuration -->
+                    <div class="action-card" style="height: fit-content;">
+                        <h3 style="margin-top: 0;">1. Select Target</h3>
+
+                        <div class="form-group-admin">
+                            <label>Book to Translate</label>
+                            <select id="trans-book-select" onchange="loadTranslationStats()"
+                                style="width:100%; padding:10px; background:#0f172a; border:1px solid #334155; color:white; border-radius:6px;">
+                                <option value="">-- Select Book --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group-admin">
+                            <label>Target Language</label>
+                            <select id="trans-lang-select" onchange="loadTranslationStats()"
+                                style="width:100%; padding:10px; background:#0f172a; border:1px solid #334155; color:white; border-radius:6px;">
+                                <option value="en">English (Global Ads)</option>
+                                <option value="hi">Hindi (हिंदी)</option>
+                                <option value="es">Spanish (Español)</option>
+                                <option value="fr">French (Français)</option>
+                                <option value="ar">Arabic (العربية)</option>
+                                <option value="zh">Mandarin Chinese (中文)</option>
+                                <option value="bn">Bengali (বাংলা)</option>
+                                <option value="pt">Portuguese (Português)</option>
+                                <option value="ru">Russian (Русский)</option>
+                                <option value="ur">Urdu (اردو)</option>
+                                <option value="jp">Japanese (日本語)</option>
+                                <option value="pa">Western Punjabi (پنجابی)</option>
+                                <option value="mr">Marathi (مراठी)</option>
+                                <option value="hi-en">Hinglish (Hindi + English)</option>
+                                <option value="de">German (Deutsch)</option>
+                            </select>
+                        </div>
+
+                        <div id="trans-stats-box"
+                            style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-top: 20px; display:none;">
+                            <h4 style="margin:0 0 10px 0; font-size:0.9rem; color:#94a3b8;">Current Status</h4>
+                            <div id="trans-stats-content" style="font-size:0.85rem; color:#cbd5e1;"></div>
+                        </div>
+
+                        <!-- Already Translated Box -->
+                        <div id="trans-languages-box"
+                            style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; margin-top: 15px; display:none;">
+                            <h4 style="margin:0 0 10px 0; font-size:0.9rem; color:#94a3b8;">Already Translated</h4>
+                            <div id="trans-languages-content" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Editor -->
+                    <div class="action-card">
+                        <h3 style="margin-top: 0; display:flex; justify-content:space-between; align-items:center;">
+                            2. Add Translated Content
+                            <button onclick="clearTransEditor()"
+                                style="font-size:0.8rem; background:none; border:none; color:#ef4444; cursor:pointer;">Clear</button>
+                        </h3>
+
+                        <div class="tabs" style="margin-bottom: 15px; border-bottom: 1px solid #334155;">
+                            <button class="tab-btn active" onclick="switchTransTab('bulk')" id="tab-btn-bulk">Bulk
+                                Import</button>
+                            <button class="tab-btn" onclick="switchTransTab('chapter')" id="tab-btn-chapter">Single
+                                Chapter</button>
+                        </div>
+
+                        <!-- Bulk Mode -->
+                        <div id="trans-mode-bulk">
+                            <p style="color:#94a3b8; font-size:0.9rem; margin-bottom:10px;">Paste the entire translated
+                                book text. Use <b>Triple Newlines</b> or <b>"Chapter X"</b> headers to split
+                                automatically.</p>
+                            <textarea id="trans-bulk-input" rows="15" placeholder="Paste full translation here..."
+                                style="width: 100%; background: #0f172a; border: 1px solid #1e293b; color: white; border-radius: 8px; padding: 15px; font-family: monospace; resize: vertical;"></textarea>
+
+                            <div style="margin-top: 15px; display:flex; gap: 10px; justify-content:flex-end;">
+                                <button class="btn-primary" onclick="previewBulkTranslation()"
+                                    style="background: #3b82f6;">👁️ Preview Split</button>
+                            </div>
+
+                            <!-- Preview Container -->
+                            <div id="trans-bulk-preview"
+                                style="display:none; margin-top: 20px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 15px;">
+                                <h4 style="margin: 0 0 10px 0; color: #60a5fa; font-size: 0.95rem;">Preview: Detected
+                                    Chapters</h4>
+                                <div id="trans-preview-list"
+                                    style="max-height: 200px; overflow-y: auto; margin-bottom: 15px; font-size: 0.9rem; color: #cbd5e1; display:flex; flex-direction:column; gap:8px;">
+                                    <!-- Preview items go here -->
+                                </div>
+                                <div style="text-align: right;">
+                                    <button class="btn-success admin-action" disabled onclick="confirmBulkSave()">🚀
+                                        Confirm & Save
+                                        All</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Single Chapter Mode -->
+                        <div id="trans-mode-chapter" style="display:none;">
+                            <div class="form-group-admin">
+                                <label>Target Chapter Number</label>
+                                <input type="number" id="trans-single-num" placeholder="e.g. 1" style="width:100px;">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Chapter Title (Translated)</label>
+                                <input type="text" id="trans-single-title" placeholder="e.g. Capítulo 1">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Content</label>
+                                <textarea id="trans-single-content" rows="10" placeholder="Paste chapter content..."
+                                    style="width: 100%; background: #0f172a; border: 1px solid #1e293b; color: white; border-radius: 8px; padding: 15px; font-family: monospace; resize: vertical;"></textarea>
+                            </div>
+                            <div style="margin-top: 15px; display:flex; justify-content:flex-end;">
+                                <button class="btn-success admin-action" disabled onclick="saveSingleTranslation()">💾
+                                    Save Chapter</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Log -->
+            <div id="trans-log"
+                style="max-width: 1200px; margin: 20px auto; background: #0f172a; padding: 15px; border-radius: 8px; border: 1px solid #334155; display:none;">
+                <h4 style="margin:0 0 10px 0; color:#cbd5e1;">Process Log</h4>
+                <div id="trans-log-content"
+                    style="font-family:monospace; color:#94a3b8; max-height: 200px; overflow-y:auto;"></div>
+            </div>
+        </div>
+
+        <!-- Homepage Manager Section -->
+        <div id="homepage-manager" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 1.8rem;">🏠</span> Homepage Manager
+                    </h2>
+                    <p style="color: #64748b; margin: 0; font-size: 0.9rem;">Control featured books, popular items,
+                        custom sections, and hero text.</p>
+                </div>
+                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">⬅
+                    Back</button>
+            </div>
+
+            <div class="config-panel"
+                style="max-width: 1100px; margin: 0 auto; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(255,255,255,0.05); padding: 30px; border-radius: 16px;">
+
+                <!-- Hero Text -->
+                <div class="action-card" style="cursor: default; margin-bottom: 20px;">
+                    <h3>✨ Hero Text Configuration</h3>
+                    <p style="color: #94a3b8; margin-bottom: 15px;">Update the main title and subtitle displayed on
+                        the
+                        homepage.</p>
+                    <div style="display: grid; gap: 15px;">
+                        <div>
+                            <label style="display:block; color:#cbd5e1; margin-bottom:5px;">Hero Title</label>
+                            <input type="text" id="home-hero-title" placeholder="Wealth & Mindset"
+                                style="width:100%; background:#0f172a; color:white; border:1px solid #334155; padding:10px; border-radius:6px;">
+                        </div>
+                        <div>
+                            <label style="display:block; color:#cbd5e1; margin-bottom:5px;">Hero Subtitle</label>
+                            <input type="text" id="home-hero-subtitle"
+                                placeholder="Mastering the Psychology of Success & Financial Freedom"
+                                style="width:100%; background:#0f172a; color:white; border:1px solid #334155; padding:10px; border-radius:6px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- micro lessons -->
+                <div class="action-card" style="cursor: default; margin-bottom: 20px;">
+                    <h3>💡 Micro Lessons (Daily Tips)</h3>
+                    <p style="color: #94a3b8; margin-bottom: 15px;">Update the rotating tip cards. Recommended: 1
+                        Financial, 1 Mindset, 1 Success.</p>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+                        <div
+                            style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <label
+                                style="display:block; color:#fbbf24; margin-bottom:8px; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">Tip
+                                1 Header</label>
+                            <input type="text" id="home-tip-head-1" placeholder="e.g. Financial Tip"
+                                style="width:100%; margin-bottom: 12px; background:#0f172a; color:white; border:1px solid #334155; padding:10px; border-radius:6px;">
+                            <label
+                                style="display:block; color:#cbd5e1; margin-bottom:5px; font-size: 0.85rem;">Content</label>
+                            <textarea id="home-tip-1" rows="3" placeholder="Write a short, powerful tip..."
+                                style="width:100%; background:#0f172a; color:white; border:1px solid #334155; padding:10px; border-radius:6px; resize: none;"></textarea>
+                        </div>
+                        <div
+                            style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <label
+                                style="display:block; color:#fbbf24; margin-bottom:8px; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">Tip
+                                2 Header</label>
+                            <input type="text" id="home-tip-head-2" placeholder="e.g. Mindset Tip"
+                                style="width:100%; margin-bottom: 12px; background:#0f172a; color:white; border:1px solid #334155; padding:10px; border-radius:6px;">
+                            <label
+                                style="display:block; color:#cbd5e1; margin-bottom:5px; font-size: 0.85rem;">Content</label>
+                            <textarea id="home-tip-2" rows="3" placeholder="Write a short, powerful tip..."
+                                style="width:100%; background:#0f172a; color:white; border:1px solid #334155; padding:10px; border-radius:6px; resize: none;"></textarea>
+                        </div>
+                        <div
+                            style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <label
+                                style="display:block; color:#fbbf24; margin-bottom:8px; font-weight: 700; font-size: 0.8rem; text-transform: uppercase;">Tip
+                                3 Header</label>
+                            <input type="text" id="home-tip-head-3" placeholder="e.g. Success Tip"
+                                style="width:100%; margin-bottom: 12px; background:#0f172a; color:white; border:1px solid #334155; padding:10px; border-radius:6px;">
+                            <label
+                                style="display:block; color:#cbd5e1; margin-bottom:5px; font-size: 0.85rem;">Content</label>
+                            <textarea id="home-tip-3" rows="3" placeholder="Write a short, powerful tip..."
+                                style="width:100%; background:#0f172a; color:white; border:1px solid #334155; padding:10px; border-radius:6px; resize: none;"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Topics -->
+                <div class="action-card" style="cursor: default; margin-bottom: 20px;">
+                    <h3>📂 Browse Topics</h3>
+                    <p style="color: #94a3b8; margin-bottom: 15px;">Check which topics are visible or add new ones.
+                    </p>
+                    <div id="topics-container" class="form-group-admin"
+                        style="display: flex; flex-wrap: wrap; gap: 20px;">
+                        <!-- Default topics will be rendered here by JS -->
+                    </div>
+                    <div style="margin-top: 15px; border-top: 1px solid #334155; padding-top: 15px;">
+                        <label style="display:block; color:#cbd5e1; margin-bottom:5px;">Add Custom Topic</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="new-topic-input" placeholder="e.g. Real Estate"
+                                style="flex: 1; background:#0f172a; color:white; border:1px solid #334155; padding:10px; border-radius:6px;">
+                            <button class="btn-primary" onclick="addNewTopic()">+ Add</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Sections Creator -->
+                <div class="action-card" style="cursor: default; margin-bottom: 20px; border: 1px dashed #334155;">
+                    <h3>✨ Create New Book Section</h3>
+                    <p style="color: #94a3b8; margin-bottom: 15px;">Add a new horizontal book list to the homepage
+                        (e.g., "Must Reads", "New Arrivals").</p>
+                    <div style="display: flex; gap: 10px; align-items: flex-end;">
+                        <div style="flex: 0 0 60px;">
+                            <label
+                                style="display:block; color:#cbd5e1; margin-bottom:5px; font-size: 0.8rem;">Icon</label>
+                            <input type="text" id="new-section-icon" placeholder="⭐"
+                                style="width:100%; text-align:center; background:#0f172a; color:white; border:1px solid #334155; padding:10px; border-radius:6px;">
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="display:block; color:#cbd5e1; margin-bottom:5px; font-size: 0.8rem;">Section
+                                Title</label>
+                            <input type="text" id="new-section-title" placeholder="e.g. Editor's Picks"
+                                style="width:100%; background:#0f172a; color:white; border:1px solid #334155; padding:10px; border-radius:6px;">
+                        </div>
+                        <button class="btn-primary" onclick="createNewSection()" style="height: 42px;">+ Create
+                            Section</button>
+                    </div>
+                </div>
+
+                <!-- Standard Sections -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <!-- Exclusive Collection -->
+                    <div class="action-card" style="cursor: default;">
+                        <h3 style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>🏆 Exclusive Collection</span>
+                            <button class="btn-primary" style="font-size:0.8rem; padding:4px 10px;"
+                                onclick="openItemAdder('exclusive')">+ Add</button>
+                        </h3>
+                        <div id="exclusive-list" style="margin-top: 15px; min-height: 50px;">
+                            <!-- Items injected by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Popular Books -->
+                    <div class="action-card" style="cursor: default;">
+                        <h3 style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>🔥 Popular Books</span>
+                            <button class="btn-primary" style="font-size:0.8rem; padding:4px 10px;"
+                                onclick="openItemAdder('popular')">+ Add</button>
+                        </h3>
+                        <div id="popular-list" style="margin-top: 15px; min-height: 50px;">
+                            <!-- Items injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success Stories -->
+                <div class="action-card" style="cursor: default; margin-bottom: 20px;">
+                    <h3 style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>📖 Success Stories</span>
+                        <button class="btn-primary" style="font-size:0.8rem; padding:4px 10px;"
+                            onclick="openItemAdder('stories')">+ Add</button>
+                    </h3>
+                    <div id="stories-list"
+                        style="margin-top: 15px; min-height: 50px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <!-- Items injected by JS -->
+                    </div>
+                </div>
+
+                <!-- List Managers -->
+                <div id="sections-container" style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+                    <!-- Sections will be rendered here by JS -->
+                </div>
+
+                <div style="text-align: right; margin-top: 30px;">
+                    <button class="btn-success" onclick="saveHomepageSettings()"
+                        style="font-size: 1.2rem; padding: 12px 30px;">💾 Save Homepage Changes</button>
+                </div>
+            </div>
+
+            <!-- Modal for Adding Items -->
+            <div id="item-adder-modal"
+                style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center;">
+                <div style="background:#1e293b; padding:30px; border-radius:12px; width:90%; max-width:500px;">
+                    <h3>Add Item</h3>
+                    <div class="form-group-admin">
+                        <label>Select Book/Story</label>
+                        <select id="item-adder-select"
+                            style="width:100%; padding:10px; background:#0f172a; color:white; border:1px solid #334155;">
+                            <!-- options -->
+                        </select>
+                    </div>
+                    <div style="text-align:right; margin-top:20px;">
+                        <button class="btn-primary" style="background:#ef4444; margin-right:10px;"
+                            onclick="document.getElementById('item-adder-modal').style.display='none'">Cancel</button>
+                        <button class="btn-success" onclick="confirmAddItem()">Add Selected</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Community Manager Section -->
+        <div id="community-manager" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">💬</span> Community Manager
+                </h2>
+                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">←
+                    Back</button>
+            </div>
+
+            <div class="admin-grid" style="display: grid; grid-template-columns: 300px 1fr; gap: 20px;">
+                <!-- Left: Book Selector & Topics -->
+                <div class="config-panel">
+                    <div class="form-group-admin">
+                        <label>Select Book</label>
+                        <select id="comm-book-select" onchange="loadCommunityTopics()"
+                            style="width: 100%; padding: 10px;">
+                            <option value="">-- Select a Book --</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <h4 style="color: #fff; margin-bottom: 15px;">Discussion Topics</h4>
+                        <div id="comm-topics-list" style="display: flex; flex-direction: column; gap: 10px;">
+                            <p style="color: #666; font-size: 0.9rem;">Select a book to manage topics.</p>
+                        </div>
+
+                        <div style="margin-top: 20px; border-top: 1px solid #333; padding-top: 15px;">
+                            <label class="admin-label">Create New Topic</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="new-comm-topic" class="admin-input"
+                                    placeholder="e.g. Best Quotes" style="margin:0;">
+                                <button class="btn-primary" onclick="createNewTopic()">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Message Management -->
+                <div class="config-panel">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 id="comm-topic-header" style="margin: 0;">Select a Topic</h3>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <div style="font-size: 0.8rem; color: #666;">Messages listed here</div>
+                            <button class="btn-primary" onclick="refreshCurrentTopic()"
+                                style="padding: 4px 8px; font-size: 0.8rem;">↻ Refresh</button>
+                        </div>
+                    </div>
+
+                    <div id="comm-messages-list"
+                        style="max-height: 600px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="text-align: center; padding: 40px; color: #666;">
+                            Choose a topic to moderate messages.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Site Analytics Section -->
+        <div id="site-analytics" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
+                <div>
+                    <h2 style="margin: 0; color: #fff; display: flex; align-items: center; gap: 15px;">
+                        <span style="font-size: 1.8rem;">📊</span> Site Analytics
+                    </h2>
+                    <p style="color: #94a3b8; font-size: 0.95rem; margin: 5px 0 0 45px;">Track visitor behavior,
+                        popular
+                        chapters, and ad performance.</p>
+                </div>
+                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">←
+                    Back</button>
+            </div>
+
+            <!-- Key Metrics Cards -->
+            <div class="dashboard-stats" style="margin-bottom: 30px;">
+                <div class="stat-card">
+                    <span class="stat-number" id="analytics-total-users">--</span>
+                    <span class="stat-label">Total Visitors</span>
+                    <span id="users-trend" style="color: #10b981; font-size: 0.8rem;">Live Data</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="analytics-page-views">--</span>
+                    <span class="stat-label">Page Views</span>
+                    <span id="views-trend" style="color: #10b981; font-size: 0.8rem;">Real-time</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="analytics-ad-revenue">--</span>
+                    <span class="stat-label">Ad Revenue (Est)</span>
+                    <span style="color: #3b82f6; font-size: 0.8rem;">● RPM Based</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="analytics-avg-session">--</span>
+                    <span class="stat-label">Popular Book</span>
+                    <span style="color: #eab308; font-size: 0.8rem;">Top Rank</span>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px;">
+                <!-- Main Traffic Graph -->
+                <div class="action-card" style="cursor: default;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin:0;">Traffic Overview (Last 7 Days)</h3>
+                        <button class="btn-primary" onclick="renderTrafficChart()"
+                            style="padding: 4px 10px; font-size: 0.7rem;">Refresh</button>
+                    </div>
+                    <div style="height: 300px;">
+                        <canvas id="trafficChart"></canvas>
+                    </div>
+                </div>
+
+
+                <!-- Device/Category Pie -->
+                <div class="action-card" style="cursor: default;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin:0;">User Devices</h3>
+                        <button class="btn-primary" onclick="renderDeviceChart()"
+                            style="padding: 4px 10px; font-size: 0.7rem;">Refresh</button>
+                    </div>
+                    <div style="height: 250px;">
+                        <canvas id="deviceChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Detailed Data Tables -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+
+                <!-- Top Performing Books -->
+                <div class="action-card" style="cursor: default;">
+                    <h3 style="margin-bottom: 15px;">🏆 Top Performing Books</h3>
+                    <table style="width: 100%; border-collapse: collapse; color: #cbd5e1; font-size: 0.9rem;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #334155; text-align: left;">
+                                <th style="padding: 10px;">Book Title</th>
+                                <th style="padding: 10px;">Reads</th>
+                                <th style="padding: 10px;">Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #1e293b;">
+                                <td style="padding: 10px;">Psychology of Money</td>
+                                <td style="padding: 10px;">5,230</td>
+                                <td style="padding: 10px; color: #eab308;">★★★★★</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #1e293b;">
+                                <td style="padding: 10px;">Atomic Habits</td>
+                                <td style="padding: 10px;">4,105</td>
+                                <td style="padding: 10px; color: #eab308;">★★★★☆</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #1e293b;">
+                                <td style="padding: 10px;">Wealth & Mindset</td>
+                                <td style="padding: 10px;">3,800</td>
+                                <td style="padding: 10px; color: #eab308;">★★★★★</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px;">The Alchemist</td>
+                                <td style="padding: 10px;">2,450</td>
+                                <td style="padding: 10px; color: #eab308;">★★★★☆</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Recent Activity Feed (Dynamic) -->
+                <div class="action-card" style="cursor: default;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="margin: 0;">⚡ Real-time Activity</h3>
+                        <button class="btn-primary" onclick="loadRealTimeActivity()"
+                            style="padding: 5px 10px; font-size: 0.75rem;">Refresh</button>
+                    </div>
+                    <div id="activity-feed-container"
+                        style="display: flex; flex-direction: column; gap: 15px; max-height: 400px; overflow-y: auto;">
+                        <p style="color: #64748b; font-size: 0.9rem;">Loading latest activity...</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- IP Activity & Cookie Acceptance Logs -->
+            <div class="action-card" style="margin-top: 30px; cursor: default;">
+                <h3 style="margin-bottom: 20px;">🔒 IP-Based User Behavior & Cookie Logs</h3>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; color: #cbd5e1; font-size: 0.85rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #334155; text-align: left;">
+                                <th style="padding: 12px; min-width: 120px;">IP Address</th>
+                                <th style="padding: 12px;">Activity Type</th>
+                                <th style="padding: 12px;">Page URL / Detail</th>
+                                <th style="padding: 12px; min-width: 160px;">Time (UTC)</th>
+                                <th style="padding: 12px;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ip-activity-log-body">
+                            <!-- Data populated via js/admin.js -->
+                            <tr>
+                                <td colspan="5" style="padding: 20px; text-align: center; color: #64748b;">Waiting
+                                    for
+                                    data from Supabase...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+
+
+
+        <!-- Feedback Inbox Section -->
+        <div id="feedback-inbox" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">📨</span> Feedback Inbox
+                </h2>
+                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">←
+                    Back</button>
+            </div>
+
+            <div class="action-card" style="cursor: default; padding: 0; overflow: hidden;">
+                <table
+                    style="width: 100%; border-collapse: collapse; color: #cbd5e1; font-size: 0.9rem; text-align: left;">
+                    <thead style="background: rgba(255,255,255,0.05);">
+                        <tr>
+                            <th style="padding: 15px;">Date</th>
+                            <th style="padding: 15px;">Sender</th>
+                            <th style="padding: 15px;">Topic</th>
+                            <th style="padding: 15px;">Message</th>
+                            <th style="padding: 15px;">Status & Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="feedback-table-body">
+                        <!-- Items injected by JS -->
+                    </tbody>
+                </table>
+                <div id="feedback-empty-msg" style="padding: 40px; text-align: center; color: #64748b; display: none;">
+                    Your inbox is empty. No new messages.
+                </div>
+            </div>
+        </div>
+
+        <!-- Site Settings Section -->
+        <div id="site-settings" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">⚙️</span> Site Settings
+                </h2>
+                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">←
+                    Back</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <!-- General & SEO -->
+                <div class="action-card" style="cursor: default; grid-column: span 2;">
+                    <h3>General & SEO</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group-admin">
+                            <label>Site Title</label>
+                            <input type="text" id="setting-site-title" value="Wealth & Mindset">
+                        </div>
+                        <div class="form-group-admin">
+                            <label>Contact Email</label>
+                            <input type="email" id="setting-contact-email" value="hello@wealthmindset.guide">
+                        </div>
+                    </div>
+                    <div class="form-group-admin">
+                        <label>SEO Description</label>
+                        <textarea id="setting-site-desc"
+                            rows="3">Explore our collection of guides on wealth, mindset, and personal growth.</textarea>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button class="btn-success" onclick="saveSettings()">💾 Save Site Settings</button>
+                    </div>
+                </div>
+
+                <!-- Content Taxonomy Manager -->
+                <div class="action-card" style="cursor: default; grid-column: span 2;">
+                    <h3>📂 Content Types & Genres</h3>
+                    <p style="color: #94a3b8; margin-bottom: 25px;">Manage the types of content (Books, Stories,
+                        etc.)
+                        and their genres available in your system.</p>
+
+                    <div id="taxonomy-list-container" style="display: flex; flex-direction: column; gap: 20px;">
+                        <!-- Injected by JS -->
+                    </div>
+
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <h4 style="color: #10b981; margin-bottom: 15px;">Add New Content Type</h4>
+                        <div
+                            style="display: grid; grid-template-columns: 100px 1fr 1fr auto; gap: 15px; align-items: end;">
+                            <div class="form-group-admin" style="margin-bottom: 0;">
+                                <label>Icon</label>
+                                <input type="text" id="new-type-icon" placeholder="e.g. 🎙️"
+                                    style="text-align: center;">
+                            </div>
+                            <div class="form-group-admin" style="margin-bottom: 0;">
+                                <label>Type Key (Internal ID)</label>
+                                <input type="text" id="new-type-key" placeholder="e.g. podcast">
+                            </div>
+                            <div class="form-group-admin" style="margin-bottom: 0;">
+                                <label>Initial Genre</label>
+                                <input type="text" id="new-type-genre" placeholder="e.g. Interviews">
+                            </div>
+                            <button class="btn-primary" onclick="addContentType()" style="height: 42px;">+ Add
+                                Type</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Editor Section -->
+
+
+        <!-- New Content: Content Studio -->
+        <div id="manage-content" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">📝</span> Content Studio
+                </h2>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-primary" onclick="triggerUpload()" style="background: #10b981;">📂 Upload File
+                        (PDF/TXT)</button>
+                    <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">←
+                        Back</button>
+                </div>
+            </div>
+
+            <div class="studio-layout" style="display: grid; grid-template-columns: 1fr 350px; gap: 25px;">
+                <!-- Left: Content Input & Preview -->
+                <div class="studio-main">
+                    <div class="config-panel" style="margin-bottom: 20px;">
+                        <textarea id="manual-paste" rows="15" placeholder="Paste your story or book content here..."
+                            style="width: 100%; height: 500px; background: #0f172a; border: 1px solid #1e293b; color: white; border-radius: 8px; padding: 15px; font-family: 'Inter', sans-serif; resize: none;"></textarea>
+                    </div>
+
+                    <!-- Splitting Tools -->
+                    <div class="action-card" style="cursor: default;">
+                        <h3 style="margin-top: 0;">🛠️ Splitting & Processing</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="form-group-admin">
+                                <label>Split Strategy</label>
+                                <select id="split-method" style="width: 100%; padding: 10px;">
+                                    <option value="keyword">AI Keyword Precision (Chapter, Part, etc.)</option>
+                                    <option value="newline">Section Break (Triple Newlines)</option>
+                                </select>
+                            </div>
+                            <div class="form-group-admin" style="display: flex; align-items: flex-end;">
+                                <button class="btn-primary" onclick="processAndSplit()"
+                                    style="width: 100%; height: 42px;">⚡ Split Into Chapters</button>
+                            </div>
+                        </div>
+
+                        <hr style="border: none; border-top: 1px solid #1e293b; margin: 20px 0;">
+
+                        <div
+                            style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; align-items: flex-end;">
+                            <div class="form-group-admin">
+                                <label>Split at Line #</label>
+                                <input type="number" id="split-line" placeholder="e.g. 150">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>New Chapter Title</label>
+                                <input type="text" id="split-title" placeholder="e.g. The Awakening">
+                            </div>
+                            <button class="btn-primary" onclick="splitAtLine()"
+                                style="height: 42px; background: #3b82f6;">Manual Split</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Metadata & Navigation -->
+                <aside class="studio-sidebar">
+                    <div class="action-card"
+                        style="cursor: default; background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.1);">
+                        <h3 style="margin-top: 0; font-size: 1rem;">🏷️ Book Information</h3>
+                        <div class="form-group-admin">
+                            <label>Book Title</label>
+                            <input type="text" id="book-title" placeholder="Enter title...">
+                        </div>
+                        <div class="form-group-admin">
+                            <label>Author / Creator</label>
+                            <input type="text" id="book-author" placeholder="Wealth Team">
+                        </div>
+                        <div class="form-group-admin">
+                            <label>Cover Image (Relative Path)</label>
+                            <input type="text" id="book-cover" placeholder="assets/covers/story1.jpg">
+                        </div>
+                        <div class="form-group-admin">
+                            <label>Type / Taxonomy</label>
+                            <select id="content-type" onchange="updateSubcategories()"></select>
+                        </div>
+                        <div class="form-group-admin">
+                            <label>Category / Genre</label>
+                            <select id="content-genre"></select>
+                        </div>
+                        <div class="form-group-admin">
+                            <label>Language</label>
+                            <select id="content-language"
+                                style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #1e293b; color: white; border-radius: 6px;">
+                                <option value="en">English (Default)</option>
+                                <option value="es">Spanish (Español)</option>
+                                <option value="fr">French (Français)</option>
+                                <option value="hi">Hindi (हिंदी)</option>
+                                <option value="de">German (Deutsch)</option>
+                                <option value="zh">Chinese (中文)</option>
+                                <option value="jp">Japanese (日本語)</option>
+                                <option value="ru">Russian (Русский)</option>
+                                <option value="pt">Portuguese (Português)</option>
+                            </select>
+                        </div>
+                        <div class="form-group-admin">
+                            <label>Description (Short Meta)</label>
+                            <textarea id="book-desc" rows="3" placeholder="Write a short summary..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Extraction results -->
+                    <div class="split-results-panel" style="margin-top: 20px;">
+                        <h3
+                            style="font-size: 1rem; color: #fff; margin-bottom: 10px; display: flex; justify-content: space-between;">
+                            📂 Chapters <span id="extraction-status" style="font-size: 0.7rem; color: #94a3b8;">No
+                                chapters yet</span>
+                        </h3>
+                        <div id="chapter-list-preview"
+                            style="background: #0f172a; border-radius: 8px; border: 1px solid #1e293b; min-height: 200px; max-height: 350px; overflow-y: auto; padding: 10px;">
+                            <p style="color: #64748b; font-size: 0.85rem; text-align: center; padding: 20px;">Chapters
+                                will appear here after splitting.</p>
+                        </div>
+                        <button class="btn-success" onclick="publishChapters()"
+                            style="width: 100%; margin-top: 15px; padding: 12px;"><span>🚀</span> Publish to
+                            Library</button>
+                        <button class="btn-primary" onclick="clearEditor()"
+                            style="width: 100%; margin-top: 10px; background: #334155; padding: 10px;">🗑️ Clear
+                            Workspace</button>
+                    </div>
+                </aside>
+            </div>
+
+            <!-- Hidden Preview for Line Numbering -->
+            <div style="display: none;">
+                <div id="line-numbers"></div>
+                <textarea id="preview-box"></textarea>
+            </div>
+        </div>
+
+        <!-- Content Editor: Paper Studio -->
+        <div id="content-editor" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">✍️</span> Content Editor
+                </h2>
+                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">⬅
+                    Back</button>
+            </div>
+
+            <div class="config-panel" style="margin-bottom: 25px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group-admin">
+                        <label>Select Book to Edit</label>
+                        <select id="content-editor-book-select" onchange="loadContentEditorBook()"
+                            style="padding: 12px; font-size: 1.1rem; border-color: #3b82f6;">
+                            <option value="">-- Select a Book --</option>
+                        </select>
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Select Chapter</label>
+                        <select id="content-editor-chapter-select" onchange="loadChapterForEditing()"
+                            style="padding: 12px; font-size: 1.1rem; border-color: #10b981;">
+                            <option value="">-- Select a Chapter --</option>
+                        </select>
+                        <div style="display: flex; gap: 8px; margin-top: 10px;">
+                            <button class="btn-primary" onclick="addNewChapter()"
+                                style="font-size: 0.8rem; padding: 6px 12px; background: #10b981;">+ New</button>
+                            <button class="btn-primary" onclick="deleteCurrentChapter()"
+                                style="font-size: 0.8rem; padding: 6px 12px; background: #ef4444;">🗑️ Delete</button>
+                            <div style="flex:1"></div>
+                            <button class="btn-primary" onclick="moveChapter(-1)"
+                                style="font-size: 0.8rem; padding: 6px 12px;" title="Move Up">⬆️</button>
+                            <button class="btn-primary" onclick="moveChapter(1)"
+                                style="font-size: 0.8rem; padding: 6px 12px;" title="Move Down">⬇️</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="content-editor-main" style="display: none;">
+                <div style="display: grid; grid-template-columns: 1fr 400px; gap: 30px;">
+                    <!-- Editor Area -->
+                    <div id="chapter-editor-panel">
+                        <div class="action-card"
+                            style="cursor: default; padding: 0; border: none; background: transparent;">
+                            <div class="editor-toolbar"
+                                style="background: #1e293b; padding: 10px 15px; border-radius: 8px 8px 0 0; display: flex; gap: 10px;">
+                                <button onclick="insertFormatting('b')" class="toolbar-btn"><b>B</b></button>
+                                <button onclick="insertFormatting('i')" class="toolbar-btn"><i>I</i></button>
+                                <button onclick="insertFormatting('center')" class="toolbar-btn">Center</button>
+                                <button onclick="insertFormatting('u')" class="toolbar-btn"><u>U</u></button>
+                                <hr style="width: 1px; height: 20px; border: none; background: #334155; margin: 0 5px;">
+                                <button onclick="insertFormatting('h1')" class="toolbar-btn">H1</button>
+                                <button onclick="insertFormatting('h2')" class="toolbar-btn">H2</button>
+                                <button onclick="insertFormatting('br')" class="toolbar-btn">Line Break</button>
+                            </div>
+                            <div style="position: relative;">
+                                <div id="editor-line-numbers"
+                                    style="position: absolute; left: 0; top: 0; bottom: 0; width: 45px; background: rgba(0,0,0,0.3); text-align: right; padding: 15px 10px; color: #475569; font-family: monospace; font-size: 0.9rem; pointer-events: none; overflow: hidden; white-space: pre;">
+                                </div>
+                                <textarea id="editor-chapter-content" rows="25"
+                                    style="width: 100%; height: 700px; background: #0f172a; border: 1px solid #1e293b; border-top: none; color: white; border-radius: 0 0 8px 8px; padding: 15px 15px 15px 60px; font-family: 'Inter', sans-serif; line-height: 1.8; font-size: 1.05rem; resize: vertical;"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Assistant Tools -->
+                        <div class="action-card" style="cursor: default; margin-top: 20px;">
+                            <h3>🔧 Editor Assistant</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div class="form-group-admin">
+                                    <label>Add Styled Heading</label>
+                                    <div style="display: flex; gap: 10px;">
+                                        <input type="text" id="assistant-heading-text" placeholder="Heading text..."
+                                            style="flex: 2;">
+                                        <select id="assistant-heading-type" style="flex: 1;">
+                                            <option value="h1">H1</option>
+                                            <option value="h2">H2</option>
+                                            <option value="h3">H3</option>
+                                        </select>
+                                    </div>
+                                    <div style="display: flex; gap: 10px; margin-top: 8px;">
+                                        <select id="assistant-heading-font" style="flex: 1;">
+                                            <option value="Outfit">Outfit</option>
+                                            <option value="Playfair Display">Playfair</option>
+                                            <option value="Inter">Inter</option>
+                                        </select>
+                                        <select id="assistant-heading-weight" style="flex: 1;">
+                                            <option value="400">Normal</option>
+                                            <option value="600">Semibold</option>
+                                            <option value="800">Extra Bold</option>
+                                        </select>
+                                        <button class="btn-primary" onclick="insertAssistantHeading()">Add</button>
+                                    </div>
+                                </div>
+                                <div class="form-group-admin">
+                                    <label>Add Image Component</label>
+                                    <input type="text" id="assistant-image-url" placeholder="assets/illustration.png"
+                                        style="margin-bottom: 8px;">
+                                    <div style="display: flex; gap: 10px;">
+                                        <input type="number" id="assistant-line-num" placeholder="Line # (Opt)"
+                                            style="flex: 1;">
+                                        <button class="btn-primary" onclick="insertAssistantImage()"
+                                            style="flex: 1;">Insert Image</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Settings Area -->
+                    <aside>
+                        <div class="action-card" style="cursor: default; margin-bottom: 20px;">
+                            <h3 style="margin-top: 0; font-size: 1rem; color: #3b82f6;">🖼️ Visual & Audio</h3>
+                            <div class="form-group-admin">
+                                <label>Background Image</label>
+                                <input type="text" id="editor-chapter-bg" placeholder="e.g. assets/bg/space.jpg">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Background Style</label>
+                                <select id="editor-chapter-bg-style">
+                                    <option value="cover">Cover (Fill)</option>
+                                    <option value="contain">Contain</option>
+                                    <option value="repeat">Repeat</option>
+                                </select>
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Atmosphere Music (URL)</label>
+                                <input type="text" id="editor-chapter-music"
+                                    placeholder="e.g. assets/audio/peaceful.mp3">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Default Volume: <span id="volume-display">30%</span></label>
+                                <input type="range" id="editor-chapter-volume" min="0" max="100" value="30"
+                                    oninput="document.getElementById('volume-display').textContent = this.value + '%'">
+                            </div>
+                            <div class="form-group-admin" style="display: flex; align-items: center; gap: 10px;">
+                                <input type="checkbox" id="editor-chapter-music-loop" checked style="width: auto;">
+                                <label for="editor-chapter-music-loop" style="margin: 0; cursor: pointer;">Loop
+                                    Music</label>
+                            </div>
+                        </div>
+
+                        <div class="action-card"
+                            style="cursor: default; background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.1);">
+                            <h3 style="margin-top: 0; font-size: 1rem; color: #10b981;">⚙️ Chapter Metadata</h3>
+                            <div class="form-group-admin">
+                                <label>Chapter Title</label>
+                                <input type="text" id="editor-chapter-title">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Short Description (SEO)</label>
+                                <textarea id="editor-chapter-desc" rows="2"></textarea>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                <div class="form-group-admin">
+                                    <label>Reading Time</label>
+                                    <input type="text" id="editor-chapter-reading-time" placeholder="5 min">
+                                </div>
+                                <div class="form-group-admin">
+                                    <label>Chapter Type</label>
+                                    <select id="editor-chapter-type">
+                                        <option value="standard">Standard</option>
+                                        <option value="premium">Premium</option>
+                                        <option value="free">Free Preview</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Visibility</label>
+                                <select id="editor-chapter-visibility">
+                                    <option value="public">Public</option>
+                                    <option value="draft">Draft (Hidden)</option>
+                                    <option value="private">Private</option>
+                                </select>
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Language</label>
+                                <select id="editor-chapter-language">
+                                    <option value="en">English</option>
+                                    <option value="hi">Hindi</option>
+                                    <option value="es">Spanish</option>
+                                    <option value="fr">French</option>
+                                    <option value="ar">Arabic</option>
+                                </select>
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Custom CSS (Optional)</label>
+                                <textarea id="editor-chapter-custom-css" rows="3"
+                                    placeholder=".chapter-content { ... }"></textarea>
+                            </div>
+                        </div>
+
+                        <button class="btn-success" onclick="saveChapterEdits()"
+                            style="width: 100%; padding: 15px; font-size: 1.1rem; font-weight: bold; margin-top: 10px;">💾
+                            Save Chapter Changes</button>
+                    </aside>
+                </div>
+            </div>
+        </div>
+
+        <!-- Library Manager -->
+        <div id="library-manager" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">📚</span> Library Manager
+                </h2>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn-primary" onclick="startNewContent()" style="background: #3b82f6;">➕ Create New
+                        Book</button>
+                    <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">←
+                        Back</button>
+                </div>
+            </div>
+
+            <div class="config-panel">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div style="position: relative; flex: 1; max-width: 400px;">
+                        <input type="text" id="library-search" placeholder="Search books, authors, or IDs..."
+                            oninput="offerFilterLibraryTable(this.value)"
+                            style="width: 100%; padding: 12px 15px 12px 40px; background: #0f172a; border: 1px solid #1e293b; border-radius: 8px; color: white;">
+                        <span
+                            style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); opacity: 0.5;">🔍</span>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <select id="library-filter-type" onchange="renderLibraryTable()"
+                            style="padding: 10px; border-radius: 6px; background: #1e293b; color: white; border: 1px solid #334155;">
+                            <option value="all">All Types</option>
+                            <option value="book">Books</option>
+                            <option value="story">Stories</option>
+                            <option value="guide">Guides</option>
+                        </select>
+                        <button class="btn-primary" onclick="renderLibraryTable()"
+                            style="background: #334155; padding: 10px 15px;">🔄 Refresh</button>
+                    </div>
+                </div>
+
+                <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr
+                                style="background: #1e293b; color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">
+                                <th style="padding: 15px; width: 60px;">Cover</th>
+                                <th style="padding: 15px;">Title & Author</th>
+                                <th style="padding: 15px;">Type</th>
+                                <th style="padding: 15px;">Order</th>
+                                <th style="padding: 15px;">Chapters</th>
+                                <th style="padding: 15px;">Status</th>
+                                <th style="padding: 15px; text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="library-table-body">
+                            <!-- Injected by library.js -->
+                        </tbody>
+                    </table>
+                    <div id="library-empty-state"
+                        style="padding: 60px; text-align: center; color: #64748b; display: none;">
+                        <span style="font-size: 3rem; display: block; margin-bottom: 15px;">🕳️</span>
+                        <p style="font-size: 1.1rem; margin: 0;">Your library is empty. Start by creating new content!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Inbox -->
+        <div id="feedback-inbox" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">📥</span> Feedback Inbox
+                </h2>
+                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">←
+                    Back</button>
+            </div>
+
+            <div class="config-panel">
+                <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr
+                                style="background: #1e293b; color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">
+                                <th style="padding: 15px;">Date</th>
+                                <th style="padding: 15px;">From</th>
+                                <th style="padding: 15px;">Subject / Type</th>
+                                <th style="padding: 15px;">Message</th>
+                                <th style="padding: 15px; text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feedback-table-body">
+                            <!-- Injected by settings.js or dedicated controller -->
+                        </tbody>
+                    </table>
+                    <div id="feedback-empty-state"
+                        style="padding: 60px; text-align: center; color: #64748b; display: none;">
+                        <p style="font-size: 1.1rem; margin: 0;">No messages in your inbox yet.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Site Analytics -->
+        <div id="site-analytics" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">📊</span> Site Analytics
+                </h2>
+                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">←
+                    Back</button>
+            </div>
+
+            <div class="analytics-grid"
+                style="display: grid; grid-template-columns: 2fr 1fr; gap: 25px; margin-bottom: 25px;">
+                <!-- Main Traffic Chart -->
+                <div class="action-card" style="cursor: default; min-height: 400px;">
+                    <h3 style="margin-top: 0;">📈 Visitor Overview (7 Days)</h3>
+                    <div style="height: 300px; width: 100%;">
+                        <canvas id="trafficChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Device Breakdown -->
+                <div class="action-card" style="cursor: default; min-height: 400px;">
+                    <h3 style="margin-top: 0;">📱 Device Access</h3>
+                    <div style="height: 300px; width: 100%;">
+                        <canvas id="deviceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analytics-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
+                <!-- Popular Content -->
+                <div class="action-card" style="cursor: default;">
+                    <h3 style="margin-top: 0;">🔥 Most Popular Chapters</h3>
+                    <div id="popular-content-list" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- List items -->
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 6px;">
+                            <span>The Psychology of Money - Chap 1</span>
+                            <span style="color: #3b82f6; font-weight: bold;">1.2k views</span>
+                        </div>
+                        <div
+                            style="display: flex; justify-content: space-between; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 6px;">
+                            <span>Atomic Habits - Introduction</span>
+                            <span style="color: #3b82f6; font-weight: bold;">940 views</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Activity Feed -->
+                <div class="action-card" style="cursor: default;">
+                    <h3 style="margin-top: 0;">⏱️ Live Activity Feed</h3>
+                    <div id="activity-feed-container"
+                        style="display: flex; flex-direction: column; gap: 12px; font-size: 0.9rem; max-height: 300px; overflow-y: auto;">
+                        <p style="color: #64748b;">Waiting for activity logs...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IP Activity Log Table -->
+            <div class="action-card" style="cursor: default; margin-top: 25px;">
+                <h3 style="margin-top: 0;">🛰️ Real-time IP Activity Log</h3>
+                <div style="overflow-x: auto; margin-top: 15px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #1e293b; color: #94a3b8; text-align: left;">
+                                <th style="padding: 12px;">IP Address</th>
+                                <th style="padding: 12px;">Activity</th>
+                                <th style="padding: 12px;">Detail</th>
+                                <th style="padding: 12px;">Timestamp</th>
+                                <th style="padding: 12px;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ip-activity-log-body">
+                            <!-- Injected by analytics.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Site Settings -->
+        <div id="site-settings" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">⚙️</span> Site Settings
+                </h2>
+                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">←
+                    Back</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; max-width: 1100px; margin: 0 auto;">
+                <!-- General Info & SEO -->
+                <div class="action-card" style="cursor: default;">
+                    <h3 style="margin-top: 0; color: #3b82f6;">🌍 SEO & Global Meta</h3>
+                    <div class="form-group-admin">
+                        <label>Site Meta Title</label>
+                        <input type="text" id="setting-site-title" placeholder="Wealth & Mindset | Master Success">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Meta Description</label>
+                        <textarea id="setting-site-desc" rows="3"
+                            placeholder="Global description for search engines..."></textarea>
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Google Analytics ID</label>
+                        <input type="text" id="set-ga-id" placeholder="UA-XXXXXXXXX-X or G-XXXXXXXXXX">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Canonical URL</label>
+                        <input type="text" id="set-site-url" placeholder="https://wealthmindset.com">
+                    </div>
+                </div>
+
+                <!-- Monetization & Ads -->
+                <div class="action-card" style="cursor: default;">
+                    <h3 style="margin-top: 0; color: #eab308;">💰 Ad Placement (Global)</h3>
+                    <div class="form-group-admin">
+                        <label>AdSense Client ID</label>
+                        <input type="text" id="set-adsense-id" placeholder="pub-xxxxxxxxxxxxxxxx">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Enable Auto-Ads</label>
+                        <select id="set-enable-autoads">
+                            <option value="true">Enabled</option>
+                            <option value="false">Disabled</option>
+                        </select>
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Sidebar Ad Slot ID</label>
+                        <input type="text" id="set-ad-slot-sidebar">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>In-Content Ad Frequency</label>
+                        <select id="set-ad-frequency">
+                            <option value="low">Low (Every 10 paragraphs)</option>
+                            <option value="med" selected>Medium (Every 5 paragraphs)</option>
+                            <option value="high">High (Every 3 paragraphs)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Branding & Contact -->
+                <div class="action-card" style="cursor: default;">
+                    <h3 style="margin-top: 0; color: #10b981;">🏁 Branding & Contact</h3>
+                    <div class="form-group-admin">
+                        <label>Support Email</label>
+                        <input type="email" id="setting-contact-email" placeholder="support@wealthmindset.com">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Admin Access Code (Secret)</label>
+                        <input type="password" id="set-admin-code" placeholder="••••••••">
+                    </div>
+                </div>
+
+                <!-- Footer & Scripts -->
+                <div class="action-card" style="cursor: default;">
+                    <h3 style="margin-top: 0; color: #ef4444;">🛡️ Footer & Custom Scripts</h3>
+                    <div class="form-group-admin">
+                        <label>Footer Copyright Text</label>
+                        <input type="text" id="set-footer-text" placeholder="© 2024 Wealth & Mindset">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Custom Header Tags</label>
+                        <textarea id="set-header-tags" rows="4"
+                            placeholder="<script>...</script> or <link>..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: right; margin-top: 30px; max-width: 1100px; margin-left: auto; margin-right: auto;">
+                <button class="btn-success" onclick="saveSettings()"
+                    style="padding: 15px 45px; font-size: 1.1rem; font-weight: bold;">💾 Save Global Settings</button>
+            </div>
+        </div>
+
+        <!-- Supabase Manager Section -->
+        <div id="supabase-manager" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">⚡</span> Supabase Manager
+                </h2>
+                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">⬅
+                    Back</button>
+            </div>
+
+            <div style="max-width: 900px; margin: 0 auto;">
+                <div class="action-card" style="cursor: default; margin-bottom: 25px; border-left: 4px solid #00e676;">
+                    <h3>Connection Status</h3>
+                    <div id="supabase-status"
+                        style="padding: 15px; border-radius: 8px; background: rgba(0,0,0,0.2); margin-top: 10px;">
+                        Checking connection...
+                    </div>
+                    <p style="font-size: 0.85rem; margin-top: 15px; color: #94a3b8;">
+                        Make sure you have updated <code>supabase-config.js</code> with your project URL and Anon
+                        Key.
+                    </p>
+                </div>
+
+                <div class="action-card" style="cursor: default;">
+                    <h3>Data Migration</h3>
+                    <p>Push your existing <code>localStorage</code> data to Supabase. This will overwrite existing
+                        data
+                        in Supabase with your local data.</p>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+                        <div class="migration-btn-wrapper">
+                            <button class="btn-primary" onclick="migrateToSupabase('library')"
+                                style="background: #3b82f6; width: 100%;">📦 Migrate Library</button>
+                            <div class="migration-progress-bar">
+                                <div class="progress-fill" data-type="library"></div>
+                            </div>
+                        </div>
+                        <div class="migration-btn-wrapper">
+                            <button class="btn-primary" onclick="migrateToSupabase('taxonomy')"
+                                style="background: #10b981; width: 100%;">🏷️ Migrate Taxonomy</button>
+                            <div class="migration-progress-bar">
+                                <div class="progress-fill" data-type="taxonomy"></div>
+                            </div>
+                        </div>
+                        <div class="migration-btn-wrapper">
+                            <button class="btn-primary" onclick="migrateToSupabase('settings')"
+                                style="background: #f59e0b; width: 100%;">⚙️ Migrate Settings</button>
+                            <div class="migration-progress-bar">
+                                <div class="progress-fill" data-type="settings"></div>
+                            </div>
+                        </div>
+                        <div class="migration-btn-wrapper">
+                            <button class="btn-primary" onclick="migrateToSupabase('homepage')"
+                                style="background: #8b5cf6; width: 100%;">🏠 Migrate Homepage</button>
+                            <div class="migration-progress-bar">
+                                <div class="progress-fill" data-type="homepage"></div>
+                            </div>
+                        </div>
+                        <div class="migration-btn-wrapper">
+                            <button class="btn-primary" onclick="migrateToSupabase('images')"
+                                style="background: #ec4899; width: 100%;">🖼️ Migrate Images</button>
+                            <div class="migration-progress-bar">
+                                <div class="progress-fill" data-type="images"></div>
+                            </div>
+                        </div>
+                        <div class="migration-btn-wrapper">
+                            <button class="btn-primary" onclick="migrateToSupabase('feedback')"
+                                style="background: #64748b; width: 100%;">💬 Migrate Feedback</button>
+                            <div class="migration-progress-bar">
+                                <div class="progress-fill" data-type="feedback"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="margin-top: 20px; border-top: 1px solid #ef4444; padding-top: 15px; color: #ef4444; font-size: 0.9rem; text-align: center;">
+                        ⚠️ <b>Warning:</b> These actions will overwrite cloud data with your local browser data. Proceed
+                        with caution.
+                    </div>
+
+                    <div id="migration-status"
+                        style="margin-top: 20px; padding: 15px; border-radius: 8px; background: rgba(0,0,0,0.2); display: none;">
+                    </div>
+                </div>
+
+                <div class="action-card" style="cursor: default; margin-top: 25px; border-left: 4px solid #ef4444;">
+                    <h3>Cloud Database Control</h3>
+                    <p style="color: #ef4444; font-weight: bold;">Danger Zone</p>
+                    <p>Switching to Supabase will make it the primary source of truth. Future changes will be saved
+                        to
+                        the cloud.</p>
+                    <div style="margin-top: 15px;">
+                        <button class="btn-primary" onclick="testSupabaseConnection()" style="background: #334155;">Test
+                            Connection</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Manager Section -->
+        <div id="review-manager" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">⭐</span> Review Manager
+                </h2>
+                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">←
+                    Back</button>
+            </div>
+
+            <div class="config-panel" style="max-width: 1000px; margin: 0 auto;">
+                <div class="form-group-admin"
+                    style="background: rgba(251, 191, 36, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(251, 191, 36, 0.2); margin-bottom: 25px;">
+                    <label style="color: #fbbf24; font-weight: 600;">Filter by Book</label>
+                    <select id="review-book-select" onchange="loadBookReviewsAdmin()"
+                        style="font-size: 1.1rem; padding: 12px; border-color: #fbbf24;">
+                        <option value="">-- All Books --</option>
+                    </select>
+                </div>
+
+                <div style="background: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr
+                                style="background: #1e293b; color: #94a3b8; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">
+                                <th style="padding: 15px;">Date</th>
+                                <th style="padding: 15px;">User</th>
+                                <th style="padding: 15px;">Rating</th>
+                                <th style="padding: 15px;">Comment</th>
+                                <th style="padding: 15px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reviews-admin-table-body">
+                            <!-- Reviews will load here -->
+                        </tbody>
+                    </table>
+                    <div id="reviews-admin-empty"
+                        style="padding: 40px; text-align: center; color: #64748b; display: none;">
+                        No reviews found for this selection.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Common Settings Section -->
+        <div id="common-settings" class="content-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                <h2 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.8rem;">⚡</span> Common Settings
+                </h2>
+                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">←
+                    Back</button>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <div class="common-tabs" style="display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;">
+                <button class="common-tab-btn active" onclick="switchCommonTab('tab-1')" data-tab="tab-1">
+                    🖼️ Carousel
+                </button>
+                <button class="common-tab-btn" onclick="switchCommonTab('tab-2')" data-tab="tab-2">
+                    🎨 Banners
+                </button>
+                <button class="common-tab-btn" onclick="switchCommonTab('tab-3')" data-tab="tab-3">
+                    💡 Tips
+                </button>
+                <button class="common-tab-btn" onclick="switchCommonTab('tab-4')" data-tab="tab-4">
+                    🏠 Branding
+                </button>
+                <button class="common-tab-btn" onclick="switchCommonTab('tab-5')" data-tab="tab-5">
+                    📔 Covers
+                </button>
+                <button class="common-tab-btn" onclick="switchCommonTab('tab-6')" data-tab="tab-6">
+                    ✨ Detail Page
+                </button>
+            </div>
+
+            <!-- Tab 1 Content -->
+            <div id="tab-1" class="common-tab-content active">
+                <div class="config-panel">
+                    <h3 style="margin-top: 0; color: #fff; display: flex; align-items: center; gap: 10px;">
+                        🖼️ Homepage Carousel Images
+                        <span id="tab1-carousel-count"
+                            style="font-size: 0.8rem; background: #3b82f6; padding: 4px 12px; border-radius: 20px; font-weight: 400;">0
+                            Slides</span>
+                    </h3>
+                    <p style="color: #94a3b8; margin-bottom: 25px;">Manage the hero carousel images that appear at
+                        the
+                        top of your homepage.</p>
+
+                    <!-- Current Carousel Images Grid -->
+                    <div id="tab1-carousel-grid" class="image-grid" style="margin-bottom: 25px;">
+                        <!-- Carousel images will be loaded here -->
+                    </div>
+
+                    <!-- Add New Image Button -->
+                    <button class="add-image-zone" onclick="openTab1AddImageModal()"
+                        style="width: 100%; padding: 30px;">
+                        <div class="icon" style="font-size: 2.5rem; margin-bottom: 10px;">➕</div>
+                        <h3 style="margin: 0; color: #fff;">Add New Carousel Image</h3>
+                        <p style="color: #94a3b8; margin: 10px 0 0;">Upload a new hero image for the homepage
+                            carousel
+                        </p>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab 2 Content -->
+            <div id="tab-2" class="common-tab-content">
+                <div class="config-panel">
+                    <h3 style="margin-top: 0; color: #fff; display: flex; align-items: center; gap: 10px;">
+                        🎨 Homepage Bottom Images
+                        <span id="tab2-bottom-count"
+                            style="font-size: 0.8rem; background: #10b981; padding: 4px 12px; border-radius: 20px; font-weight: 400;">0
+                            Images</span>
+                    </h3>
+                    <p style="color: #94a3b8; margin-bottom: 25px;">Manage promotional banners and decorative images
+                        at
+                        the bottom of your homepage.</p>
+
+                    <!-- Current Bottom Images Grid -->
+                    <div id="tab2-bottom-grid" class="image-grid" style="margin-bottom: 25px;">
+                        <!-- Bottom images will be loaded here -->
+                    </div>
+
+                    <!-- Add New Image Button -->
+                    <button class="add-image-zone" onclick="openTab2AddImageModal()"
+                        style="width: 100%; padding: 30px;">
+                        <div class="icon" style="font-size: 2.5rem; margin-bottom: 10px;">➕</div>
+                        <h3 style="margin: 0; color: #fff;">Add New Bottom Image</h3>
+                        <p style="color: #94a3b8; margin: 10px 0 0;">Add promotional banners or decorative images
+                        </p>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tab 3 Content -->
+            <div id="tab-3" class="common-tab-content">
+                <div class="config-panel">
+                    <h3 style="margin-top: 0; color: #fff; display: flex; align-items: center; gap: 10px;">
+                        💡 Daily Tips & Insights
+                    </h3>
+                    <p style="color: #94a3b8; margin-bottom: 25px;">Edit the knowledge tips shown on your homepage.
+                    </p>
+
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+                        <!-- Tip 1 -->
+                        <div
+                            style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <h4 style="margin: 0 0 15px; color: #fbbf24;">Tip #1</h4>
+                            <div class="form-group-admin">
+                                <label>Badge Heading</label>
+                                <input type="text" id="common-tip-head-1" placeholder="e.g., FINANCIAL TIP">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Tip Content</label>
+                                <textarea id="common-tip-1" rows="2" placeholder="Enter tip content..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Tip 2 -->
+                        <div
+                            style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <h4 style="margin: 0 0 15px; color: #fbbf24;">Tip #2</h4>
+                            <div class="form-group-admin">
+                                <label>Badge Heading</label>
+                                <input type="text" id="common-tip-head-2" placeholder="e.g., MINDSET TIP">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Tip Content</label>
+                                <textarea id="common-tip-2" rows="2" placeholder="Enter tip content..."></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Tip 3 -->
+                        <div
+                            style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <h4 style="margin: 0 0 15px; color: #fbbf24;">Tip #3</h4>
+                            <div class="form-group-admin">
+                                <label>Badge Heading</label>
+                                <input type="text" id="common-tip-head-3" placeholder="e.g., SUCCESS TIP">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Tip Content</label>
+                                <textarea id="common-tip-3" rows="2" placeholder="Enter tip content..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: right; margin-top: 30px;">
+                        <button class="btn-success" onclick="saveTab3Tips()">💾 Save All Tips</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4 Content -->
+            <div id="tab-4" class="common-tab-content">
+                <div class="config-panel">
+                    <h3 style="margin-top: 0; color: #fff; display: flex; align-items: center; gap: 10px;">
+                        🏠 Homepage Branding
+                    </h3>
+                    <p style="color: #94a3b8; margin-bottom: 25px;">Manage your site's main hero section and
+                        branding
+                        identity.</p>
+
+                    <div class="form-group-admin">
+                        <label>Main Hero Title</label>
+                        <input type="text" id="common-hero-title" placeholder="e.g., Wealth & Mindset">
+                    </div>
+
+                    <div class="form-group-admin">
+                        <label>Hero Subtitle</label>
+                        <textarea id="common-hero-subtitle" rows="3"
+                            placeholder="e.g., Mastering the Psychology of Success..."></textarea>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div class="form-group-admin">
+                            <label>Logo URL</label>
+                            <input type="text" id="common-logo-url" placeholder="e.g., assets/logo-new.png">
+                        </div>
+                        <div class="form-group-admin">
+                            <label>Site Tagline</label>
+                            <input type="text" id="common-site-tagline" placeholder="Read Smart. Think Wealth.">
+                        </div>
+                    </div>
+
+                    <div style="text-align: right; margin-top: 30px;">
+                        <button class="btn-success" onclick="saveTab4Branding()">💾 Save Site Branding</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Tab 5 Content -->
+            <div id="tab-5" class="common-tab-content">
+                <div class="config-panel">
+                    <h3 style="margin-top: 0; color: #fff; display: flex; align-items: center; gap: 10px;">
+                        📔 Global Book Cover Manager
+                    </h3>
+                    <p style="color: #94a3b8; margin-bottom: 25px;">Design and manage covers for all books. Changes
+                        here
+                        reflect everywhere the book is displayed.</p>
+
+                    <div class="form-group-admin"
+                        style="background: rgba(59, 130, 246, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.2); margin-bottom: 25px;">
+                        <label style="color: #60a5fa; font-weight: 600;">Select Book to Design</label>
+                        <select id="common-cover-book-select" onchange="loadSelectedBookCover()"
+                            style="font-size: 1.1rem; padding: 12px; border-color: #3b82f6;">
+                            <option value="">-- Select a Book --</option>
+                        </select>
+                    </div>
+
+                    <div id="cover-designer-fields" style="display: none;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="form-group-admin">
+                                <label>Design Image URL (The Cover Art)</label>
+                                <input type="text" id="common-cover-url" placeholder="e.g., assets/covers/book1.jpg">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Hero Background Image (The Purple Area)</label>
+                                <input type="text" id="common-hero-bg-url"
+                                    placeholder="Enter image URL for hero background">
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="form-group-admin">
+                                <label>Main Title on Cover</label>
+                                <input type="text" id="common-cover-title" placeholder="e.g., THE PSYCHOLOGY OF MONEY">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Secondary Text (Author/Subtitle)</label>
+                                <input type="text" id="common-cover-subtitle" placeholder="e.g., Morgan Housel">
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="form-group-admin">
+                                <label>Hero Background Color 1</label>
+                                <input type="color" id="common-hero-bg-color1" value="#1e3a8a"
+                                    style="height: 45px; width: 100%; padding: 2px;">
+                                <p style="font-size: 0.75rem; color: #64748b; margin: 4px 0 0;">Format: #RRGGBB (Hex)
+                                </p>
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Hero Background Color 2</label>
+                                <input type="color" id="common-hero-bg-color2" value="#7c3aed"
+                                    style="height: 45px; width: 100%; padding: 2px;">
+                                <p style="font-size: 0.75rem; color: #64748b; margin: 4px 0 0;">Format: #RRGGBB (Hex)
+                                </p>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div class="form-group-admin">
+                                <label>Text Horizontal Alignment (Side)</label>
+                                <select id="common-cover-align">
+                                    <option value="left">Left Side</option>
+                                    <option value="center">Center</option>
+                                    <option value="right">Right Side</option>
+                                </select>
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Text Vertical Alignment</label>
+                                <select id="common-cover-valign">
+                                    <option value="start" id="cover-valign-top">Top Side</option>
+                                    <option value="center" id="cover-valign-middle" selected>Middle</option>
+                                    <option value="end" id="cover-valign-bottom">Bottom Side</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: end;">
+                            <div class="form-group-admin" style="margin-bottom: 0;">
+                                <label>Overlay Text Color</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="color" id="common-cover-text-color" value="#ffffff"
+                                        style="height: 45px; width: 60px; padding: 2px;">
+                                    <input type="text" id="common-cover-text-hex" value="#ffffff" placeholder="#ffffff"
+                                        style="flex: 1;"
+                                        oninput="document.getElementById('common-cover-text-color').value = this.value">
+                                </div>
+                            </div>
+                            <div class="form-group-admin" style="margin-bottom: 0;">
+                                <label>Text Shadow Intensity</label>
+                                <select id="common-cover-shadow">
+                                    <option value="none">None</option>
+                                    <option value="0 2px 4px rgba(0,0,0,0.5)">Light</option>
+                                    <option value="0 4px 10px rgba(0,0,0,0.8)" selected>Medium</option>
+                                    <option value="0 10px 30px rgba(0,0,0,1)">Heavy</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px dashed rgba(255,255,255,0.1);">
+                            <h4
+                                style="margin: 0 0 15px 0; color: #60a5fa; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">
+                                🏷️ Cover Badges & Labels</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div class="form-group-admin">
+                                    <label>Top Badge Text (e.g., CHAPTER 3)</label>
+                                    <input type="text" id="common-cover-badge-top"
+                                        placeholder="e.g., CHAPTER 3 (42-120)">
+                                </div>
+                                <div class="form-group-admin">
+                                    <label>Bottom Badge Text (e.g., VOLUME 6)</label>
+                                    <input type="text" id="common-cover-badge-bottom"
+                                        placeholder="e.g., VOLUME 6 / FEATURED">
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div class="form-group-admin">
+                                    <label>Top Badge Shade</label>
+                                    <select id="common-cover-badge-top-color">
+                                        <option value="#0d9488">Teal (Standard)</option>
+                                        <option value="#2563eb">Blue</option>
+                                        <option value="#10b981">Green</option>
+                                        <option value="#f59e0b">Amber</option>
+                                        <option value="#ef4444">Red</option>
+                                        <option value="#000000">Black</option>
+                                    </select>
+                                </div>
+                                <div class="form-group-admin">
+                                    <label>Bottom Badge Shade</label>
+                                    <select id="common-cover-badge-bottom-color">
+                                        <option value="#000000">Black (Standard)</option>
+                                        <option value="#1e293b">Navy</option>
+                                        <option value="#334155">Slate</option>
+                                        <option value="#dc2626">Dark Red</option>
+                                        <option value="#ca8a04">Dark Yellow</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div
+                            style="text-align: right; margin-top: 30px; display: flex; justify-content: flex-end; gap: 15px;">
+                            <button class="btn-primary" style="background: #334155;"
+                                onclick="resetCoverDesigner()">Reset</button>
+                            <button class="btn-success" onclick="saveTab5Cover()">💾 Save & Apply Cover
+                                Design</button>
+                        </div>
+                    </div>
+
+                    <div id="cover-no-selection"
+                        style="text-align: center; padding: 50px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 2px dashed rgba(255,255,255,0.1);">
+                        <p style="color: #64748b; font-size: 1.1rem; margin: 0;">Select a book from the list above
+                            to
+                            start designing its cover.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 6 Content: Detail Page Commons -->
+            <div id="tab-6" class="common-tab-content">
+                <div class="config-panel">
+                    <h3 style="margin-top: 0; color: #fff; display: flex; align-items: center; gap: 10px;">
+                        ✨ Detail Page Commons
+                    </h3>
+                    <p style="color: #94a3b8; margin-bottom: 25px;">Manage global elements that appear on EVERY book
+                        detail page (e.g., Platform Features in About tab).</p>
+
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; margin-bottom: 25px;">
+                        <h4 style="margin: 0; color: #60a5fa; font-size: 0.9rem; text-transform: uppercase;">🚀 Platform
+                            Features (About Tab Section)</h4>
+                        <button class="btn-primary" onclick="resetCommonFeatures()"
+                            style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 5px 12px; font-size: 0.8rem;">↺
+                            Reset Defaults</button>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <!-- Feature 1 -->
+                        <div
+                            style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <label style="font-size: 0.8rem; color: #64748b;">Feature 1 (e.g., Smart Sync)</label>
+                            <input type="text" id="common-feat-title-1" placeholder="Title"
+                                style="margin-bottom: 10px;">
+                            <textarea id="common-feat-desc-1" rows="2" placeholder="Description"></textarea>
+                            <div style="display: flex; gap: 10px; margin-top: 5px;">
+                                <input type="color" id="common-feat-color-1" value="#3b82f6"
+                                    style="height: 35px; width: 50px; padding: 2px;">
+                                <input type="text" id="common-feat-hex-1" placeholder="#3b82f6" style="flex: 1;"
+                                    oninput="document.getElementById('common-feat-color-1').value = this.value">
+                            </div>
+                        </div>
+                        <!-- Feature 2 -->
+                        <div
+                            style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <label style="font-size: 0.8rem; color: #64748b;">Feature 2 (e.g., Audio Mode)</label>
+                            <input type="text" id="common-feat-title-2" placeholder="Title"
+                                style="margin-bottom: 10px;">
+                            <textarea id="common-feat-desc-2" rows="2" placeholder="Description"></textarea>
+                            <div style="display: flex; gap: 10px; margin-top: 5px;">
+                                <input type="color" id="common-feat-color-2" value="#10b981"
+                                    style="height: 35px; width: 50px; padding: 2px;">
+                                <input type="text" id="common-feat-hex-2" placeholder="#10b981" style="flex: 1;"
+                                    oninput="document.getElementById('common-feat-color-2').value = this.value">
+                            </div>
+                        </div>
+                        <!-- Feature 3 -->
+                        <div
+                            style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <label style="font-size: 0.8rem; color: #64748b;">Feature 3 (e.g., Offline Access)</label>
+                            <input type="text" id="common-feat-title-3" placeholder="Title"
+                                style="margin-bottom: 10px;">
+                            <textarea id="common-feat-desc-3" rows="2" placeholder="Description"></textarea>
+                            <div style="display: flex; gap: 10px; margin-top: 5px;">
+                                <input type="color" id="common-feat-color-3" value="#f59e0b"
+                                    style="height: 35px; width: 50px; padding: 2px;">
+                                <input type="text" id="common-feat-hex-3" placeholder="#f59e0b" style="flex: 1;"
+                                    oninput="document.getElementById('common-feat-color-3').value = this.value">
+                            </div>
+                        </div>
+                        <!-- Feature 4 -->
+                        <div
+                            style="background: rgba(255,255,255,0.02); padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                            <label style="font-size: 0.8rem; color: #64748b;">Feature 4 (e.g., Community)</label>
+                            <input type="text" id="common-feat-title-4" placeholder="Title"
+                                style="margin-bottom: 10px;">
+                            <textarea id="common-feat-desc-4" rows="2" placeholder="Description"></textarea>
+                            <div style="display: flex; gap: 10px; margin-top: 5px;">
+                                <input type="color" id="common-feat-color-4" value="#8b5cf6"
+                                    style="height: 35px; width: 50px; padding: 2px;">
+                                <input type="text" id="common-feat-hex-4" placeholder="#8b5cf6" style="flex: 1;"
+                                    oninput="document.getElementById('common-feat-color-4').value = this.value">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 25px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h4 style="margin: 0; color: #60a5fa; font-size: 0.9rem; text-transform: uppercase;">💬
+                                Global Review Highlight (About Tab)</h4>
+                            <button class="btn-primary" onclick="clearFeaturedReview()"
+                                style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 5px 12px; font-size: 0.8rem;">✕
+                                Clear Review</button>
+                        </div>
+                        <div class="form-group-admin">
+                            <label>Show a "Top Review" snippet in the About tab for all books?</label>
+                            <select id="common-detail-show-review-snippet">
+                                <option value="no">No, keep About tab focused on synopsis</option>
+                                <option value="yes">Yes, show a featured review snippet</option>
+                            </select>
+                        </div>
+                        <div id="common-review-snippet-fields" style="display: none;">
+                            <div class="form-group-admin">
+                                <label>Featured Review Text</label>
+                                <textarea id="common-review-text" rows="3"
+                                    placeholder="Enter a generic positive review quote..."></textarea>
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Reviewer Name</label>
+                                <input type="text" id="common-review-author" placeholder="e.g., John D., Top Reader">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: right; margin-top: 30px;">
+                        <button class="btn-success" onclick="saveTab6DetailCommons()">💾 Save Detail Page
+                            Commons</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </main>
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+
+    <!-- Modular Admin Scripts -->
+    <script src="js/admin/utils.js"></script>
+    <script src="js/admin/sync.js"></script>
+    <script src="js/admin/core.js"></script>
+    <script src="js/admin/library.js"></script>
+    <script src="js/admin/analytics.js"></script>
+    <script src="js/admin/editor.js"></script>
+    <script src="js/admin/community.js"></script>
+    <script src="js/admin/reviews.js"></script>
+    <script src="js/admin/metadata.js"></script>
+    <script src="js/admin/content-processor.js"></script>
+    <script src="js/admin/common-settings.js"></script>
+    <script src="js/admin/homepage.js"></script>
+    <script src="js/admin/detail-editor.js"></script>
+    <script src="js/admin/settings.js"></script>
+    <script src="js/admin/advanced-tools.js"></script>
+    <script src="js/admin/daily-mindset.js"></script>
+    <script src="js/admin/launcher.js"></script>
+    <!-- Custom Edit Modal -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Chapter Details</h3>
+                <span class="close-modal" onclick="closeEditModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group-admin">
+                    <label>Chapter Number</label>
+                    <input type="number" id="edit-chap-num" placeholder="e.g. 1">
+                </div>
+                <div class="form-group-admin">
+                    <label>Chapter Name</label>
+                    <input type="text" id="edit-chap-title" placeholder="e.g. The Beginning">
+                </div>
+                <div class="form-group-admin">
+                    <label>Heading / Subtitle</label>
+                    <input type="text" id="edit-chap-heading" placeholder="e.g. A journey starts...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" style="background: #ef4444; margin-right: 10px;"
+                    onclick="closeEditModal()">Cancel</button>
+                <button class="btn-success" style="margin: 0;" onclick="saveEditModal()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    <!-- Tab Content Modal -->
+    <div id="tab-content-modal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>Edit Tab Content: <span id="current-tab-name-display"></span></h3>
+                <span class="close-modal" onclick="closeTabModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group-admin">
+                    <label>Tab Heading (Optional)</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="tab-content-heading" placeholder="e.g. About This Book" style="flex: 2;">
+                        <select id="tab-content-heading-weight" style="flex: 1;">
+                            <option value="400">Normal (400)</option>
+                            <option value="500">Medium (500)</option>
+                            <option value="600">Semibold (600)</option>
+                            <option value="700" selected>Bold (700)</option>
+                            <option value="800">Extra Bold (800)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group-admin">
+                    <label>Tab Subheading (Optional)</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="tab-content-subheading" placeholder="e.g. A brief summary..."
+                            style="flex: 2;">
+                        <select id="tab-content-subheading-weight" style="flex: 1;">
+                            <option value="300">Light (300)</option>
+                            <option value="400" selected>Normal (400)</option>
+                            <option value="500">Medium (500)</option>
+                            <option value="600">Semibold (600)</option>
+                            <option value="700">Bold (700)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group-admin">
+                    <label>Tab Image URL (Optional)</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="tab-content-image" placeholder="https://example.com/image.jpg"
+                            style="flex: 3;">
+                        <select id="tab-content-image-width" style="flex: 1;">
+                            <option value="100%">Width: 100%</option>
+                            <option value="75%">Width: 75%</option>
+                            <option value="50%">Width: 50%</option>
+                            <option value="25%">Width: 25%</option>
+                            <option value="auto">Width: Auto</option>
+                        </select>
+                    </div>
+                    <small style="color: #64748b;">Image will be displayed below headings.</small>
+                </div>
+                <div class="form-group-admin">
+                    <label>Tab Content (HTML Supported)</label>
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <button onclick="insertTabHeading()" class="toolbar-btn"
+                            style="background:#555; color:white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">+
+                            Heading</button>
+                        <button onclick="insertTabSubheading()" class="toolbar-btn"
+                            style="background:#555; color:white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">+
+                            Subheading</button>
+                        <button onclick="insertTabImageStruct()" class="toolbar-btn"
+                            style="background:#555; color:white; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem;">+
+                            Image Object</button>
+                    </div>
+                    <textarea id="tab-content-text" rows="10" placeholder="Write your tab content here..."
+                        style="background: #0f172a; border: 1px solid #1e293b; color: white; border-radius: 8px; padding: 10px; width: 100%; font-family: 'Inter', sans-serif; resize: vertical; line-height: 1.6;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" style="background: #ef4444; margin-right: 10px;"
+                    onclick="closeTabModal()">Cancel</button>
+                <button class="btn-success" style="margin: 0;" onclick="saveTabContent()">Apply Content</button>
+            </div>
+        </div>
+    </div>
+    <!-- Custom Confirmation Modal -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
+            <div id="confirm-icon" style="font-size: 3rem; margin-bottom: 20px;">⚠️</div>
+            <h3 id="confirm-title" style="margin: 0 0 10px 0; color: #fff;">Are you sure?</h3>
+            <p id="confirm-message" style="color: #94a3b8; font-size: 0.95rem; line-height: 1.5; margin-bottom: 25px;">
+                This action cannot be undone.</p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button id="confirm-cancel-btn" class="btn-primary"
+                    style="background: #334155; margin: 0; flex: 1;">Cancel</button>
+                <button id="confirm-ok-btn" class="btn-success"
+                    style="background: #ef4444; margin: 0; flex: 1;">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Alert Modal -->
+    <div id="alert-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center; padding: 30px;">
+            <div id="alert-icon" style="font-size: 3rem; margin-bottom: 20px;">ℹ️</div>
+            <h3 id="alert-title" style="margin: 0 0 10px 0; color: #fff;">Notice</h3>
+            <p id="alert-message" style="color: #94a3b8; font-size: 0.95rem; line-height: 1.5; margin-bottom: 25px;">
+                This is an alert message.</p>
+            <div style="display: flex; justify-content: center;">
+                <button id="alert-ok-btn" class="btn-primary"
+                    style="background: #3b82f6; margin: 0; min-width: 120px;">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Prompt Modal -->
+    <div id="prompt-modal" class="modal">
+        <div class="modal-content" style="max-width: 450px; text-align: center; padding: 30px;">
+            <div id="prompt-icon" style="font-size: 3rem; margin-bottom: 20px;">✏️</div>
+            <h3 id="prompt-title" style="margin: 0 0 10px 0; color: #fff;">Input Required</h3>
+            <p id="prompt-message" style="color: #94a3b8; font-size: 0.95rem; line-height: 1.5; margin-bottom: 20px;">
+                Please enter a value:</p>
+            <input type="text" id="prompt-input"
+                style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; font-size: 1rem; margin-bottom: 25px;">
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button id="prompt-cancel-btn" class="btn-primary"
+                    style="background: #334155; margin: 0; flex: 1;">Cancel</button>
+                <button id="prompt-ok-btn" class="btn-success"
+                    style="background: #3b82f6; margin: 0; flex: 1;">OK</button>
+            </div>
+        </div>
+    </div>
+    <!-- Review Editor Modal -->
+    <div id="review-editor-modal" class="modal-overlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center;">
+        <div class="config-panel" style="width: 500px; max-width: 90%; background: #1e293b; border: 1px solid #334155;">
+            <h3 style="margin-top:0;">Edit Review</h3>
+            <input type="hidden" id="edit-review-id">
+            <div class="form-group-admin">
+                <label>Reviewer Name</label>
+                <input type="text" id="edit-review-user" class="admin-input">
+            </div>
+            <div class="form-group-admin" style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label>Likes</label>
+                    <input type="number" id="edit-review-likes" class="admin-input" min="0">
+                </div>
+                <div style="flex: 1;">
+                    <label>Dislikes</label>
+                    <input type="number" id="edit-review-dislikes" class="admin-input" min="0">
+                </div>
+            </div>
+            <div class="form-group-admin">
+                <label>Rating (1-5)</label>
+                <input type="number" id="edit-review-rating" class="admin-input" min="1" max="5">
+            </div>
+            <div class="form-group-admin">
+                <label>Comment</label>
+                <textarea id="edit-review-comment" class="admin-input" rows="4"></textarea>
+            </div>
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn-primary" onclick="closeReviewModal()"
+                    style="background:#475569; margin-right:10px;">Cancel</button>
+                <button class="btn-success" onclick="saveReviewEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Reply Modal -->
+    <div id="review-reply-modal" class="modal-overlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center;">
+        <div class="config-panel" style="width: 500px; max-width: 90%; background: #1e293b; border: 1px solid #334155;">
+            <h3 style="margin-top:0;">Admin Reply</h3>
+            <input type="hidden" id="reply-review-id">
+            <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 15px;">Your reply will be visible directly under
+                the
+                user's review.</p>
+            <div class="form-group-admin">
+                <label>Reply Message</label>
+                <textarea id="reply-review-text" class="admin-input" rows="4"
+                    placeholder="Thank you for your feedback..."></textarea>
+            </div>
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn-primary" onclick="closeReplyModal()"
+                    style="background:#475569; margin-right:10px;">Cancel</button>
+                <button class="btn-success" onclick="saveReviewReply()">Send Reply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Language Variants Modal -->
+    <div id="variants-modal" class="modal-overlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center;">
+        <div class="config-panel"
+            style="width: 600px; max-width: 95%; background: #1e293b; border: 1px solid #334155; padding: 25px; border-radius: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin:0; display: flex; align-items: center; gap: 10px; color: #fff;">
+                    <span style="font-size: 1.5rem;">🌐</span> Language Variants
+                </h3>
+                <button onclick="closeVariantsModal()"
+                    style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:1.5rem;">&times;</button>
+            </div>
+
+            <p id="variants-book-title"
+                style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px; font-weight: 500;"></p>
+
+            <div id="variants-list"
+                style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 5px;">
+                <div style="text-align: center; padding: 40px; color: #64748b;">Loading variants...</div>
+            </div>
+
+            <div
+                style="text-align: right; margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                <button class="btn-primary" onclick="closeVariantsModal()"
+                    style="background:#475569; padding: 10px 25px; margin: 0;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="js/admin/utils.js"></script>
+    <script src="js/admin/core.js"></script>
+    <script src="js/admin/sync.js"></script>
+
+    <!-- Feature Scripts -->
+    <script src="js/admin/metadata.js"></script>
+    <script src="js/admin/content-processor.js"></script>
+    <script src="js/admin/library.js"></script>
+    <script src="js/admin/settings.js"></script>
+    <script src="js/admin/common-settings.js"></script>
+    <script src="js/admin/homepage.js"></script>
+    <script src="js/admin/analytics.js"></script>
+    <script src="js/admin/reviews.js"></script>
+    <script src="js/admin/community.js"></script>
+    <script src="js/admin/advanced-tools.js"></script>
+    <script src="js/admin/daily-mindset.js"></script>
+    <script src="js/admin/detail-editor.js"></script>
+
+    <!-- Launcher (Must be last) -->
+    <script src="js/admin/launcher.js"></script>
+    <!-- Admin Authentication Logic -->
+    <script>
+        // Store the original text of the login button
+        const loginBtn = document.querySelector('#admin-login button');
+        const originalLoginText = loginBtn ? loginBtn.innerText : 'Login';
+
+        async function adminLogin() {
+            const email = document.getElementById("adminEmail").value;
+            const password = document.getElementById("adminPassword").value;
+            const btn = document.querySelector('#admin-login button');
+
+            if (!email || !password) {
+                alert("Please enter email and password");
+                return;
+            }
+
+            if (btn) btn.innerText = "Verifying...";
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email,
+                password
+            });
+
+            if (error) {
+                alert("Invalid admin credentials: " + error.message);
+                if (btn) btn.innerText = originalLoginText;
+                return;
+            }
+
+            // Success
+            handleAuthSuccess();
+        }
+
+        function handleAuthSuccess() {
+            document.body.classList.add("admin-authenticated");
+            enableAdminActions();
+
+            // UI Feedback
+            const loginDiv = document.getElementById('admin-login');
+            const emailInput = document.getElementById('adminEmail');
+            const passInput = document.getElementById('adminPassword');
+            const btn = document.querySelector('#admin-login button');
+            const status = document.getElementById('auth-status');
+
+            if (emailInput) emailInput.style.display = 'none';
+            if (passInput) passInput.style.display = 'none';
+            if (btn) btn.style.display = 'none';
+            if (status) status.style.display = 'inline';
+        }
+
+        function enableAdminActions() {
+            document.querySelectorAll(".admin-action").forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = "1";
+                btn.style.cursor = "pointer";
+                btn.style.pointerEvents = "auto";
+                btn.title = "";
+            });
+            console.log("Admin actions enabled.");
+        }
+
+        // Check session on load
+        window.addEventListener('DOMContentLoaded', async () => {
+            // First check if we're even allowed here
+            if (localStorage.getItem("admin_ui_access") !== "true") return;
+
+            // Check Supabase Session
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session) {
+                handleAuthSuccess();
+            } else {
+                // Ensure disabled state is enforced visually if CSS didn't catch it
+                document.querySelectorAll(".admin-action").forEach(btn => {
+                    btn.disabled = true;
+                    btn.style.opacity = "0.5";
+                    btn.style.cursor = "not-allowed";
+                    btn.style.pointerEvents = "none";
+                    btn.title = "Login required to perform this action";
+                });
+            }
+        });
+
+        // Listen for auth state changes (e.g. if token expires)
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_OUT') {
+                window.location.reload();
+            }
+        });
+    </script>
+    <!-- Review Editor Modal -->
+    <div id="review-editor-modal" class="modal-overlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center;">
+        <div class="config-panel" style="width: 500px; max-width: 90%; background: #1e293b; border: 1px solid #334155;">
+            <h3 style="margin-top:0;">Edit Review</h3>
+            <input type="hidden" id="edit-review-id">
+
+            <div class="form-group-admin">
+                <label>Reviewer Name</label>
+                <input type="text" id="edit-review-user" class="admin-input">
+            </div>
+
+            <div class="form-group-admin">
+                <label>Rating (1-5)</label>
+                <input type="number" id="edit-review-rating" class="admin-input" min="1" max="5">
+            </div>
+
+            <div class="form-group-admin">
+                <label>Comment</label>
+                <textarea id="edit-review-comment" class="admin-input" rows="4"></textarea>
+            </div>
+
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn-primary" onclick="closeReviewModal()"
+                    style="background:#475569; margin-right:10px;">Cancel</button>
+                <button class="btn-success" onclick="saveReviewEdit()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Reply Modal -->
+    <div id="review-reply-modal" class="modal-overlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center;">
+        <div class="config-panel" style="width: 500px; max-width: 90%; background: #1e293b; border: 1px solid #334155;">
+            <h3 style="margin-top:0;">Admin Reply</h3>
+            <input type="hidden" id="reply-review-id">
+
+            <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 15px;">Your reply will be visible directly under
+                the
+                user's review.</p>
+
+            <div class="form-group-admin">
+                <label>Reply Message</label>
+                <textarea id="reply-review-text" class="admin-input" rows="4"
+                    placeholder="Thank you for your feedback..."></textarea>
+            </div>
+
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn-primary" onclick="closeReplyModal()"
+                    style="background:#475569; margin-right:10px;">Cancel</button>
+                <button class="btn-success" onclick="saveReviewReply()">Send Reply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Language Variants Modal -->
+    <div id="variants-modal" class="modal-overlay"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:2000; justify-content:center; align-items:center;">
+        <div class="config-panel"
+            style="width: 600px; max-width: 95%; background: #1e293b; border: 1px solid #334155; padding: 25px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin:0; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.5rem;">🌐</span> Language Variants
+                </h3>
+                <button onclick="closeVariantsModal()"
+                    style="background:none; border:none; color:#94a3b8; cursor:pointer; font-size:1.5rem;">&times;</button>
+            </div>
+
+            <p id="variants-book-title"
+                style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px; font-weight: 500;">
+            </p>
+
+            <div id="variants-list"
+                style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 5px;">
+                <!-- Variants injected by JS -->
+                <div style="text-align: center; padding: 40px; color: #64748b;">Loading variants...</div>
+            </div>
+
+            <div
+                style="text-align: right; margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
+                <button class="btn-primary" onclick="closeVariantsModal()"
+                    style="background:#475569; padding: 10px 25px;">Close</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

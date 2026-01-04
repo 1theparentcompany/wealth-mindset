@@ -1,0 +1,4510 @@
+﻿pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+let extractedText = "";
+let chaptersArray = [];
+let currentChapterIndex = 0; // Tracks which chapter is currently loaded in the editor
+
+let currentEditId = null; // Tracks if we are editing an existing library item
+
+// Global Notification System
+const showToast = (message, type = 'success') => {
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    // Choose icon based on type
+    let icon = 'ℹ️';
+    if (type === 'success') icon = '✅';
+    if (type === 'error') icon = '❌';
+    if (type === 'warning') icon = '⚠️';
+
+    toast.innerHTML = `
+        <span style="font-size: 1.2rem;">${icon}</span>
+        <div style="flex: 1;">${message}</div>
+    `;
+
+    container.appendChild(toast);
+
+    // Auto remove
+    setTimeout(() => {
+        toast.classList.add('hide');
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+};
+// Custom Confirmation Modal Helper
+const customConfirm = (message, title = "Are you sure?", icon = "⚠️") => {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirm-modal');
+        const titleEl = document.getElementById('confirm-title');
+        const msgEl = document.getElementById('confirm-message');
+        const iconEl = document.getElementById('confirm-icon');
+        const okBtn = document.getElementById('confirm-ok-btn');
+        const cancelBtn = document.getElementById('confirm-cancel-btn');
+
+        if (!modal) {
+            resolve(confirm(message));
+            return;
+        }
+
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+        iconEl.textContent = icon;
+        modal.style.display = 'block';
+
+        const handleResolve = (val) => {
+            modal.style.display = 'none';
+            cleanup();
+            resolve(val);
+        };
+
+        const onCancel = () => handleResolve(false);
+        const onConfirm = () => handleResolve(true);
+
+        const cleanup = () => {
+            okBtn.removeEventListener('click', onConfirm);
+            cancelBtn.removeEventListener('click', onCancel);
+        };
+
+        okBtn.addEventListener('click', onConfirm);
+        cancelBtn.addEventListener('click', onCancel);
+    });
+};
+
+
+function showSection(id) {
+    if (!id) return;
+    const sections = ['dashboard-view', 'manage-content', 'content-editor', 'site-analytics', 'library-manager', 'feedback-inbox', 'site-settings', 'metadata-manager', 'detail-page-editor', 'homepage-manager', 'image-management', 'supabase-manager', 'common-settings', 'taxonomy-ads-manager', 'community-manager'];
+
+    sections.forEach(s => {
+        const el = document.getElementById(s);
+        if (el) {
+            el.style.display = 'none';
+            el.classList.remove('active');
+        }
+    });
+
+    const target = document.getElementById(id);
+    if (target) {
+        target.style.display = 'block';
+        target.classList.add('active'); // Add active class to trigger observers if any
+        window.scrollTo(0, 0);
+        // Sync URL hash
+        if (window.location.hash !== '#' + id) {
+            window.location.hash = id;
+        }
+    }
+
+    // Special handling for various sections
+    try {
+        if (id === 'site-analytics' && typeof initCharts === 'function') {
+            setTimeout(initCharts, 100);
+        }
+        if (id === 'library-manager') renderLibraryTable();
+        if (id === 'feedback-inbox') renderFeedbackTable();
+        if (id === 'site-settings') loadSettings();
+        if (id === 'content-editor') loadContentEditorBooks();
+        if (id === 'metadata-manager') loadMetaBooks();
+        if (id === 'detail-page-editor') loadDetailPageBooks();
+        if (id === 'homepage-manager') initHomepageManager();
+        if (id === 'image-management') loadImageManagementBooks();
+        if (id === 'common-settings') loadCommonSettings();
+        if (id === 'taxonomy-ads-manager') initAdvancedTools();
+        if (id === 'community-manager') initCommunityManager();
+        if (id === 'supabase-manager' && typeof testSupabaseConnection === 'function') {
+            testSupabaseConnection();
+        }
+        if (id === 'manage-content') {
+            const draft = localStorage.getItem('contentStudioDraft');
+            if (draft && chaptersArray.length === 0) {
+                loadDraft();
+            }
+        }
+    } catch (e) {
+        console.warn("Section initialization helper failed:", e);
+    }
+}
+
+// Handle Back/Forward Navigation
+window.addEventListener('hashchange', () => {
+    const currentHash = window.location.hash.substring(1);
+    if (currentHash) showSection(currentHash);
+});
+
+let categoryMap = {
+    'book': { icon: '📔', genres: ['Inspiration', 'Education', 'Finance', 'Psychology', 'Business', 'Self-Help'] },
+    'story': { icon: '📖', genres: ['Inspirational', 'Motivational', 'Success Story', 'Biographical', 'Classic'] },
+    'guide': { icon: '🧭', genres: ['Wealth Management', 'Personal Growth', 'Study Guide', 'Technical'] },
+    'laws': { icon: '⚖️', genres: ['Finance Laws', 'Legal Rights', 'Property Laws', 'General'] },
+    'chapter': { icon: '📄', genres: ['Snippet', 'Short Reading', 'Quote'] },
+    'quates': { icon: '📄', genres: ['General'] }
+};
+
+function initTaxonomy() {
+    const saved = localStorage.getItem('siteTaxonomy');
+    if (saved) {
+        categoryMap = JSON.parse(saved);
+    } else {
+        localStorage.setItem('siteTaxonomy', JSON.stringify(categoryMap));
+    }
+    renderTaxonomyBadges();
+    updateEditorTypeDropdown();
+}
+
+function renderTaxonomyBadges() {
+    const container = document.getElementById('taxonomy-preview');
+    const parentSelect = document.getElementById('genre-parent-type');
+    if (!container) return;
+
+    container.innerHTML = '';
+    parentSelect.innerHTML = '';
+
+    const types = Object.keys(categoryMap);
+
+    types.forEach((type, index) => {
+        // To Select
+        const opt = document.createElement('option');
+        opt.value = type;
+        opt.textContent = type.charAt(0).toUpperCase() + type.slice(1);
+        parentSelect.appendChild(opt);
+
+        // To Badges UI
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = "background: rgba(255,255,255,0.02); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); width: 100%; display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;";
+
+        const leftSide = document.createElement('div');
+        leftSide.style.display = "flex";
+        leftSide.style.alignItems = "center";
+        leftSide.style.gap = "15px";
+
+        // Order Controls
+        const orderBtnGroup = document.createElement('div');
+        orderBtnGroup.style.display = "flex";
+        orderBtnGroup.style.flexDirection = "column";
+        orderBtnGroup.style.gap = "2px";
+
+        const upBtn = document.createElement('button');
+        upBtn.innerHTML = "▲";
+        upBtn.style.cssText = "background:none; border:none; color:#64748b; cursor:pointer; font-size:0.7rem; padding:0;";
+        upBtn.onclick = () => moveTaxonomyType(index, 'up');
+        if (index === 0) upBtn.style.opacity = "0.2";
+
+        const downBtn = document.createElement('button');
+        downBtn.innerHTML = "▼";
+        downBtn.style.cssText = "background:none; border:none; color:#64748b; cursor:pointer; font-size:0.7rem; padding:0;";
+        downBtn.onclick = () => moveTaxonomyType(index, 'down');
+        if (index === types.length - 1) downBtn.style.opacity = "0.2";
+
+        orderBtnGroup.appendChild(upBtn);
+        orderBtnGroup.appendChild(downBtn);
+        leftSide.appendChild(orderBtnGroup);
+
+        // Label and Genres
+        const icon = categoryMap[type].icon || '📄';
+        const contentInfo = document.createElement('div');
+        contentInfo.innerHTML = `<span style="font-size:1.2rem; margin-right:8px;">${icon}</span><span style="color:#eab308; font-weight:700; margin-right:5px; text-transform:uppercase; font-size:0.85rem;">${type}:</span>`;
+
+        const genreContainer = document.createElement('span');
+        const genres = categoryMap[type].genres || categoryMap[type]; // Handle old format if any
+        (Array.isArray(genres) ? genres : []).forEach(genre => {
+            const badge = document.createElement('span');
+            badge.textContent = genre;
+            badge.style.cssText = "background:rgba(255,255,255,0.05); padding:3px 10px; border-radius:4px; font-size:0.8rem; color:#94a3b8; margin-right:5px; border:1px solid #1e293b; display:inline-block; margin-bottom:4px;";
+            genreContainer.appendChild(badge);
+        });
+        contentInfo.appendChild(genreContainer);
+        leftSide.appendChild(contentInfo);
+
+        wrapper.appendChild(leftSide);
+
+        // Delete Action
+        const delBtn = document.createElement('button');
+        delBtn.innerHTML = "🗑️";
+        delBtn.style.cssText = "background:none; border:none; color:#ef4444; cursor:pointer; padding:5px; opacity: 0.6;";
+        delBtn.onmouseover = () => delBtn.style.opacity = "1";
+        delBtn.onmouseout = () => delBtn.style.opacity = "0.6";
+        delBtn.onclick = () => deleteTaxonomyType(type);
+        wrapper.appendChild(delBtn);
+
+        container.appendChild(wrapper);
+    });
+}
+
+function moveTaxonomyType(index, direction) {
+    const types = Object.keys(categoryMap);
+    if (direction === 'up' && index > 0) {
+        [types[index], types[index - 1]] = [types[index - 1], types[index]];
+    } else if (direction === 'down' && index < types.length - 1) {
+        [types[index], types[index + 1]] = [types[index + 1], types[index]];
+    } else {
+        return;
+    }
+
+    // Rebuild map in new order
+    const newMap = {};
+    types.forEach(t => {
+        newMap[t] = categoryMap[t];
+    });
+    categoryMap = newMap;
+    saveTaxonomy();
+}
+
+function deleteTaxonomyType(type) {
+    customConfirm(`Are you sure you want to delete the "${type}" content type? This will not delete actual library items.`, "Confirm Deletion", "🗑️")
+        .then(confirmed => {
+            if (!confirmed) return;
+            delete categoryMap[type];
+            saveTaxonomy();
+            showToast(`Category "${type}" deleted`);
+        });
+}
+
+function addTaxonomyType() {
+    const icon = document.getElementById('new-type-icon').value.trim() || '📄';
+    const nameRaw = document.getElementById('new-type-name').value.trim();
+    const name = nameRaw.toLowerCase().replace(/\s+/g, '-');
+
+    if (!name) return;
+    if (categoryMap[name]) { showToast("Type already exists!", 'error'); return; }
+
+    categoryMap[name] = { icon: icon, genres: ['General'] };
+    saveTaxonomy();
+    document.getElementById('new-type-name').value = '';
+    document.getElementById('new-type-icon').value = '';
+    showToast(`New type "${nameRaw}" added!`);
+}
+
+function addTaxonomyGenre() {
+    const type = document.getElementById('genre-parent-type').value;
+    const genre = document.getElementById('new-genre-name').value.trim();
+    if (!genre) return;
+
+    const genres = categoryMap[type].genres || (Array.isArray(categoryMap[type]) ? categoryMap[type] : []);
+    if (!genres.includes(genre)) {
+        if (Array.isArray(categoryMap[type])) {
+            categoryMap[type].push(genre);
+        } else {
+            categoryMap[type].genres.push(genre);
+        }
+        saveTaxonomy();
+        document.getElementById('new-genre-name').value = '';
+        showToast(`Added "${genre}" to ${type}`);
+    }
+}
+
+function saveTaxonomy() {
+    localStorage.setItem('siteTaxonomy', JSON.stringify(categoryMap));
+    renderTaxonomyBadges();
+    updateEditorTypeDropdown();
+    updateSubcategories();
+}
+
+function updateEditorTypeDropdown() {
+    const select = document.getElementById('content-type');
+    if (!select) return;
+    const currentVal = select.value;
+    select.innerHTML = '';
+    Object.keys(categoryMap).forEach(key => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        const icon = categoryMap[key].icon || '📄';
+        opt.textContent = `${icon} ${key.charAt(0).toUpperCase() + key.slice(1)}`;
+        select.appendChild(opt);
+    });
+    if (categoryMap[currentVal]) select.value = currentVal;
+}
+
+function showDashboard() {
+    showSection('dashboard-view');
+    updateDashboardStats();
+}
+
+function updateSubcategories() {
+    const type = document.getElementById('content-type').value;
+    const genreSelect = document.getElementById('content-genre');
+    genreSelect.innerHTML = '';
+
+    const data = categoryMap[type];
+    const genres = data ? (data.genres || (Array.isArray(data) ? data : ['General'])) : ['General'];
+
+    genres.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.toLowerCase().replace(/\s+/g, '-');
+        opt.textContent = cat;
+        genreSelect.appendChild(opt);
+    });
+}
+
+function startNewContent() {
+    currentEditId = null;
+    chaptersArray = [];
+    currentChapterIndex = 0;
+    document.getElementById('book-title').value = '';
+    document.getElementById('book-author').value = '';
+    document.getElementById('book-cover').value = '';
+    document.getElementById('book-desc').value = '';
+    document.getElementById('manual-paste').value = '';
+    document.getElementById('preview-box').value = '[No content loaded]';
+    document.getElementById('chapter-list-preview').innerHTML = '<p style="color: #64748b; font-size: 0.9rem;">Chapters will appear here after splitting.</p>';
+
+    updateSubcategories();
+
+    const publishBtn = document.querySelector('.split-results-panel .btn-success');
+    if (publishBtn) publishBtn.innerHTML = '<span>🚀</span> Publish';
+
+    const status = document.getElementById('extraction-status');
+    status.textContent = 'Ready for upload...';
+    status.style.color = "#94a3b8";
+
+    showSection('manage-content');
+    updateLineNumbers();
+    saveDraft(); // Init draft
+}
+
+
+// Logic to enforces 50-75 char line width
+function reflowText(text) {
+    if (!text) return "";
+    const paragraphs = text.split(/\n/);
+    const reflowedLines = [];
+    const maxChars = 75;
+
+    paragraphs.forEach(para => {
+        const words = para.split(' ');
+        let currentLine = "";
+
+        words.forEach(word => {
+            if ((currentLine.length + word.length + 1) > maxChars) {
+                if (currentLine) reflowedLines.push(currentLine);
+                currentLine = word;
+            } else {
+                currentLine = currentLine ? (currentLine + " " + word) : word;
+            }
+        });
+        if (currentLine) reflowedLines.push(currentLine);
+    });
+
+    return reflowedLines.join('\n');
+}
+
+// Chart State
+let trafficChartInstance = null;
+let deviceChartInstance = null;
+
+function initCharts() {
+    // Traffic Chart
+    const trafficCanvas = document.getElementById('trafficChart');
+    if (trafficCanvas) {
+        if (trafficChartInstance) trafficChartInstance.destroy();
+        const trafficCtx = trafficCanvas.getContext('2d');
+        trafficChartInstance = new Chart(trafficCtx, {
+            type: 'line',
+            data: {
+                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                datasets: [{
+                    label: 'Daily Visitors',
+                    data: [1200, 1900, 1500, 2200, 2800, 3100, 3500],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                }
+            }
+        });
+    }
+
+    // Device Chart
+    const deviceCanvas = document.getElementById('deviceChart');
+    if (deviceCanvas) {
+        if (deviceChartInstance) deviceChartInstance.destroy();
+        const deviceCtx = deviceCanvas.getContext('2d');
+        deviceChartInstance = new Chart(deviceCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Mobile', 'Desktop', 'Tablet'],
+                datasets: [{
+                    data: [65, 30, 5],
+                    backgroundColor: ['#10b981', '#3b82f6', '#eab308'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { color: '#cbd5e1' } }
+                }
+            }
+        });
+    }
+
+    // Load Real-time Data
+    loadRealTimeActivity();
+}
+
+
+async function loadRealTimeActivity() {
+    if (typeof isSupabaseConfigured !== 'function' || !isSupabaseConfigured()) return;
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('user_activity')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        if (error) throw error;
+
+        // 1. Update Feed
+        const feedContainer = document.getElementById('activity-feed-container');
+        if (feedContainer) {
+            feedContainer.innerHTML = data && data.length > 0 ? '' : '<p style="color: #64748b; font-size: 0.9rem;">No activity found yet.</p>';
+            if (data) {
+                data.forEach(item => {
+                    const dotColor = item.activity_type === 'cookie_accept' ? '#10b981' : (item.activity_type === 'page_view' ? '#3b82f6' : '#eab308');
+                    const timeStr = new Date(item.created_at).toLocaleTimeString();
+
+                    const html = `
+                        <div style="display: flex; align-items: center; gap: 10px; font-size: 0.85rem;">
+                            <span style="background: ${dotColor}; width: 8px; height: 8px; border-radius: 50%;"></span>
+                            <span style="color: #94a3b8;">IP <b>${item.ip_address}</b> : ${item.activity_type.replace('_', ' ')}</span>
+                            <span style="margin-left: auto; color: #64748b; font-size: 0.75rem;">${timeStr}</span>
+                        </div>
+                    `;
+                    feedContainer.insertAdjacentHTML('beforeend', html);
+                });
+            }
+        }
+
+        // 2. Update IP Log Table
+        const logBody = document.getElementById('ip-activity-log-body');
+        if (logBody && data) {
+            logBody.innerHTML = data.map(item => {
+                const detail = item.metadata ? (item.metadata.title || item.metadata.timestamp || item.page_url) : item.page_url;
+                const statusColor = item.activity_type === 'cookie_accept' ? '#10b981' : '#cbd5e1';
+                const statusText = item.activity_type === 'cookie_accept' ? '✓ Accepted' : 'Active';
+
+                return `
+                    <tr style="border-bottom: 1px solid #1e293b;">
+                        <td style="padding: 12px; font-family: monospace; color: #3b82f6;">${item.ip_address}</td>
+                        <td style="padding: 12px; text-transform: capitalize;">${item.activity_type.replace('_', ' ')}</td>
+                        <td style="padding: 12px; color: #94a3b8; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${detail}</td>
+                        <td style="padding: 12px; color: #64748b;">${new Date(item.created_at).toUTCString()}</td>
+                        <td style="padding: 12px;"><span style="color: ${statusColor}; font-weight: 600;">${statusText}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+    } catch (e) {
+        console.warn("Failed to load activity logs", e);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initCharts();
+    // Publish Button Initializer
+    const publishBtn = document.querySelector('.split-results-panel .btn-success');
+    if (publishBtn) publishBtn.onclick = publishChapters;
+});
+
+
+// Initialize/Reset State
+function initContent(text) {
+    const formatted = reflowText(text);
+    document.getElementById('manual-paste').value = text; // Keep raw in paste? Or formatted? Let's sync.
+    document.getElementById('preview-box').value = formatted;
+
+    // Initial State: One big chunk
+    chaptersArray = [{ title: "Full Text / Unsorted", content: formatted }];
+    currentChapterIndex = 0;
+
+    renderChapters();
+    updateLineNumbers();
+
+    const status = document.getElementById('extraction-status');
+    status.textContent = "Content loaded. Ready to split.";
+    status.style.color = "#3b82f6";
+}
+
+// Sync manual paste with preview + Apply Formatting
+document.getElementById('manual-paste').addEventListener('input', function () {
+    initContent(this.value);
+});
+
+let editingChapterIndex = null;
+
+function openEditModal(index) {
+    editingChapterIndex = index;
+    const chap = chaptersArray[index];
+    const modal = document.getElementById('edit-modal');
+
+    // Try to parse existing number/title if possible, or just load raw
+    // Assuming title format might be "Chapter 1: The Beginning"
+
+    // Simple logic: If we stored them separately we'd populate them. 
+    // For now, we only have 'title'. Let's fill 'Chapter Name' with the current title.
+    // And maybe try to extract a number if it exists.
+
+    document.getElementById('edit-chap-num').value = index + 1; // Default to index + 1
+    document.getElementById('edit-chap-title').value = chap.title;
+    // document.getElementById('edit-chap-heading').value = chap.heading || ""; // If we had a heading field property
+
+    modal.style.display = 'block';
+}
+
+function closeEditModal() {
+    document.getElementById('edit-modal').style.display = 'none';
+    editingChapterIndex = null;
+}
+
+function saveEditModal() {
+    if (editingChapterIndex === null) return;
+
+    const num = document.getElementById('edit-chap-num').value;
+    const title = document.getElementById('edit-chap-title').value;
+    const heading = document.getElementById('edit-chap-heading').value;
+
+    // Construct new display title
+    // Format: "Chapter [Num]: [Title] - [Heading]" or just simple string?
+    // Let's make it flexible.
+    let displayTitle = title;
+    if (num) displayTitle = `Chapter ${num}: ${title}`;
+    if (heading) displayTitle += ` - ${heading}`;
+
+    // Update Data
+    chaptersArray[editingChapterIndex].title = displayTitle;
+    // We could store structured data too if we wanted:
+    // chaptersArray[editingChapterIndex].meta = { num, title, heading };
+
+    const status = document.getElementById('extraction-status');
+    status.textContent = `Updated: ${displayTitle}`;
+
+    renderChapters();
+    closeEditModal();
+}
+
+// Shared Render Logic
+function renderChapters() {
+    const chaptersDiv = document.getElementById('chapter-list-preview');
+    const status = document.getElementById('extraction-status');
+
+    chaptersDiv.innerHTML = ``;
+
+    chaptersArray.forEach((chap, i) => {
+        const badge = document.createElement('div');
+        badge.className = 'chapter-badge';
+        badge.style.cursor = 'pointer';
+        badge.style.display = 'flex';
+        badge.style.justifyContent = 'space-between';
+        badge.style.alignItems = 'center';
+        badge.style.gap = '10px';
+
+        // Highlight active
+        if (i === currentChapterIndex) {
+            badge.style.borderColor = "#eab308";
+            badge.style.color = "#eab308";
+        }
+
+        const titleSpan = document.createElement('span');
+        titleSpan.textContent = chap.title;
+        badge.appendChild(titleSpan);
+
+        // Rename Icon (Small pencil)
+        const editIcon = document.createElement('span');
+        editIcon.innerHTML = 'âœï¸';
+        editIcon.style.fontSize = '0.9rem';
+        editIcon.style.opacity = '0.7';
+        editIcon.title = "Edit Details";
+        editIcon.style.padding = "5px";
+        editIcon.style.borderRadius = "4px";
+        // Hover effect logic handled by CSS or just simple inline for now
+        editIcon.onmouseover = function () { this.style.backgroundColor = 'rgba(255,255,255,0.1)'; };
+        editIcon.onmouseout = function () { this.style.backgroundColor = 'transparent'; };
+
+        badge.appendChild(editIcon);
+
+        badge.onclick = (e) => {
+            // Check if clicking edit icon or main badge
+            if (e.target === editIcon) {
+                e.stopPropagation();
+                openEditModal(i);
+                return;
+            }
+
+            // Load Content
+            currentChapterIndex = i;
+            document.getElementById('preview-box').value = chap.content;
+            updateLineNumbers();
+            renderChapters(); // Re-render to update highlights
+            status.textContent = `Editing: ${chap.title}`;
+        };
+
+        chaptersDiv.appendChild(badge);
+    });
+}
+
+// Handle File Upload
+const fileInput = document.createElement('input');
+fileInput.type = 'file';
+fileInput.accept = '.pdf,.txt';
+fileInput.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    const status = document.getElementById('extraction-status');
+
+    if (file.type === "application/pdf") {
+        status.textContent = "Extracting text from PDF... Please wait.";
+        reader.onload = async function () {
+            const typedarray = new Uint8Array(this.result);
+            const pdf = await pdfjsLib.getDocument(typedarray).promise;
+            let fullText = "";
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                fullText += textContent.items.map(item => item.str).join(" ") + "\n";
+            }
+            extractedText = fullText;
+            finalizeUpload(file.name);
+        };
+        reader.readAsArrayBuffer(file);
+    } else {
+        status.textContent = "Reading text file...";
+        reader.onload = function () {
+            extractedText = this.result;
+            finalizeUpload(file.name);
+        };
+        reader.readAsText(file);
+    }
+};
+
+function triggerUpload() { fileInput.click(); }
+
+function finalizeUpload(fileName) {
+    extractedText = extractedText || "";
+    document.getElementById('manual-paste').value = extractedText;
+    initContent(extractedText);
+
+    const status = document.getElementById('extraction-status');
+    status.textContent = `File Loaded: ${fileName}`;
+    status.style.color = "#10b981";
+}
+
+// Core Splitting Logic (Auto - Replaces everything)
+function processAndSplit() {
+    const textToProcess = document.getElementById('manual-paste').value;
+    if (!textToProcess) {
+        showToast("Please add text first!", 'warning');
+        return;
+    }
+
+    const splitMethod = document.getElementById('split-method').value;
+    const formatted = reflowText(textToProcess);
+
+    let newChapters = [];
+
+    if (splitMethod === 'keyword') {
+        const chapterRegex = /(?:Chapter|CHAPTER|PART|Part|LESSON|Lesson|SECTION|Section)\s+([0-9]+|[A-Za-z]+|[\w\s]+)(?::|\s|\n|-)/g;
+        let match;
+        let indices = [];
+        while ((match = chapterRegex.exec(formatted)) !== null) {
+            indices.push({ title: match[0].trim(), index: match.index });
+        }
+        if (indices.length === 0) {
+            newChapters = [{ title: "Full Text", content: formatted }];
+        } else {
+            for (let i = 0; i < indices.length; i++) {
+                const start = indices[i].index;
+                const end = indices[i + 1] ? indices[i + 1].index : formatted.length;
+                newChapters.push({
+                    title: indices[i].title,
+                    content: formatted.substring(start, end).trim()
+                });
+            }
+        }
+    } else {
+        // Split by major paragraph breaks
+        const chunks = formatted.split(/\n\s*\n\s*\n/);
+        newChapters = chunks.map((c, i) => {
+            const lines = c.trim().split('\n');
+            const firstLine = lines[0].length < 100 ? lines[0] : `Section ${i + 1}`;
+            return {
+                title: firstLine,
+                content: c.trim()
+            };
+        });
+    }
+
+    // Update Global State
+    chaptersArray = newChapters;
+    currentChapterIndex = 0;
+
+    renderChapters();
+
+    // Load first chapter
+    if (chaptersArray.length > 0) {
+        document.getElementById('preview-box').value = chaptersArray[0].content;
+        updateLineNumbers();
+    }
+}
+
+// SEQUENTIAL Manual Split Logic
+function splitAtLine() {
+    // 1. Get Inputs
+    const lineNum = parseInt(document.getElementById('split-line').value);
+    const customTitleInput = document.getElementById('split-title');
+    let customTitle = customTitleInput.value.trim();
+
+    if (!lineNum || lineNum < 1) {
+        showToast("Please enter a valid line number.", 'warning');
+        return;
+    }
+
+    // 2. Get Current Content (from textarea, which reflects the actively edited chapter)
+    const currentContent = document.getElementById('preview-box').value;
+    const lines = currentContent.split('\n');
+
+    if (lineNum >= lines.length) {
+        showToast(`Line number exceeds current section length (${lines.length} lines).`, 'error');
+        return;
+    }
+
+    // 3. Perform Split
+    const part1Content = lines.slice(0, lineNum).join('\n');
+    const part2Content = lines.slice(lineNum).join('\n');
+
+    // 4. Determine Titles
+    // If user didn't provide a title, ask for one? Or generate default?
+    // "ask for chapter anme" -> user might have typed it in input.
+    if (!customTitle) {
+        customTitle = `Chapter ${currentChapterIndex + 1}`;
+    }
+    const part1Title = customTitle;
+    const part2Title = "Remaining Content"; // This will be the next thing they split
+
+    // 5. Update Global Array (Splicing)
+    // Replace the CURRENT chapter with [Part 1, Part 2]
+    const newPart1 = { title: part1Title, content: part1Content };
+    const newPart2 = { title: part2Title, content: part2Content };
+
+    chaptersArray.splice(currentChapterIndex, 1, newPart1, newPart2);
+
+    // 6. Update UI
+    // Reset title input for next time
+    customTitleInput.value = "";
+    document.getElementById('split-line').value = "";
+
+    // Move focus to the "Remaining" part so user can continue splitting seamlessly
+    currentChapterIndex = currentChapterIndex + 1;
+
+    renderChapters();
+
+    // Load the "Remaining" part immediately
+    document.getElementById('preview-box').value = newPart2.content;
+    updateLineNumbers();
+
+    const status = document.getElementById('extraction-status');
+    status.textContent = `Split Done! created "${part1Title}". Now showing remaining text.`;
+    status.style.color = "#eab308";
+}
+
+// Drag & Drop
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.style.borderColor = "#3b82f6";
+    dropZone.style.background = "rgba(59, 130, 246, 0.1)";
+});
+dropZone.addEventListener('dragleave', () => {
+    dropZone.style.borderColor = "#314158";
+    dropZone.style.background = "rgba(0, 0, 0, 0.2)";
+});
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) fileInput.onchange({ target: { files: [file] } });
+});
+
+// Line Numbers
+const previewBox = document.getElementById('preview-box');
+const lineNumbers = document.getElementById('line-numbers');
+
+const updateLineNumbers = () => {
+    const lines = previewBox.value.split('\n').length;
+    let lineStr = "";
+    for (let i = 1; i <= lines; i++) {
+        lineStr += i + "\n";
+    }
+    lineNumbers.textContent = lineStr;
+};
+
+
+const syncScroll = () => {
+    lineNumbers.scrollTop = previewBox.scrollTop;
+};
+
+function insertFormatting(tag) {
+    const start = previewBox.selectionStart;
+    const end = previewBox.selectionEnd;
+    const text = previewBox.value;
+    const selected = text.substring(start, end);
+
+    let beforeTag = `<${tag}>`;
+    let afterTag = `</${tag}>`;
+
+    // Special handling for some tags if needed
+    if (tag === 'center') {
+        beforeTag = `<div style="text-align:center;">`;
+        afterTag = `</div>`;
+    }
+
+    const newText = text.substring(0, start) + beforeTag + selected + afterTag + text.substring(end);
+    previewBox.value = newText;
+
+    // Re-trigger input event to sync data
+    const event = new Event('input', { bubbles: true });
+    previewBox.dispatchEvent(event);
+
+    // Refocus and select the text
+    previewBox.focus();
+    previewBox.setSelectionRange(start + beforeTag.length, start + beforeTag.length + selected.length);
+    saveDraft();
+}
+
+previewBox.addEventListener('input', () => {
+    updateLineNumbers();
+    if (chaptersArray[currentChapterIndex]) {
+        chaptersArray[currentChapterIndex].content = previewBox.value;
+    }
+    saveDraft();
+});
+previewBox.addEventListener('scroll', syncScroll);
+
+function clearEditor() {
+    customConfirm("Clear current content?", "Clear Editor", "🗑️")
+        .then(confirmed => {
+            if (!confirmed) return;
+            previewBox.value = "";
+            document.getElementById('manual-paste').value = "";
+            document.getElementById('book-author').value = "";
+            document.getElementById('book-cover').value = "";
+            document.getElementById('book-desc').value = "";
+            chaptersArray = [];
+            currentChapterIndex = 0;
+            renderChapters();
+            updateLineNumbers();
+            localStorage.removeItem('contentStudioDraft');
+        });
+}
+
+function saveDraft() {
+    const draft = {
+        title: document.getElementById('book-title').value,
+        author: document.getElementById('book-author').value,
+        cover: document.getElementById('book-cover').value,
+        desc: document.getElementById('book-desc').value,
+        type: document.getElementById('content-type').value,
+        genre: document.getElementById('content-genre').value,
+        chapters: chaptersArray,
+        currentIdx: currentChapterIndex
+    };
+    localStorage.setItem('contentStudioDraft', JSON.stringify(draft));
+}
+
+function loadDraft() {
+    const saved = localStorage.getItem('contentStudioDraft');
+    if (!saved) return;
+
+    customConfirm("You have a saved draft. Load it?", "Load Draft", "📂")
+        .then(confirmed => {
+            if (!confirmed) return;
+
+            const draft = JSON.parse(saved);
+            document.getElementById('book-title').value = draft.title || "";
+            document.getElementById('book-author').value = draft.author || "";
+            document.getElementById('book-cover').value = draft.cover || "";
+            document.getElementById('book-desc').value = draft.desc || "";
+            document.getElementById('content-type').value = draft.type || "book";
+            updateSubcategories();
+            setTimeout(() => {
+                document.getElementById('content-genre').value = draft.genre || "";
+            }, 0);
+
+            chaptersArray = draft.chapters || [];
+            currentChapterIndex = draft.currentIdx || 0;
+
+            if (chaptersArray.length > 0) {
+                previewBox.value = chaptersArray[currentChapterIndex].content;
+                updateLineNumbers();
+            }
+            renderChapters();
+
+            const status = document.getElementById('extraction-status');
+            status.textContent = "Draft loaded successfully!";
+            status.style.color = "#3b82f6";
+        });
+}
+
+// Publish Logic
+function publishChapters() {
+    if (chaptersArray.length === 0) {
+        showToast("No chapters to publish.", 'warning');
+        return;
+    }
+
+    const titleInput = document.getElementById('book-title');
+    const typeSelect = document.getElementById('content-type');
+    const genreSelect = document.getElementById('content-genre');
+
+    const bookTitle = titleInput.value.trim() || "Untitled Book";
+    const bookAuthor = document.getElementById('book-author').value.trim() || "Unknown Author";
+    const bookCover = document.getElementById('book-cover').value.trim();
+    const bookDesc = document.getElementById('book-desc').value.trim();
+    const contentType = typeSelect.value;
+    const contentGenre = genreSelect.value;
+
+    // Create New Entry
+    const newEntry = {
+        id: currentEditId || Date.now().toString(),
+        title: bookTitle,
+        author: bookAuthor,
+        image: bookCover,
+        description: bookDesc,
+        type: contentType,
+        genre: contentGenre,
+        chapters: chaptersArray,
+        timestamp: new Date().toISOString()
+    };
+
+    // Save to LocalStorage (Simulating Backend)
+    let library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+
+    if (currentEditId) {
+        // Update existing
+        const index = library.findIndex(item => item.id === currentEditId);
+        if (index !== -1) {
+            library[index] = newEntry;
+            showToast(`Updated "${bookTitle}" successfully!`);
+        }
+    } else {
+        // Add new
+        library.push(newEntry);
+        showToast(`Success! Published "${bookTitle}" with ${chaptersArray.length} chapters.`);
+    }
+
+    localStorage.setItem('siteLibrary', JSON.stringify(library));
+
+    // Sync to Supabase
+    syncToCloud('library', newEntry);
+
+    console.log("Saved Entry:", newEntry);
+
+    const status = document.getElementById('extraction-status');
+    status.textContent = currentEditId ? `✅ Updated "${bookTitle}"!` : `🚀 Published "${bookTitle}" to Library!`;
+    status.style.color = "#10b981";
+
+    // Reset Editor State
+    currentEditId = null;
+    const publishBtn = document.querySelector('.split-results-panel .btn-success');
+    if (publishBtn) publishBtn.innerHTML = '<span>🚀</span> Publish';
+
+    updateDashboardStats();
+}
+
+// --- NEW MANAGEMENT FEATURES ---
+
+function renderLibraryTable() {
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const tbody = document.getElementById('library-table-body');
+    const emptyMsg = document.getElementById('library-empty-msg');
+
+    tbody.innerHTML = '';
+    if (library.length === 0) {
+        emptyMsg.style.display = 'block';
+        return;
+    }
+    emptyMsg.style.display = 'none';
+
+    library.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid #1e293b';
+        tr.innerHTML = `
+                    <td style="padding: 15px;">${item.id}</td>
+                    <td style="padding: 15px; color: white; font-weight: 500;">${item.title}<br><small style="color:#64748b; text-transform: capitalize;">${item.genre || 'General'}</small></td>
+                    <td style="padding: 15px;"><span style="text-transform: capitalize;">${item.type}</span></td>
+                    <td style="padding: 15px;">${item.chapters ? item.chapters.length : 0} Chapters</td>
+                    <td style="padding: 15px; color: #64748b;">${new Date(item.timestamp).toLocaleDateString()}</td>
+                    <td style="padding: 15px;">
+                        <button onclick="editLibraryItem('${item.id}')" style="background:none; border:none; color:#3b82f6; cursor:pointer; margin-right: 10px;" title="Edit">âœï¸</button>
+                        <button onclick="deleteLibraryItem('${item.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer;" title="Delete">🗑️</button>
+                    </td>
+                `;
+        tbody.appendChild(tr);
+    });
+}
+
+function deleteLibraryItem(id) {
+    customConfirm("Are you sure you want to delete this item?", "Delete Confirmation", "🗑️")
+        .then(confirmed => {
+            if (!confirmed) return;
+            const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+            const filtered = library.filter(item => item.id !== id);
+            localStorage.setItem('siteLibrary', JSON.stringify(filtered));
+
+            // Delete from Supabase
+            syncToCloud('library_delete', null, id);
+            renderLibraryTable();
+            updateDashboardStats();
+            showToast("Item deleted successfully", "success");
+        });
+}
+
+function clearFullLibrary() {
+    customConfirm("CRITICAL: This will delete ALL published items. Continue?", "Wipe Library", "⚠️")
+        .then(confirmed => {
+            if (!confirmed) return;
+            localStorage.removeItem('siteLibrary');
+            renderLibraryTable();
+            updateDashboardStats();
+            showToast("Library cleared!", "warning");
+        });
+}
+
+function editLibraryItem(id) {
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const item = library.find(i => i.id === id);
+
+    if (!item) {
+        showToast("Item not found!", 'error');
+        return;
+    }
+
+    // 1. Poplate Editor State
+    currentEditId = id;
+    chaptersArray = item.chapters || [];
+    currentChapterIndex = 0;
+
+    // 2. Populate UI Fields
+    document.getElementById('book-title').value = item.title;
+    document.getElementById('book-author').value = item.author || "";
+    document.getElementById('book-cover').value = item.image || "";
+    document.getElementById('book-desc').value = item.description || "";
+    document.getElementById('content-type').value = item.type;
+    updateSubcategories();
+    setTimeout(() => {
+        document.getElementById('content-genre').value = item.genre || '';
+    }, 0);
+
+    // 3. Load first chapter into editor
+    if (chaptersArray.length > 0) {
+        document.getElementById('preview-box').value = chaptersArray[0].content;
+        updateLineNumbers();
+    }
+
+    // 4. Update Split Preview
+    renderChapters();
+
+    // 5. Change Publish Button Text
+    const publishBtn = document.querySelector('.split-results-panel .btn-success');
+    if (publishBtn) publishBtn.innerHTML = '<span>💾</span> Save Update';
+
+    // 6. Navigate to Manage Section
+    showSection('manage-content');
+
+    const status = document.getElementById('extraction-status');
+    status.textContent = `Editing: ${item.title}`;
+    status.style.color = "#3b82f6";
+}
+
+function renderFeedbackTable() {
+    const feedback = JSON.parse(localStorage.getItem('siteFeedback') || '[]');
+    const tbody = document.getElementById('feedback-table-body');
+    const emptyMsg = document.getElementById('feedback-empty-msg');
+
+    tbody.innerHTML = '';
+    if (feedback.length === 0) {
+        emptyMsg.style.display = 'block';
+        return;
+    }
+    emptyMsg.style.display = 'none';
+
+    feedback.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid #1e293b';
+        tr.innerHTML = `
+                    <td style="padding: 15px; color: #64748b;">${item.date}</td>
+                    <td style="padding: 15px; color: white; font-weight: 500;">${item.name}<br><small style="color:#64748b">${item.email}</small></td>
+                    <td style="padding: 15px;"><span style="background:#1e293b; padding:2px 8px; border-radius:4px; font-size:0.8rem;">${item.topic}</span></td>
+                    <td style="padding: 15px; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.message}</td>
+                    <td style="padding: 15px;">
+                        <button onclick="deleteFeedbackItem('${item.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer;" title="Delete">🗑️</button>
+                    </td>
+                `;
+        tbody.appendChild(tr);
+    });
+}
+
+function deleteFeedbackItem(id) {
+    const feedback = JSON.parse(localStorage.getItem('siteFeedback') || '[]');
+    const filtered = feedback.filter(item => item.id !== id);
+    localStorage.setItem('siteFeedback', JSON.stringify(filtered));
+    renderFeedbackTable();
+    updateDashboardStats();
+}
+
+function saveSettings() {
+    customConfirm("Save changes to site settings?", "Save Settings", "⚙️").then(confirmed => {
+        if (!confirmed) return;
+
+        const settings = JSON.parse(localStorage.getItem('siteSettings') || '{}');
+        settings.title = document.getElementById('setting-site-title').value;
+        settings.desc = document.getElementById('setting-site-desc').value;
+        settings.email = document.getElementById('setting-contact-email').value;
+
+        localStorage.setItem('siteSettings', JSON.stringify(settings));
+
+        // Sync to Supabase
+        syncToCloud('settings', settings);
+        showToast("Site settings saved successfully!");
+    });
+}
+
+function loadSettings() {
+    const settings = JSON.parse(localStorage.getItem('siteSettings') || '{}');
+    if (settings.title) document.getElementById('setting-site-title').value = settings.title;
+    if (settings.desc) document.getElementById('setting-site-desc').value = settings.desc;
+    if (settings.email) document.getElementById('setting-contact-email').value = settings.email;
+
+    initTaxonomy(); // Load custom types and genres
+}
+
+function updateDashboardStats() {
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const feedback = JSON.parse(localStorage.getItem('siteFeedback') || '[]');
+
+    const readersEl = document.querySelector('.stats-grid .stat-card:nth-child(1) .stat-number');
+    const feedbackEl = document.querySelector('.stats-grid .stat-card:nth-child(2) .stat-number');
+
+    if (readersEl) readersEl.textContent = (1284 + library.length).toLocaleString();
+    if (feedbackEl) feedbackEl.textContent = feedback.length;
+}
+
+
+// --- Detail Page Editor Logic ---
+function loadDetailPageSettings() {
+    const select = document.getElementById('detail-book-select');
+    const content = document.getElementById('detail-editor-content');
+    const id = select.value;
+
+    if (!id) {
+        content.style.display = 'none';
+        return;
+    }
+
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const item = library.find(b => b.id === id);
+
+    if (!item) {
+        content.style.display = 'none';
+        return;
+    }
+
+    // Load existing detail page settings or use defaults
+    const detailSettings = item.detailSettings || {};
+
+    // Populate Tabs
+    const tabsList = document.getElementById('active-tabs-list');
+    const defaultTabs = detailSettings.tabs || [
+        { name: '📖 About', enabled: true },
+        { name: '📚 Chapters', enabled: true },
+        { name: 'â­ Reviews', enabled: true }
+    ];
+
+    tabsList.innerHTML = '';
+    defaultTabs.forEach(tab => {
+        const tabDiv = document.createElement('div');
+        tabDiv.className = 'tab-item';
+        tabDiv.draggable = true;
+        tabDiv.dataset.content = tab.content || "";
+        tabDiv.dataset.heading = tab.heading || "";
+        tabDiv.dataset.subheading = tab.subheading || "";
+        tabDiv.dataset.image = tab.image || "";
+        tabDiv.dataset.headingWeight = tab.headingWeight || "700";
+        tabDiv.dataset.subheadingWeight = tab.subheadingWeight || "400";
+        tabDiv.dataset.imageWidth = tab.imageWidth || "100%";
+        tabDiv.style.cssText = 'background: #1e293b; padding: 10px; border-radius: 6px; margin-bottom: 8px; cursor: move; display: flex; justify-content: space-between; align-items: center;';
+        tabDiv.innerHTML = `
+                        <span>${tab.name}</span>
+                        <div style="display: flex; gap: 5px;">
+                            <button class="toolbar-btn" onclick="openTabEdit(this)" style="background: #3b82f6; border-color: #3b82f6; color: white; padding: 4px 10px;">Edit Content</button>
+                            <button class="toolbar-btn" onclick="removeTab(this)" style="background: #ef4444; border-color: #ef4444; color: white; padding: 4px 10px;">Remove</button>
+                        </div>
+                    `;
+        tabsList.appendChild(tabDiv);
+    });
+
+    // (Drag & Drop initialized once in DOMContentLoaded via setupTabDragAndDrop)
+
+    // Populate Features & Badges
+    document.getElementById('detail-genres').value = detailSettings.genres || '';
+    document.getElementById('detail-readers').value = detailSettings.readers || '';
+    document.getElementById('detail-rating').value = detailSettings.rating || '';
+    document.getElementById('detail-chapters-count').value = detailSettings.chaptersCount || (item.chapters ? item.chapters.length : '');
+    document.getElementById('detail-pages').value = detailSettings.pages || '';
+
+    // Populate Interactive Icons
+    const icons = detailSettings.icons || { bookmark: true, share: true, listen: true, progress: true, report: true, audio: true };
+    document.getElementById('icon-bookmark').checked = icons.bookmark !== false;
+    document.getElementById('icon-share').checked = icons.share !== false;
+    document.getElementById('icon-listen').checked = icons.listen !== false;
+    document.getElementById('icon-progress').checked = icons.progress !== false;
+    document.getElementById('icon-report').checked = icons.report !== false;
+    document.getElementById('icon-audio').checked = icons.audio !== false;
+
+    // Populate Author Info
+    document.getElementById('detail-author-name').value = detailSettings.authorName || item.author || '';
+    document.getElementById('detail-author-bio').value = detailSettings.authorBio || '';
+    document.getElementById('detail-author-photo').value = detailSettings.authorPhoto || '';
+
+    // Populate About Content
+    // Populate About Content and Sync
+    const aboutTabItem = Array.from(tabsList.children).find(el => el.querySelector('span').textContent.toLowerCase().includes('about'));
+    const aboutTextarea = document.getElementById('detail-about-content');
+
+    if (aboutTabItem) {
+        aboutTextarea.value = aboutTabItem.dataset.content || '';
+        // Sync typing in textarea to the tab's dataset
+        aboutTextarea.oninput = function () {
+            aboutTabItem.dataset.content = this.value;
+        };
+    } else {
+        aboutTextarea.value = detailSettings.aboutContent || item.description || '';
+    }
+
+    // Populate Visual Settings
+    document.getElementById('detail-gradient-start').value = detailSettings.gradientStart || '#1e3a8a';
+    document.getElementById('detail-gradient-end').value = detailSettings.gradientEnd || '#7c3aed';
+    document.getElementById('detail-button-color').value = detailSettings.buttonColor || '#3b82f6';
+
+    // Populate Advanced Options
+    document.getElementById('detail-enable-reviews').value = detailSettings.enableReviews || 'yes';
+    document.getElementById('detail-enable-ads').value = detailSettings.enableAds || 'yes';
+    document.getElementById('detail-show-related').value = detailSettings.showRelated || 'yes';
+    document.getElementById('detail-custom-css').value = detailSettings.customCss || '';
+    document.getElementById('detail-custom-js').value = detailSettings.customJs || '';
+
+    content.style.display = 'block';
+}
+
+function addNewTab() {
+    const tabName = document.getElementById('new-tab-name').value.trim();
+    if (!tabName) {
+        showToast('Please enter a tab name', 'warning');
+        return;
+    }
+
+    const tabsList = document.getElementById('active-tabs-list');
+    const tabDiv = document.createElement('div');
+    tabDiv.className = 'tab-item';
+    tabDiv.draggable = true;
+    tabDiv.dataset.content = "";
+    tabDiv.dataset.heading = "";
+    tabDiv.dataset.subheading = "";
+    tabDiv.dataset.image = "";
+    tabDiv.dataset.headingWeight = "700";
+    tabDiv.dataset.subheadingWeight = "400";
+    tabDiv.dataset.imageWidth = "100%";
+    tabDiv.style.cssText = 'background: #1e293b; padding: 10px; border-radius: 6px; margin-bottom: 8px; cursor: move; display: flex; justify-content: space-between; align-items: center;';
+    tabDiv.innerHTML = `
+                <span>? ${tabName}</span>
+                <div style="display: flex; gap: 5px;">
+                    <button class="toolbar-btn" onclick="openTabEdit(this)" style="background: #3b82f6; border-color: #3b82f6; color: white; padding: 4px 10px;">Edit Content</button>
+                    <button class="toolbar-btn" onclick="removeTab(this)" style="background: #ef4444; border-color: #ef4444; color: white; padding: 4px 10px;">Remove</button>
+                </div>
+            `;
+    tabsList.appendChild(tabDiv);
+
+    document.getElementById('new-tab-name').value = '';
+}
+
+let currentEditingTab = null;
+
+function openTabEdit(btn) {
+    currentEditingTab = btn.closest('.tab-item');
+    const name = currentEditingTab.querySelector('span').textContent;
+    const content = currentEditingTab.dataset.content || "";
+    const heading = currentEditingTab.dataset.heading || "";
+    const subheading = currentEditingTab.dataset.subheading || "";
+    const image = currentEditingTab.dataset.image || "";
+    const headingWeight = currentEditingTab.dataset.headingWeight || "700";
+    const subheadingWeight = currentEditingTab.dataset.subheadingWeight || "400";
+    const imageWidth = currentEditingTab.dataset.imageWidth || "100%";
+
+    document.getElementById('current-tab-name-display').textContent = name;
+    document.getElementById('tab-content-heading').value = heading;
+    document.getElementById('tab-content-subheading').value = subheading;
+    document.getElementById('tab-content-image').value = image;
+    document.getElementById('tab-content-image-width').value = imageWidth;
+    document.getElementById('tab-content-heading-weight').value = headingWeight;
+    document.getElementById('tab-content-subheading-weight').value = subheadingWeight;
+    document.getElementById('tab-content-text').value = content;
+
+    document.getElementById('tab-content-modal').style.display = 'block';
+}
+
+function closeTabModal() {
+    document.getElementById('tab-content-modal').style.display = 'none';
+    currentEditingTab = null;
+}
+
+function saveTabContent() {
+    if (!currentEditingTab) return;
+
+    currentEditingTab.dataset.heading = document.getElementById('tab-content-heading').value;
+    currentEditingTab.dataset.subheading = document.getElementById('tab-content-subheading').value;
+    currentEditingTab.dataset.image = document.getElementById('tab-content-image').value;
+    currentEditingTab.dataset.headingWeight = document.getElementById('tab-content-heading-weight').value;
+    currentEditingTab.dataset.subheadingWeight = document.getElementById('tab-content-subheading-weight').value;
+    currentEditingTab.dataset.imageWidth = document.getElementById('tab-content-image-width').value;
+    currentEditingTab.dataset.content = document.getElementById('tab-content-text').value;
+
+    // If editing the About tab, update the main textarea
+    if (currentEditingTab.querySelector('span').textContent.toLowerCase().includes('about')) {
+        const aboutTextarea = document.getElementById('detail-about-content');
+        if (aboutTextarea) aboutTextarea.value = currentEditingTab.dataset.content;
+    }
+
+    showToast('Tab content updated!');
+    closeTabModal();
+}
+
+function removeTab(btn) {
+    customConfirm('Remove this tab?', 'Delete Tab', '🗑️').then(confirmed => {
+        if (confirmed) btn.closest('.tab-item').remove();
+    });
+}
+
+// (Drag & Drop functionality is handled via setupTabDragAndDrop at the end)
+
+function openDetailEditor(id) {
+    showSection('detail-page-editor');
+    const select = document.getElementById('detail-book-select');
+    if (select) {
+        select.value = id;
+        loadDetailPageSettings();
+    }
+}
+
+function insertTabHeading() {
+    const textarea = document.getElementById('tab-content-text');
+    const snippet = '<h3 class="section-title">New Heading</h3>\n';
+    insertAtCursor(textarea, snippet);
+}
+
+function insertTabSubheading() {
+    const textarea = document.getElementById('tab-content-text');
+    const snippet = '<h4 style="color: #94a3b8; font-size: 1.1rem; margin: 15px 0;">New Subheading</h4>\n';
+    insertAtCursor(textarea, snippet);
+}
+
+function insertTabImageStruct() {
+    const textarea = document.getElementById('tab-content-text');
+    const snippet = '<div style="margin: 20px 0;"><img src="https://placehold.co/600x400" style="width: 100%; border-radius: 8px;"></div>\n';
+    insertAtCursor(textarea, snippet);
+}
+
+function insertAtCursor(myField, myValue) {
+    if (document.selection) {
+        myField.focus();
+        sel = document.selection.createRange();
+        sel.text = myValue;
+    } else if (myField.selectionStart || myField.selectionStart == '0') {
+        var startPos = myField.selectionStart;
+        var endPos = myField.selectionEnd;
+        myField.value = myField.value.substring(0, startPos)
+            + myValue
+            + myField.value.substring(endPos, myField.value.length);
+    } else {
+        myField.value += myValue;
+    }
+}
+
+function saveDetailPageSettings() {
+    const id = document.getElementById('detail-book-select').value;
+    if (!id) {
+        showToast('No book selected', 'warning');
+        return;
+    }
+
+    customConfirm("Update detail page configuration for this item?", "Save Page Design", "🎨").then(confirmed => {
+        if (!confirmed) return;
+
+        const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+        const index = library.findIndex(b => b.id === id);
+
+        if (index === -1) {
+            showToast('Book not found', 'error');
+            return;
+        }
+
+        // Collect all tabs
+        const tabs = [];
+        document.querySelectorAll('#active-tabs-list .tab-item').forEach(tabDiv => {
+            const name = tabDiv.querySelector('span').textContent;
+            tabs.push({
+                name,
+                enabled: true,
+                content: tabDiv.dataset.content || '',
+                heading: tabDiv.dataset.heading || '',
+                subheading: tabDiv.dataset.subheading || '',
+                image: tabDiv.dataset.image || '',
+                headingWeight: tabDiv.dataset.headingWeight || '700',
+                subheadingWeight: tabDiv.dataset.subheadingWeight || '400',
+                imageWidth: tabDiv.dataset.imageWidth || '100%'
+            });
+        });
+
+        // Build settings object
+        const detailSettings = {
+            tabs: tabs,
+            genres: document.getElementById('detail-genres').value,
+            readers: document.getElementById('detail-readers').value,
+            rating: document.getElementById('detail-rating').value,
+            chaptersCount: document.getElementById('detail-chapters-count').value,
+            pages: document.getElementById('detail-pages').value,
+            icons: {
+                bookmark: document.getElementById('icon-bookmark').checked,
+                share: document.getElementById('icon-share').checked,
+                listen: document.getElementById('icon-listen').checked,
+                progress: document.getElementById('icon-progress').checked,
+                report: document.getElementById('icon-report').checked,
+                audio: document.getElementById('icon-audio').checked
+            },
+            authorName: document.getElementById('detail-author-name').value,
+            authorBio: document.getElementById('detail-author-bio').value,
+            authorPhoto: document.getElementById('detail-author-photo').value,
+            aboutContent: document.getElementById('detail-about-content').value,
+            gradientStart: document.getElementById('detail-gradient-start').value,
+            gradientEnd: document.getElementById('detail-gradient-end').value,
+            buttonColor: document.getElementById('detail-button-color').value,
+            enableReviews: document.getElementById('detail-enable-reviews').value,
+            enableAds: document.getElementById('detail-enable-ads').value,
+            showRelated: document.getElementById('detail-show-related').value,
+            customCss: document.getElementById('detail-custom-css').value,
+            customJs: document.getElementById('detail-custom-js').value
+        };
+
+        // Save to library item
+        library[index].detailSettings = detailSettings;
+
+        // Also update basic metadata that might have changed
+        library[index].author = detailSettings.authorName;
+        library[index].description = detailSettings.aboutContent;
+
+        localStorage.setItem('siteLibrary', JSON.stringify(library));
+
+        // Sync to Supabase
+        syncToCloud('library', library[index]);
+
+        showToast('Detail page settings saved successfully!');
+    });
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadMetaBooks();
+    loadDetailPageBooks();
+    initCharts();
+    updateDashboardStats();
+    initTaxonomy();
+
+    // Check for edit query param from book-detail.html
+    const urlParams = new URLSearchParams(window.location.search);
+    const editId = urlParams.get('edit');
+
+    if (editId) {
+        // Wait a bit to ensure everything is initialized
+        setTimeout(() => {
+            // Start authentication check first just incase, though index.html handles it
+            if (sessionStorage.getItem('adminAuthenticated')) {
+                editLibraryItem(editId);
+            }
+        }, 500);
+    } else {
+        // Load section from URL hash or default to dashboard
+        const initialSection = window.location.hash.substring(1) || 'dashboard-view';
+        showSection(initialSection);
+    }
+
+    const publishBtn = document.querySelector('.split-results-panel .btn-success');
+    if (publishBtn) publishBtn.onclick = publishChapters;
+
+    // Volume slider display update
+    const volumeSlider = document.getElementById('volume-slider');
+    if (volumeSlider) {
+        volumeSlider.addEventListener('input', function () {
+            document.getElementById('volume-display').textContent = this.value + '%';
+        });
+    }
+
+    // Setup Tab Drag & Drop once
+    setupTabDragAndDrop();
+});
+
+// --- Drag & Drop for Tabs Implementation ---
+let draggedItem = null;
+
+function setupTabDragAndDrop() {
+    const list = document.getElementById('active-tabs-list');
+    if (!list) return;
+
+    list.addEventListener('dragstart', (e) => {
+        const target = e.target.closest('.tab-item');
+        if (target) {
+            draggedItem = target;
+            setTimeout(() => draggedItem.style.opacity = '0.5', 0);
+        }
+    });
+
+    list.addEventListener('dragend', (e) => {
+        if (draggedItem) {
+            draggedItem.style.opacity = '1';
+        }
+        draggedItem = null;
+    });
+
+    list.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(list, e.clientY);
+        if (draggedItem) {
+            if (afterElement == null) {
+                list.appendChild(draggedItem);
+            } else {
+                list.insertBefore(draggedItem, afterElement);
+            }
+        }
+    });
+}
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.tab-item:not(.dragging)')];
+
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// ========================================
+// Content Editor Functions
+// ========================================
+let currentEditorBookId = null;
+let currentEditorChapterIndex = null;
+
+function loadContentEditorBooks() {
+    const select = document.getElementById('content-editor-book-select');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">-- Select a Book --</option>';
+
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+
+    library.forEach(item => {
+        if (item.chapters && item.chapters.length > 0) {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = `${item.title} (${item.chapters.length} chapters)`;
+            select.appendChild(option);
+        }
+    });
+
+    if (library.length === 0) {
+        select.innerHTML = '<option value="">No books available - Please publish content first</option>';
+    }
+}
+
+function loadContentEditorBook() {
+    const select = document.getElementById('content-editor-book-select');
+    const bookId = select.value;
+
+    if (!bookId) {
+        document.getElementById('content-editor-main').style.display = 'none';
+        return;
+    }
+
+    currentEditorBookId = bookId;
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const book = library.find(item => item.id === bookId);
+
+    if (!book || !book.chapters) {
+        showToast('Book not found or has no chapters', 'error');
+        return;
+    }
+
+    // Populate chapter dropdown
+    const chapterSelect = document.getElementById('content-editor-chapter-select');
+    chapterSelect.innerHTML = '<option value="">-- Select a Chapter --</option>';
+
+    book.chapters.forEach((chapter, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = chapter.title || `Chapter ${index + 1}`;
+        chapterSelect.appendChild(option);
+    });
+
+    document.getElementById('content-editor-main').style.display = 'block';
+    document.getElementById('chapter-editor-panel').style.display = 'none';
+}
+
+function loadChapterForEditing() {
+    const chapterIndex = parseInt(document.getElementById('content-editor-chapter-select').value);
+
+    if (isNaN(chapterIndex)) {
+        document.getElementById('chapter-editor-panel').style.display = 'none';
+        return;
+    }
+
+    currentEditorChapterIndex = chapterIndex;
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const book = library.find(item => item.id === currentEditorBookId);
+
+    if (!book || !book.chapters[chapterIndex]) {
+        showToast('Chapter not found', 'error');
+        return;
+    }
+
+    const chapter = book.chapters[chapterIndex];
+
+    // Load chapter data into form
+    document.getElementById('editor-chapter-title').value = chapter.title || '';
+    document.getElementById('editor-chapter-desc').value = chapter.description || '';
+    document.getElementById('editor-chapter-content').value = chapter.content || '';
+
+    // Media settings
+    document.getElementById('editor-chapter-bg').value = chapter.backgroundImage || '';
+    document.getElementById('editor-chapter-bg-style').value = chapter.backgroundStyle || 'cover';
+    document.getElementById('editor-chapter-music').value = chapter.musicUrl || '';
+    document.getElementById('editor-chapter-volume').value = chapter.musicVolume || 30;
+    document.getElementById('volume-display').textContent = (chapter.musicVolume || 30) + '%';
+    document.getElementById('editor-chapter-music-loop').checked = chapter.musicLoop !== false;
+
+    // Advanced settings
+    document.getElementById('editor-chapter-reading-time').value = chapter.readingTime || '';
+    document.getElementById('editor-chapter-type').value = chapter.chapterType || 'standard';
+    document.getElementById('editor-chapter-visibility').value = chapter.visibility || 'public';
+    document.getElementById('editor-chapter-custom-css').value = chapter.customCss || '';
+
+    // Initialize line numbers for this editor
+    updateEditorLineNumbers();
+
+    document.getElementById('chapter-editor-panel').style.display = 'block';
+}
+
+// Line numbering system for the new Editor
+const editorTextArea = document.getElementById('editor-chapter-content');
+const editorLineNumbers = document.getElementById('editor-line-numbers');
+
+function updateEditorLineNumbers() {
+    if (!editorTextArea || !editorLineNumbers) return;
+    const lines = editorTextArea.value.split('\n').length;
+    let lineStr = "";
+    for (let i = 1; i <= lines; i++) {
+        lineStr += i + "\n";
+    }
+    editorLineNumbers.textContent = lineStr;
+}
+
+if (editorTextArea) {
+    editorTextArea.addEventListener('input', updateEditorLineNumbers);
+    editorTextArea.addEventListener('scroll', () => {
+        editorLineNumbers.scrollTop = editorTextArea.scrollTop;
+    });
+}
+
+function saveChapterEdits() {
+    if (currentEditorBookId === null || currentEditorChapterIndex === null) {
+        showToast('No chapter selected for editing', 'warning');
+        return;
+    }
+
+    customConfirm("Save updates to this chapter?", "Update Content", "📝").then(confirmed => {
+        if (!confirmed) return;
+
+        const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+        const bookIndex = library.findIndex(item => item.id === currentEditorBookId);
+
+        if (bookIndex === -1 || !library[bookIndex].chapters[currentEditorChapterIndex]) {
+            showToast('Error: Book or chapter not found', 'error');
+            return;
+        }
+
+        // Update chapter data
+        const chapter = library[bookIndex].chapters[currentEditorChapterIndex];
+
+        chapter.title = document.getElementById('editor-chapter-title').value;
+        chapter.description = document.getElementById('editor-chapter-desc').value;
+        chapter.content = document.getElementById('editor-chapter-content').value;
+
+        // Media
+        chapter.backgroundImage = document.getElementById('editor-chapter-bg').value;
+        chapter.backgroundStyle = document.getElementById('editor-chapter-bg-style').value;
+        chapter.musicUrl = document.getElementById('editor-chapter-music').value;
+        chapter.musicVolume = parseInt(document.getElementById('editor-chapter-volume').value);
+        chapter.musicLoop = document.getElementById('editor-chapter-music-loop').checked;
+
+        // Advanced
+        chapter.readingTime = document.getElementById('editor-chapter-reading-time').value;
+        chapter.chapterType = document.getElementById('editor-chapter-type').value;
+        chapter.visibility = document.getElementById('editor-chapter-visibility').value;
+        chapter.customCss = document.getElementById('editor-chapter-custom-css').value;
+
+        // Update timestamp
+        chapter.lastModified = new Date().toISOString();
+
+        // Save back to localStorage
+        localStorage.setItem('siteLibrary', JSON.stringify(library));
+
+        // Sync to Supabase
+        syncToCloud('library', library[bookIndex]);
+
+        showToast(`Chapter "${chapter.title}" has been successfully updated!`);
+
+        // Options reload the chapter to show saved data
+        loadChapterForEditing();
+    });
+}
+
+function insertAssistantHeading() {
+    const headingText = document.getElementById('assistant-heading-text').value.trim();
+    const type = document.getElementById('assistant-heading-type').value;
+    const font = document.getElementById('assistant-heading-font').value;
+    const weight = document.getElementById('assistant-heading-weight').value;
+
+    if (!headingText) {
+        showToast('Please enter heading text', 'warning');
+        return;
+    }
+
+    const style = `font-family: ${font}; font-weight: ${weight}; margin-top: 25px; margin-bottom: 15px; color: #fff; line-height: 1.4; display: block;`;
+    const html = `<${type} style="${style}">${headingText}</${type}>\n`;
+
+    smartInsertIntoContent(html);
+    document.getElementById('assistant-heading-text').value = '';
+}
+
+function insertAssistantImage() {
+    const imageUrl = document.getElementById('assistant-image-url').value.trim();
+
+    if (!imageUrl) {
+        showToast('Please enter an image URL', 'warning');
+        return;
+    }
+
+    const html = `\n<div style="text-align:center; margin: 30px 0;">
+    <img src="${imageUrl}" style="max-width:100%; border-radius:12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);" alt="Chapter Image Component">
+</div>\n`;
+
+    smartInsertIntoContent(html);
+    document.getElementById('assistant-image-url').value = '';
+}
+
+function smartInsertIntoContent(html) {
+    const textarea = document.getElementById('editor-chapter-content');
+    const lineNumInput = document.getElementById('assistant-line-num');
+    const lineNum = parseInt(lineNumInput.value);
+
+    if (isNaN(lineNum) || lineNum <= 0) {
+        // Fallback to cursor position
+        insertAtCursor(textarea, html);
+    } else {
+        // Insert at specific line
+        const lines = textarea.value.split('\n');
+        // Ensure index is within bounds, or append at end
+        const insertIdx = Math.min(lineNum - 1, lines.length);
+        lines.splice(insertIdx, 0, html);
+        textarea.value = lines.join('\n');
+
+        // Clear input and trigger update
+        lineNumInput.value = '';
+        const event = new Event('input', { bubbles: true });
+        textarea.dispatchEvent(event);
+
+        // Auto-scroll to the new content
+        const lineHeight = 1.5 * 15.2; // approx line height in px
+        textarea.scrollTop = insertIdx * lineHeight;
+    }
+}
+
+function insertAtCursor(myField, myValue) {
+    if (!myField) return;
+
+    if (myField.selectionStart || myField.selectionStart === 0) {
+        const startPos = myField.selectionStart;
+        const endPos = myField.selectionEnd;
+        myField.value = myField.value.substring(0, startPos)
+            + myValue
+            + myField.value.substring(endPos, myField.value.length);
+        myField.focus();
+        myField.selectionStart = startPos + myValue.length;
+        myField.selectionEnd = startPos + myValue.length;
+    } else {
+        myField.value += myValue;
+    }
+    // Trigger any input listeners if needed
+    const event = new Event('input', { bubbles: true });
+    myField.dispatchEvent(event);
+}
+
+// Helper function to load books for metadata manager
+function loadMetaBooks() {
+    const select = document.getElementById('meta-book-select');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">-- Select a Book --</option>';
+
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+
+    library.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.title;
+        select.appendChild(option);
+    });
+}
+
+function loadMetaBook() {
+    const bookId = document.getElementById('meta-book-select').value;
+    if (!bookId) {
+        document.getElementById('meta-editor-form').style.display = 'none';
+        return;
+    }
+
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const book = library.find(item => item.id === bookId);
+
+    if (!book) return;
+
+    document.getElementById('meta-title').value = book.title || '';
+    document.getElementById('meta-author').value = book.author || '';
+    document.getElementById('meta-cover').value = book.cover || '';
+    document.getElementById('meta-desc').value = book.description || '';
+
+    document.getElementById('meta-editor-form').style.display = 'block';
+}
+
+function saveMetadata() {
+    const bookId = document.getElementById('meta-book-select').value;
+    if (!bookId) return;
+
+    customConfirm("Save metadata changes?", "Save Meta", "🏷️").then(confirmed => {
+        if (!confirmed) return;
+
+        const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+        const bookIndex = library.findIndex(item => item.id === bookId);
+
+        if (bookIndex === -1) return;
+
+        library[bookIndex].title = document.getElementById('meta-title').value;
+        library[bookIndex].author = document.getElementById('meta-author').value;
+        library[bookIndex].cover = document.getElementById('meta-cover').value;
+        library[bookIndex].image = document.getElementById('meta-cover').value; // Sync with image key
+        library[bookIndex].description = document.getElementById('meta-desc').value;
+
+        localStorage.setItem('siteLibrary', JSON.stringify(library));
+
+        // Sync to Supabase
+        syncToCloud('library', library[bookIndex]);
+        showToast('Metadata saved successfully!');
+        loadMetaBooks();
+        syncSiteImageConfig(); // Sync covers if updated here
+    });
+}
+
+// --- Homepage Manager Functions ---
+let homepageConfig = {
+    heroTitle: "",
+    heroSubtitle: "",
+    exclusive: [],
+    popular: [],
+    stories: [],
+    topics: [],
+    tips: ["", "", ""],
+    tipHeadings: ["", "", ""],
+    customSections: []
+};
+
+function initHomepageManager() {
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const savedConfig = localStorage.getItem('siteHomepageConfig');
+    if (savedConfig) {
+        homepageConfig = JSON.parse(savedConfig);
+    }
+
+    // Populate Dropdowns
+    const exclusiveSelect = document.getElementById('homepage-exclusive-select');
+    const popularSelect = document.getElementById('homepage-popular-select');
+    const storiesSelect = document.getElementById('homepage-stories-select');
+
+    [exclusiveSelect, popularSelect, storiesSelect].forEach(sel => {
+        if (sel) sel.innerHTML = '<option value="">-- Select Book/Story --</option>';
+    });
+
+    library.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.title;
+
+        if (exclusiveSelect) exclusiveSelect.appendChild(option.cloneNode(true));
+        if (popularSelect) popularSelect.appendChild(option.cloneNode(true));
+        if (storiesSelect) storiesSelect.appendChild(option.cloneNode(true));
+    });
+    // Populate Hero
+    const hTitle = document.getElementById('home-hero-title');
+    const hSub = document.getElementById('home-hero-subtitle');
+    if (hTitle) hTitle.value = homepageConfig.heroTitle || "";
+    if (hSub) hSub.value = homepageConfig.heroSubtitle || "";
+
+    // Populate Tips
+    const tip1 = document.getElementById('homepage-tip-1') || document.getElementById('home-tip-1');
+    const tip2 = document.getElementById('homepage-tip-2') || document.getElementById('home-tip-2');
+    const tip3 = document.getElementById('homepage-tip-3') || document.getElementById('home-tip-3');
+    if (tip1) tip1.value = homepageConfig.tips[0] || "";
+    if (tip2) tip2.value = homepageConfig.tips[1] || "";
+    if (tip3) tip3.value = homepageConfig.tips[2] || "";
+
+    // Populate Tip Headings
+    for (let i = 1; i <= 3; i++) {
+        const el = document.getElementById(`home-tip-head-${i}`);
+        if (el) el.value = homepageConfig.tipHeadings[i - 1] || "";
+    }
+
+    // Populate Topics (Categories)
+    renderTopics();
+
+    renderHomepageSectionLists();
+}
+
+function renderTopics() {
+    const container = document.getElementById('topics-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const defaultTopics = ['Mindset', 'Success', 'Growth', 'Finance', 'Business', 'Habits'];
+    const allTopics = [...defaultTopics];
+    if (homepageConfig.customTopics) {
+        homepageConfig.customTopics.forEach(t => {
+            if (!allTopics.includes(t)) allTopics.push(t);
+        });
+    }
+
+    allTopics.forEach(topic => {
+        const val = topic.toLowerCase();
+        const isChecked = homepageConfig.topics && homepageConfig.topics.includes(val);
+        container.innerHTML += `
+            <label style="display:flex; align-items:center; gap:8px; color: #e2e8f0; font-size: 0.9rem; background: rgba(255,255,255,0.05); padding: 5px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
+                <input type="checkbox" class="home-topic-cb" value="${val}" ${isChecked ? 'checked' : ''}>
+                ${topic}
+            </label>
+        `;
+    });
+}
+
+function addNewTopic() {
+    const input = document.getElementById('new-topic-input');
+    if (!input) return;
+    const rawVal = input.value.trim();
+    if (!rawVal) return;
+    const topicName = rawVal.charAt(0).toUpperCase() + rawVal.slice(1);
+    if (!homepageConfig.customTopics) homepageConfig.customTopics = [];
+
+    if (!homepageConfig.customTopics.includes(topicName)) {
+        homepageConfig.customTopics.push(topicName);
+        if (!homepageConfig.topics) homepageConfig.topics = [];
+        homepageConfig.topics.push(topicName.toLowerCase());
+        renderTopics();
+        input.value = '';
+    } else {
+        showToast('Topic already exists!', 'warning');
+    }
+}
+
+function addToHomepageSection(section) {
+    const select = document.getElementById(`homepage-${section}-select`);
+    const bookId = select.value;
+    if (!bookId) return;
+
+    if (homepageConfig[section].includes(bookId)) {
+        showToast('Item already in this section', 'warning');
+        return;
+    }
+
+    homepageConfig[section].push(bookId);
+    renderHomepageSectionLists();
+}
+
+
+let currentAddTarget = null;
+function openItemAdder(targetId) {
+    currentAddTarget = targetId;
+    const modal = document.getElementById('item-adder-modal');
+    const select = document.getElementById('item-adder-select');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">-- Select Content --</option>';
+
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    library.forEach(b => {
+        select.innerHTML += `<option value="${b.id}">${b.title} (${b.type || 'Book'})</option>`;
+    });
+
+    if (modal) modal.style.display = 'flex';
+}
+
+function confirmAddItem() {
+    const select = document.getElementById('item-adder-select');
+    const val = select.value;
+    if (!val) return;
+
+    // Check if it's a standard section or custom section
+    if (['exclusive', 'popular', 'stories'].includes(currentAddTarget)) {
+        if (!homepageConfig[currentAddTarget]) homepageConfig[currentAddTarget] = [];
+        if (!homepageConfig[currentAddTarget].includes(val)) {
+            homepageConfig[currentAddTarget].push(val);
+        }
+    } else {
+        // It represents a custom section ID
+        if (homepageConfig.customSections) {
+            const sec = homepageConfig.customSections.find(s => s.id === currentAddTarget);
+            if (sec) {
+                if (!sec.items.includes(val)) sec.items.push(val);
+            }
+        }
+    }
+
+    renderHomepageSectionLists();
+    const modal = document.getElementById('item-adder-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function removeFromHomepageSection(section, index) {
+    if (homepageConfig[section]) {
+        homepageConfig[section].splice(index, 1);
+        renderHomepageSectionLists();
+    }
+}
+
+function removeCustomSectionItem(secId, index) {
+    if (homepageConfig.customSections) {
+        const sec = homepageConfig.customSections.find(s => s.id === secId);
+        if (sec) {
+            sec.items.splice(index, 1);
+            renderHomepageSectionLists();
+        }
+    }
+}
+
+function renderHomepageSectionLists() {
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+
+    // Render Standard Sections
+    ['exclusive', 'popular', 'stories'].forEach(section => {
+        const container = document.getElementById(`${section}-list`);
+        if (!container) return;
+
+        container.innerHTML = '';
+        const items = homepageConfig[section] || [];
+
+        if (items.length === 0) {
+            container.innerHTML = '<p style="color:#64748b; font-size: 0.85rem; padding: 10px;">No items added yet.</p>';
+        }
+
+        items.forEach((id, index) => {
+            const book = library.find(b => b.id === id);
+            const name = book ? book.title : 'Unknown Item';
+            const cover = book ? (book.cover || book.image || 'assets/logo-new.png') : 'assets/logo-new.png';
+
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'mini-list-item';
+            itemDiv.style.cssText = 'background: #1e293b; padding: 8px 12px; border-radius: 6px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.05);';
+            itemDiv.innerHTML = `
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <img src="${cover}" style="width: 30px; height: 40px; object-fit: cover; border-radius: 4px;">
+                            <span title="${name}">${name.length > 25 ? name.substring(0, 25) + '...' : name}</span>
+                        </div>
+                        <button onclick="removeFromHomepageSection('${section}', ${index})" style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 1.1rem; padding: 5px;">×</button>
+                    `;
+            container.appendChild(itemDiv);
+        });
+    });
+
+    // Render Custom Sections
+    const customContainer = document.getElementById('sections-container');
+    if (customContainer) {
+        customContainer.innerHTML = '';
+        if (homepageConfig.customSections) {
+            homepageConfig.customSections.forEach(sec => {
+                const items = sec.items || [];
+                let itemsHtml = '';
+
+                if (items.length === 0) {
+                    itemsHtml = '<li style="color:#64748b; font-style:italic;">No items added yet.</li>';
+                } else {
+                    items.forEach((id, idx) => {
+                        const book = library.find(b => b.id === id) || { title: 'Unknown Content' };
+                        itemsHtml += `
+                                    <li style="background:#0f172a; padding:10px; margin-bottom:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; border:1px solid #334155;">
+                                        <span>${book.title}</span>
+                                        <button onclick="removeCustomSectionItem('${sec.id}', ${idx})" style="background:#ef4444; border:none; color:white; padding:4px 8px; border-radius:4px; cursor:pointer;">Remove</button>
+                                    </li>
+                                `;
+                    });
+                }
+
+                const cardHtml = `
+                            <div class="action-card" style="cursor: default; margin-top: 20px;">
+                                <h3 style="display:flex; justify-content:space-between; align-items:center;">
+                                    <span>${sec.icon || '📂'} ${sec.title}</span>
+                                    <div>
+                                        <button class="btn-primary" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; font-size:0.8rem; padding:4px 10px; margin-right: 10px;" onclick="deleteSection('${sec.id}')">Delete Section</button>
+                                        <button class="btn-primary" style="font-size:0.8rem; padding:4px 10px;" onclick="openItemAdder('${sec.id}')">+ Add</button>
+                                    </div>
+                                </h3>
+                                <ul style="list-style:none; padding:0; margin-top:15px;">
+                                    ${itemsHtml}
+                                </ul>
+                            </div>
+                        `;
+                customContainer.insertAdjacentHTML('beforeend', cardHtml);
+            });
+        }
+    }
+}
+
+function saveHomepageConfig() {
+    customConfirm("Update the homepage layout and configuration?", "Save Home", "🏠").then(confirmed => {
+        if (!confirmed) return;
+
+        // Update Hero
+        homepageConfig.heroTitle = document.getElementById('home-hero-title')?.value || "";
+        homepageConfig.heroSubtitle = document.getElementById('home-hero-subtitle')?.value || "";
+
+        // Update tips
+        for (let i = 1; i <= 3; i++) {
+            const tipEl = document.getElementById(`homepage-tip-${i}`) || document.getElementById(`home-tip-${i}`);
+            const headEl = document.getElementById(`home-tip-head-${i}`);
+            if (tipEl) homepageConfig.tips[i - 1] = tipEl.value;
+            if (headEl) homepageConfig.tipHeadings[i - 1] = headEl.value;
+        }
+
+        // Update topics from checkboxes
+        const topicChecks = document.querySelectorAll('#topics-container input:checked');
+        homepageConfig.topics = Array.from(topicChecks).map(cb => cb.value);
+
+        localStorage.setItem('siteHomepageConfig', JSON.stringify(homepageConfig));
+
+        // Sync to Supabase
+        syncToCloud('homepage', homepageConfig);
+        showToast('Homepage configuration saved successfully!');
+        renderHomepageSectionLists();
+    });
+}
+
+// Add stub for custom sections if they exist in HTML
+function addCustomSection() {
+    const name = prompt("Enter section name:");
+    if (!name) return;
+    const id = 'custom-' + Date.now();
+    if (!homepageConfig.customSections) homepageConfig.customSections = [];
+    homepageConfig.customSections.push({ id, name, items: [] });
+    renderHomepageSectionLists();
+}
+
+function createNewSection() {
+    const title = document.getElementById('new-section-title').value.trim();
+    const icon = document.getElementById('new-section-icon').value.trim() || '📂';
+
+    if (!title) {
+        showToast("Please enter a section title.", 'warning');
+        return;
+    }
+
+    const newSection = {
+        id: 'custom_sec_' + Date.now(),
+        title: title,
+        icon: icon,
+        items: [] // array of book IDs
+    };
+
+    if (!homepageConfig.customSections) homepageConfig.customSections = [];
+    homepageConfig.customSections.push(newSection);
+
+    // Clear inputs
+    document.getElementById('new-section-title').value = '';
+    document.getElementById('new-section-icon').value = '';
+
+    renderHomepageSectionLists();
+}
+
+function deleteSection(sectionId) {
+    customConfirm("Are you sure you want to delete this content section?", "Delete Section", "🗑️")
+        .then(confirmed => {
+            if (!confirmed) return;
+            homepageConfig.customSections = homepageConfig.customSections.filter(s => s.id !== sectionId);
+            renderHomepageSectionLists();
+            showToast("Section deleted");
+        });
+}
+
+function saveHomepageSettings() {
+    saveHomepageConfig();
+}
+
+// Helper function to load books for detail page editor
+function loadDetailPageBooks() {
+    const select = document.getElementById('detail-book-select');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">-- Select a Book --</option>';
+
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+
+    library.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.title;
+        select.appendChild(option);
+    });
+}
+
+// =============================================
+// IMAGE MANAGEMENT FUNCTIONS
+// =============================================
+
+// Load books for Image Management dropdowns
+function loadImageManagementBooks() {
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+
+    // Cover book select
+    const coverSelect = document.getElementById('cover-book-select');
+    if (coverSelect) {
+        coverSelect.innerHTML = '<option value="">-- Select a Book --</option>';
+        library.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = item.title;
+            coverSelect.appendChild(option);
+        });
+    }
+
+    // Background book select
+    const bgSelect = document.getElementById('bg-book-select');
+    if (bgSelect) {
+        bgSelect.innerHTML = '<option value="">-- Select a Book --</option>';
+        library.forEach(item => {
+            const option = document.createElement('option');
+            option.value = item.id;
+            option.textContent = item.title;
+            bgSelect.appendChild(option);
+        });
+    }
+
+    // Load carousel images
+    loadCarouselImages();
+    // Load bottom images
+    loadBottomImages();
+
+    // Update Cover and Background counts
+    const coverCount = library.filter(b => b.cover).length;
+    const coverBadge = document.getElementById('cover-art-count');
+    if (coverBadge) coverBadge.textContent = `${coverCount} Books with Covers`;
+
+    const bgCount = library.filter(b => b.backgroundSettings && b.backgroundSettings.detailUrl).length;
+    const bgBadge = document.getElementById('bg-visuals-count');
+    if (bgBadge) bgBadge.textContent = `${bgCount} Themes Configured`;
+}
+
+// Switch between image management tabs
+function switchImageTab(tabId) {
+    // Remove active from all tabs and content
+    document.querySelectorAll('.img-tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.img-tab-content').forEach(content => content.classList.remove('active'));
+
+    // Add active to clicked tab and corresponding content
+    document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+}
+
+// Get carousel images from storage
+function getCarouselImages() {
+    return JSON.parse(localStorage.getItem('carouselImages') || '[]');
+}
+
+function saveCarouselImagesStorage(images) {
+    localStorage.setItem('carouselImages', JSON.stringify(images));
+    syncSiteImageConfig();
+}
+
+function syncSiteImageConfig() {
+    const carouselImages = getCarouselImages();
+    const bottomImages = getBottomImages();
+
+    const config = {
+        carousel: carouselImages.map(img => ({
+            img: img.url,
+            title: img.heading || img.title,
+            desc: img.title || '',
+            badge: img.badge || '',
+            color: '#3b82f6' // Default color for badges
+        })),
+        bottomBanners: bottomImages.map(img => img.url)
+    };
+
+    localStorage.setItem('siteImageConfig', JSON.stringify(config));
+
+    // Sync to Supabase if available
+    if (typeof syncToCloud === 'function') {
+        syncToCloud('images', config);
+    }
+}
+
+// Load and display carousel images
+function loadCarouselImages() {
+    const grid = document.getElementById('carousel-images-grid');
+    if (!grid) return;
+
+    let images = getCarouselImages();
+
+    // If no saved images, initialize with default carousel images
+    if (images.length === 0) {
+        images = [
+            { id: 'carousel-1', title: 'Featured Guide Banner', url: 'assets/carousel-1.png', badge: 'Featured Guide', heading: 'Master Your Financial Destiny' },
+            { id: 'carousel-2', title: 'Public Library Banner', url: 'assets/carousel-2.png', badge: 'Public Library', heading: 'The Library of Success' },
+            { id: 'carousel-3', title: 'New Arrivals Banner', url: 'assets/carousel-3.png', badge: 'New Arrivals', heading: 'Build Lasting Wealth' }
+        ];
+        saveCarouselImagesStorage(images);
+    }
+
+    // Update count badge
+    const countBadge = document.getElementById('carousel-slide-count');
+    if (countBadge) {
+        countBadge.textContent = `${images.length} Slide${images.length !== 1 ? 's' : ''} Configured`;
+    }
+
+    grid.innerHTML = images.map((img, index) => `
+                <div class="image-card">
+                    <img src="${img.url}" alt="${img.title}" onerror="this.src='assets/logo-new.png'">
+                    <div class="image-card-body">
+                        <h4>${img.title}</h4>
+                        <p>Slide #${index + 1} • ${img.badge || 'No Badge'}</p>
+                        <div class="image-card-actions">
+                            <button class="img-action-btn edit" onclick="editCarouselImage('${img.id}')">✏️ Edit</button>
+                            <button class="img-action-btn delete" onclick="deleteCarouselImage('${img.id}')">🗑️ Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+}
+
+// Get bottom images from storage
+function getBottomImages() {
+    return JSON.parse(localStorage.getItem('bottomImages') || '[]');
+}
+
+// Save bottom images
+function saveBottomImagesStorage(images) {
+    localStorage.setItem('bottomImages', JSON.stringify(images));
+    syncSiteImageConfig();
+}
+
+// Load and display bottom images
+function loadBottomImages() {
+    const grid = document.getElementById('bottom-images-grid');
+    if (!grid) return;
+
+    let images = getBottomImages();
+
+    // Initialize defaults if empty
+    if (images.length === 0) {
+        images = [
+            { id: 'bottom-1', title: 'Micro Lessons Banner', section: 'micro-lessons', url: 'assets/logo-new.png' },
+            { id: 'bottom-2', title: 'Moving Animation', section: 'animation', url: 'assets/logo-new.png' }
+        ];
+        saveBottomImagesStorage(images);
+    }
+
+    // Update count badge
+    const countBadge = document.getElementById('bottom-banner-count');
+    if (countBadge) {
+        countBadge.textContent = `${images.length} Banner${images.length !== 1 ? 's' : ''} Configured`;
+    }
+
+    grid.innerHTML = images.map((img, index) => `
+                <div class="image-card">
+                    <img src="${img.url}" alt="${img.title}" onerror="this.src='assets/logo-new.png'">
+                    <div class="image-card-body">
+                        <h4>${img.title}</h4>
+                        <p>Section: ${img.section || 'General'}</p>
+                        <div class="image-card-actions">
+                            <button class="img-action-btn edit" onclick="editBottomImage('${img.id}')">✏️ Edit</button>
+                            <button class="img-action-btn delete" onclick="deleteBottomImage('${img.id}')">🗑️ Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+}
+
+// Open image upload modal
+function openImageUploadModal(type) {
+    const title = type === 'carousel' ? 'Add Carousel Image' : 'Add Bottom Section Image';
+
+    const modalHtml = `
+                <div id="image-upload-modal" class="modal" style="display: flex; align-items: center; justify-content: center;">
+                    <div class="modal-content" style="max-width: 500px; margin: 0;">
+                        <div class="modal-header">
+                            <h3>${title}</h3>
+                            <span class="close-modal" onclick="closeImageUploadModal()">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group-admin">
+                                <label>Image Title</label>
+                                <input type="text" id="new-image-title" placeholder="e.g., Featured Banner">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Image URL or Path</label>
+                                <input type="text" id="new-image-url" placeholder="Enter image URL">
+                            </div>
+                            ${type === 'carousel' ? `
+                            <div class="form-group-admin">
+                                <label>Badge Text</label>
+                                <input type="text" id="new-image-badge" placeholder="e.g., Featured, New Arrivals">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Heading Text</label>
+                                <input type="text" id="new-image-heading" placeholder="e.g., Master Your Destiny">
+                            </div>
+                            ` : `
+                            <div class="form-group-admin">
+                                <label>Section</label>
+                                <select id="new-image-section">
+                                    <option value="micro-lessons">Micro Lessons</option>
+                                    <option value="animation">Animation Banner</option>
+                                    <option value="ad-banner">Ad Banner</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            `}
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn-primary" style="background: #ef4444; margin-right: 10px;" onclick="closeImageUploadModal()">Cancel</button>
+                            <button class="btn-success" style="margin: 0;" onclick="saveNewImage('${type}')">Add Image</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function closeImageUploadModal() {
+    const modal = document.getElementById('image-upload-modal');
+    if (modal) modal.remove();
+}
+
+function saveNewImage(type) {
+    const title = document.getElementById('new-image-title').value;
+    const url = document.getElementById('new-image-url').value;
+
+    if (!title || !url) {
+        showToast('Please fill in all required fields', 'warning');
+        return;
+    }
+
+    if (type === 'carousel') {
+        const images = getCarouselImages();
+        const newImage = {
+            id: 'carousel-' + Date.now(),
+            title: title,
+            url: url,
+            badge: document.getElementById('new-image-badge').value || '',
+            heading: document.getElementById('new-image-heading').value || ''
+        };
+        images.push(newImage);
+        saveCarouselImagesStorage(images);
+        loadCarouselImages();
+    } else {
+        const images = getBottomImages();
+        const newImage = {
+            id: 'bottom-' + Date.now(),
+            title: title,
+            url: url,
+            section: document.getElementById('new-image-section').value
+        };
+        images.push(newImage);
+        saveBottomImagesStorage(images);
+        loadBottomImages();
+    }
+
+    closeImageUploadModal();
+    showToast('Image added successfully!');
+}
+
+function editCarouselImage(imageId) {
+    const images = getCarouselImages();
+    const image = images.find(img => img.id === imageId);
+    if (!image) return;
+
+    const modalHtml = `
+                <div id="image-upload-modal" class="modal" style="display: flex; align-items: center; justify-content: center;">
+                    <div class="modal-content" style="max-width: 500px; margin: 0;">
+                        <div class="modal-header">
+                            <h3>Edit Carousel Image</h3>
+                            <span class="close-modal" onclick="closeImageUploadModal()">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group-admin">
+                                <label>Image Title</label>
+                                <input type="text" id="edit-image-title" value="${image.title}">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Image URL</label>
+                                <input type="text" id="edit-image-url" value="${image.url}">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Badge Text</label>
+                                <input type="text" id="edit-image-badge" value="${image.badge || ''}">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Heading Text</label>
+                                <input type="text" id="edit-image-heading" value="${image.heading || ''}">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn-primary" style="background: #ef4444; margin-right: 10px;" onclick="closeImageUploadModal()">Cancel</button>
+                            <button class="btn-success" style="margin: 0;" onclick="updateCarouselImage('${imageId}')">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function updateCarouselImage(imageId) {
+    const images = getCarouselImages();
+    const index = images.findIndex(img => img.id === imageId);
+    if (index === -1) return;
+
+    images[index] = {
+        ...images[index],
+        title: document.getElementById('edit-image-title').value,
+        url: document.getElementById('edit-image-url').value,
+        badge: document.getElementById('edit-image-badge').value,
+        heading: document.getElementById('edit-image-heading').value
+    };
+
+    saveCarouselImagesStorage(images);
+    loadCarouselImages();
+    closeImageUploadModal();
+    showToast('Carousel image updated!');
+}
+
+function deleteCarouselImage(imageId) {
+    customConfirm('Are you sure you want to delete this carousel image?', 'Delete Slide', '🗑️')
+        .then(confirmed => {
+            if (!confirmed) return;
+            const images = getCarouselImages().filter(img => img.id !== imageId);
+            saveCarouselImagesStorage(images);
+            loadCarouselImages();
+            showToast('Carousel image deleted!');
+        });
+}
+
+function editBottomImage(imageId) {
+    const images = getBottomImages();
+    const image = images.find(img => img.id === imageId);
+    if (!image) return;
+
+    const modalHtml = `
+                <div id="image-upload-modal" class="modal" style="display: flex; align-items: center; justify-content: center;">
+                    <div class="modal-content" style="max-width: 500px; margin: 0;">
+                        <div class="modal-header">
+                            <h3>Edit Bottom Section Image</h3>
+                            <span class="close-modal" onclick="closeImageUploadModal()">&times;</span>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group-admin">
+                                <label>Image Title</label>
+                                <input type="text" id="edit-image-title" value="${image.title}">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Image URL</label>
+                                <input type="text" id="edit-image-url" value="${image.url}">
+                            </div>
+                            <div class="form-group-admin">
+                                <label>Section</label>
+                                <select id="edit-image-section">
+                                    <option value="micro-lessons" ${image.section === 'micro-lessons' ? 'selected' : ''}>Micro Lessons</option>
+                                    <option value="animation" ${image.section === 'animation' ? 'selected' : ''}>Animation Banner</option>
+                                    <option value="ad-banner" ${image.section === 'ad-banner' ? 'selected' : ''}>Ad Banner</option>
+                                    <option value="other" ${image.section === 'other' ? 'selected' : ''}>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn-primary" style="background: #ef4444; margin-right: 10px;" onclick="closeImageUploadModal()">Cancel</button>
+                            <button class="btn-success" style="margin: 0;" onclick="updateBottomImage('${imageId}')">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function updateBottomImage(imageId) {
+    const images = getBottomImages();
+    const index = images.findIndex(img => img.id === imageId);
+    if (index === -1) return;
+
+    images[index] = {
+        ...images[index],
+        title: document.getElementById('edit-image-title').value,
+        url: document.getElementById('edit-image-url').value,
+        section: document.getElementById('edit-image-section').value
+    };
+
+    saveBottomImagesStorage(images);
+    loadBottomImages();
+    closeImageUploadModal();
+    showToast('Bottom image updated!');
+}
+
+function deleteBottomImage(imageId) {
+    customConfirm('Are you sure you want to delete this image?', 'Delete Image', '🗑️')
+        .then(confirmed => {
+            if (!confirmed) return;
+            const images = getBottomImages().filter(img => img.id !== imageId);
+            saveBottomImagesStorage(images);
+            loadBottomImages();
+            showToast('Image deleted!');
+        });
+}
+
+// Cover Images Functions
+function loadCoverImages() {
+    const bookId = document.getElementById('cover-book-select').value;
+    const editor = document.getElementById('cover-images-editor');
+
+    if (!bookId) {
+        editor.style.display = 'none';
+        return;
+    }
+
+    editor.style.display = 'block';
+
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const book = library.find(item => item.id === bookId);
+
+    if (!book) return;
+
+    // Set main cover
+    const mainUrl = document.getElementById('cover-main-url');
+    const mainPreview = document.getElementById('cover-preview-main');
+    mainUrl.value = book.cover || '';
+    if (book.cover) {
+        mainPreview.src = book.cover;
+        mainPreview.style.display = 'block';
+    } else {
+        mainPreview.style.display = 'none';
+    }
+
+    // Populate chapter dropdown
+    const chapterSelect = document.getElementById('cover-chapter-select');
+    chapterSelect.innerHTML = '<option value="">-- Select a Chapter --</option>';
+    if (book.chapters) {
+        book.chapters.forEach((chapter, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = chapter.title || `Chapter ${index + 1}`;
+            chapterSelect.appendChild(option);
+        });
+    }
+}
+
+function loadChapterCover() {
+    const bookId = document.getElementById('cover-book-select').value;
+    const chapterIndex = document.getElementById('cover-chapter-select').value;
+
+    if (!bookId || chapterIndex === '') return;
+
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const book = library.find(item => item.id === bookId);
+
+    if (!book || !book.chapters || !book.chapters[chapterIndex]) return;
+
+    const chapter = book.chapters[chapterIndex];
+    const chapterUrl = document.getElementById('cover-chapter-url');
+    const chapterPreview = document.getElementById('cover-preview-chapter');
+
+    chapterUrl.value = chapter.coverImage || '';
+    if (chapter.coverImage) {
+        chapterPreview.src = chapter.coverImage;
+        chapterPreview.style.display = 'block';
+    } else {
+        chapterPreview.style.display = 'none';
+    }
+}
+
+function previewCover(type) {
+    if (type === 'main') {
+        const url = document.getElementById('cover-main-url').value;
+        const preview = document.getElementById('cover-preview-main');
+        if (url) {
+            preview.src = url;
+            preview.style.display = 'block';
+        }
+    } else {
+        const url = document.getElementById('cover-chapter-url').value;
+        const preview = document.getElementById('cover-preview-chapter');
+        if (url) {
+            preview.src = url;
+            preview.style.display = 'block';
+        }
+    }
+}
+
+function saveCoverImages() {
+    const bookId = document.getElementById('cover-book-select').value;
+    if (!bookId) {
+        showToast('Please select a book first', 'warning');
+        return;
+    }
+
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const bookIndex = library.findIndex(item => item.id === bookId);
+
+    if (bookIndex === -1) return;
+
+    // Save main cover
+    const mainUrl = document.getElementById('cover-main-url').value;
+    library[bookIndex].cover = mainUrl;
+    library[bookIndex].image = mainUrl; // Sync with image key
+
+    // Save chapter cover if selected
+    const chapterIndex = document.getElementById('cover-chapter-select').value;
+    if (chapterIndex !== '' && library[bookIndex].chapters && library[bookIndex].chapters[chapterIndex]) {
+        library[bookIndex].chapters[chapterIndex].coverImage = document.getElementById('cover-chapter-url').value;
+    }
+
+    localStorage.setItem('siteLibrary', JSON.stringify(library));
+
+    // Sync to Supabase
+    syncToCloud('library', library[bookIndex]);
+    showToast('Cover images saved successfully!');
+}
+
+// Background Settings Functions
+function loadBackgroundSettings() {
+    const bookId = document.getElementById('bg-book-select').value;
+    const editor = document.getElementById('background-editor');
+
+    if (!bookId) {
+        editor.style.display = 'none';
+        return;
+    }
+
+    editor.style.display = 'block';
+
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const book = library.find(item => item.id === bookId);
+
+    if (!book) return;
+
+    // Load book detail background settings
+    const bgSettings = book.backgroundSettings || {};
+    document.getElementById('bg-detail-url').value = bgSettings.detailUrl || '';
+    document.getElementById('bg-detail-style').value = bgSettings.detailStyle || 'cover';
+    document.getElementById('bg-detail-opacity').value = bgSettings.detailOpacity || 70;
+    document.getElementById('bg-detail-opacity-val').textContent = (bgSettings.detailOpacity || 70) + '%';
+
+    // Setup opacity slider listener
+    document.getElementById('bg-detail-opacity').oninput = function () {
+        document.getElementById('bg-detail-opacity-val').textContent = this.value + '%';
+    };
+
+    // Populate chapter dropdown for backgrounds
+    const chapterSelect = document.getElementById('bg-chapter-select');
+    chapterSelect.innerHTML = '<option value="">-- All Chapters (Default) --</option>';
+    if (book.chapters) {
+        book.chapters.forEach((chapter, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = chapter.title || `Chapter ${index + 1}`;
+            chapterSelect.appendChild(option);
+        });
+    }
+}
+
+function loadChapterBackground() {
+    const bookId = document.getElementById('bg-book-select').value;
+    const chapterIndex = document.getElementById('bg-chapter-select').value;
+
+    if (!bookId) return;
+
+    if (chapterIndex === '') {
+        // Use book defaults
+        document.getElementById('bg-chapter-url').value = '';
+        document.getElementById('bg-chapter-theme').value = 'dark';
+        return;
+    }
+
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const book = library.find(item => item.id === bookId);
+
+    if (!book || !book.chapters || !book.chapters[chapterIndex]) return;
+
+    const chapter = book.chapters[chapterIndex];
+    document.getElementById('bg-chapter-url').value = chapter.backgroundImage || '';
+    document.getElementById('bg-chapter-theme').value = chapter.readingTheme || 'dark';
+}
+
+function saveBackgroundSettings() {
+    const bookId = document.getElementById('bg-book-select').value;
+    if (!bookId) {
+        showToast('Please select a book first', 'warning');
+        return;
+    }
+
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const bookIndex = library.findIndex(item => item.id === bookId);
+
+    if (bookIndex === -1) return;
+
+    // Save book detail page background settings
+    library[bookIndex].backgroundSettings = {
+        detailUrl: document.getElementById('bg-detail-url').value,
+        detailStyle: document.getElementById('bg-detail-style').value,
+        detailOpacity: parseInt(document.getElementById('bg-detail-opacity').value)
+    };
+
+    // Save chapter background if selected
+    const chapterIndex = document.getElementById('bg-chapter-select').value;
+    if (chapterIndex !== '' && library[bookIndex].chapters && library[bookIndex].chapters[chapterIndex]) {
+        library[bookIndex].chapters[chapterIndex].backgroundImage = document.getElementById('bg-chapter-url').value;
+        library[bookIndex].chapters[chapterIndex].readingTheme = document.getElementById('bg-chapter-theme').value;
+    }
+
+    localStorage.setItem('siteLibrary', JSON.stringify(library));
+
+    // Sync to Supabase
+    syncToCloud('library', library[bookIndex]);
+    showToast('Background settings saved successfully!');
+}
+
+
+// --- Supabase Cloud Sync Helper ---
+async function syncToCloud(type, data, identifier = null) {
+    if (!isSupabaseConfigured() || !supabaseClient) return;
+
+    try {
+        switch (type) {
+            case 'library':
+            case 'book':
+                const book = data;
+                // 1. Sync Book Info
+                const bookPayload = {
+                    title: book.title,
+                    author: book.author || 'James Allen',
+                    description: book.description || '',
+                    cover_image: book.image || book.cover || 'assets/logo-new.png',
+                    public_domain: book.publicDomain === true
+                };
+
+                if (book.id && book.id.match(/^[0-9a-fA-F-]{36}$/)) {
+                    bookPayload.id = book.id;
+                }
+
+                const { data: savedBook, error: bookError } = await supabaseClient
+                    .from('books')
+                    .upsert(bookPayload, { onConflict: 'title' })
+                    .select()
+                    .single();
+
+                if (bookError) throw bookError;
+
+                // 2. Sync Chapters if present
+                if (book.chapters && book.chapters.length > 0) {
+                    const bookId = savedBook.id;
+                    for (let i = 0; i < book.chapters.length; i++) {
+                        const ch = book.chapters[i];
+                        await supabaseClient.from('chapters').upsert({
+                            book_id: bookId,
+                            chapter_number: i + 1,
+                            chapter_title: ch.title,
+                            content: ch.content,
+                            bg_image: ch.backgroundImage || '',
+                            audio_url: ch.audioUrl || ''
+                        });
+                    }
+                }
+                break;
+            case 'library_delete':
+                await supabaseClient.from('books').delete().eq('id', identifier);
+                break;
+            case 'settings':
+                await supabaseClient.from('admin_settings').upsert({
+                    ads_enabled: data.adsEnabled !== false,
+                    audio_enabled: data.audioEnabled !== false,
+                    background_enabled: data.bgEnabled !== false,
+                    maintenance_mode: data.maintenanceMode === true
+                });
+                break;
+            case 'homepage':
+                await supabaseClient.from('homepage_settings').upsert({
+                    id: 1, // Ensure single record
+                    hero_title: data.heroTitle || '',
+                    hero_subtitle: data.heroSubtitle || '',
+                    exclusive_collection: data.exclusive || [],
+                    popular_books: data.popular || [],
+                    success_stories: data.stories || [],
+                    browse_topics: data.topics || [],
+                    micro_lessons: data.tips || [],
+                    micro_lesson_headings: data.tipHeadings || [],
+                    custom_sections: data.customSections || []
+                });
+                break;
+            case 'images':
+                await supabaseClient.from('homepage_settings').upsert({
+                    id: 1,
+                    slider_images: data.carousel || [],
+                    bottom_banners: data.bottomBanners || data.bottomBanner || []
+                });
+                break;
+            case 'stories':
+                await supabaseClient.from('stories').upsert({
+                    title: data.title,
+                    content: data.content,
+                    moral: data.moral || '',
+                    category: data.category || 'Success Story',
+                    featured: data.featured || false
+                });
+                break;
+            case 'quotes':
+                await supabaseClient.from('quotes').upsert({
+                    quote: data.text || data.quote,
+                    // If book linking is needed, it should be passed here. For generic quotes, we might need a placeholder or update schema.
+                    // Assuming basic structure first as per user request which defines id, book_id, chapter_id, quote
+                    // If migration data doesn't have book_id, we might skip or leave null if allowed.
+                });
+                break;
+            case 'feedback':
+                await supabaseClient.from('feedback').insert({
+                    name: data.name,
+                    message: data.message,
+                    secret_code: data.secretCode || ''
+                });
+                break;
+        }
+        console.log(`Cloud sync success: ${type}`);
+    } catch (e) {
+        console.error(`Cloud sync failed: ${type}`, e);
+    }
+}
+
+// --- Supabase Management Logic ---
+function updateSupabaseStatus(message, isError = false) {
+    const statusEl = document.getElementById('supabaseClient-status');
+    if (statusEl) {
+        statusEl.textContent = message;
+        statusEl.style.color = isError ? '#ef4444' : '#00e676';
+    }
+}
+
+async function testSupabaseConnection() {
+    if (!isSupabaseConfigured()) {
+        updateSupabaseStatus("Supabase URL or Key not configured in supabaseClient-config.js", true);
+        return false;
+    }
+
+    updateSupabaseStatus("Testing connection...");
+
+    if (!supabaseClient) {
+        updateSupabaseStatus("❌ Supabase client not initialized. Check your API keys and internet connection.", true);
+        return false;
+    }
+
+    try {
+        // Test query - V2 schema uses admin_settings
+        const { data, error } = await supabaseClient.from('admin_settings').select('id').limit(1);
+
+        if (error) {
+            // Check if it's a "relation does not exist" error (code 42P01)
+            if (error.code === '42P01' || error.message.includes('relation "public.admin_settings" does not exist')) {
+                updateSupabaseStatus("✅ Connected! (Note: V2 tables not created yet)");
+                return true;
+            }
+            throw error;
+        }
+        updateSupabaseStatus("✅ Connected to Supabase V2!");
+        return true;
+    } catch (e) {
+        console.error("Supabase Connection Error:", e);
+        updateSupabaseStatus("❌ Connection failed: " + e.message, true);
+        return false;
+    }
+}
+
+async function migrateToSupabase(type) {
+    if (!isSupabaseConfigured()) {
+        showToast("Please configure Supabase first!", 'warning');
+        return;
+    }
+
+    customConfirm(`Start full V2 migration for ${type}? This will sync all local items to the new cloud schema.`, "Full Migration", "🚀")
+        .then(confirmed => {
+            if (!confirmed) return;
+            performMigration(type);
+        });
+}
+
+async function performMigration(type) {
+
+    updateSupabaseStatus(`Migrating ${type} (V2)...`);
+
+    try {
+        switch (type) {
+            case 'library':
+                const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+                if (library.length === 0) throw new Error("No local library data found.");
+
+                for (const item of library) {
+                    await syncToCloud('library', item);
+                }
+                break;
+
+            case 'settings':
+                const settings = JSON.parse(localStorage.getItem('siteSettings') || '{}');
+                await syncToCloud('settings', settings);
+                break;
+
+            case 'homepage':
+                const hpConfig = JSON.parse(localStorage.getItem('homepageSettings') || '{}');
+                await syncToCloud('homepage', hpConfig);
+                break;
+
+            case 'images':
+                const carousel = JSON.parse(localStorage.getItem('carouselImages') || '[]');
+                const bottom = JSON.parse(localStorage.getItem('bottomImages') || '[]');
+                // Map to media table
+                for (const url of carousel) {
+                    await supabaseClient.from('media').upsert({ type: 'image', url: url, usage: 'slider' });
+                }
+                for (const url of bottom) {
+                    await supabaseClient.from('media').upsert({ type: 'image', url: url, usage: 'banner' });
+                }
+                break;
+
+            case 'feedback':
+                const feedback = JSON.parse(localStorage.getItem('feedbackData') || '[]');
+                for (const fb of feedback) {
+                    await syncToCloud('feedback', fb);
+                }
+                break;
+        }
+
+        updateSupabaseStatus(`✅ V2 Migration complete for ${type}!`);
+    } catch (e) {
+        console.error("Migration failed:", e);
+        updateSupabaseStatus(`❌ Migration failed: ${e.message}`, true);
+    }
+}
+
+// Initialize Supabase Status
+document.addEventListener('DOMContentLoaded', () => {
+    if (isSupabaseConfigured()) {
+        testSupabaseConnection();
+    } else {
+        updateSupabaseStatus("Not configured (using LocalStorage fallback)", false);
+    }
+});
+
+
+// ======================================
+// Common Settings Functions
+// ======================================
+
+// Switch between common settings tabs
+function switchCommonTab(tabId) {
+    // Remove active from all tabs and content
+    document.querySelectorAll('.common-tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.common-tab-content').forEach(content => content.classList.remove('active'));
+
+    // Add active to clicked tab and corresponding content
+    document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+}
+
+// Load Common Settings from localStorage
+function loadCommonSettings() {
+    const settings = JSON.parse(localStorage.getItem('commonSettings') || '{}');
+    const homepageConfig = JSON.parse(localStorage.getItem('siteHomepageConfig') || '{}');
+
+    // Tab 1 - Load Carousel Images
+    loadTab1CarouselImages();
+
+    // Tab 2 - Load Bottom Images
+    loadTab2BottomImages();
+
+    // Tab 3 - Load Tips
+    if (homepageConfig.tips && Array.isArray(homepageConfig.tips)) {
+        for (let i = 1; i <= 3; i++) {
+            const tipEl = document.getElementById(`common-tip-${i}`);
+            const headEl = document.getElementById(`common-tip-head-${i}`);
+            if (tipEl) tipEl.value = homepageConfig.tips[i - 1] || '';
+            if (headEl) headEl.value = (homepageConfig.tipHeadings && homepageConfig.tipHeadings[i - 1]) || '';
+        }
+    }
+
+    // Tab 4 - Load Branding
+    document.getElementById('common-hero-title').value = homepageConfig.heroTitle || 'Wealth & Mindset';
+    document.getElementById('common-hero-subtitle').value = homepageConfig.heroSubtitle || '';
+    document.getElementById('common-logo-url').value = homepageConfig.logoUrl || 'assets/logo-new.png';
+    document.getElementById('common-site-tagline').value = homepageConfig.tagline || 'Read Smart. Think Wealth.';
+
+    // Tab 5 - Load Cover Page (Populate Books)
+    loadTab5Books();
+
+    // Tab 6 - Load Detail Page Commons
+    const detailCommons = JSON.parse(localStorage.getItem('siteDetailCommons') || '{}');
+    if (detailCommons.features) {
+        for (let i = 1; i <= 4; i++) {
+            const feat = detailCommons.features[i - 1] || {};
+            if (document.getElementById(`common-feat-title-${i}`))
+                document.getElementById(`common-feat-title-${i}`).value = feat.title || '';
+            if (document.getElementById(`common-feat-desc-${i}`))
+                document.getElementById(`common-feat-desc-${i}`).value = feat.desc || '';
+            if (document.getElementById(`common-feat-color-${i}`))
+                document.getElementById(`common-feat-color-${i}`).value = feat.color || '';
+        }
+    }
+    if (document.getElementById('common-detail-show-review-snippet')) {
+        const showReview = detailCommons.showReviewSnippet || 'no';
+        document.getElementById('common-detail-show-review-snippet').value = showReview;
+        document.getElementById('common-review-snippet-fields').style.display = showReview === 'yes' ? 'block' : 'none';
+        document.getElementById('common-review-text').value = detailCommons.reviewText || '';
+        document.getElementById('common-review-author').value = detailCommons.reviewAuthor || '';
+    }
+}
+
+// ===== TAB 3: Daily Tips Functions =====
+
+function saveTab3Tips() {
+    customConfirm("Save these tips to the homepage?", "Save Tips", "💡").then(confirmed => {
+        if (!confirmed) return;
+
+        const homepageConfig = JSON.parse(localStorage.getItem('siteHomepageConfig') || '{"tips":["","",""],"tipHeadings":["","",""]}');
+
+        if (!homepageConfig.tips) homepageConfig.tips = ["", "", ""];
+        if (!homepageConfig.tipHeadings) homepageConfig.tipHeadings = ["", "", ""];
+
+        for (let i = 1; i <= 3; i++) {
+            const tipEl = document.getElementById(`common-tip-${i}`);
+            const headEl = document.getElementById(`common-tip-head-${i}`);
+            if (tipEl) homepageConfig.tips[i - 1] = tipEl.value;
+            if (headEl) homepageConfig.tipHeadings[i - 1] = headEl.value;
+        }
+
+        localStorage.setItem('siteHomepageConfig', JSON.stringify(homepageConfig));
+
+        // Sync to cloud if available
+        if (typeof syncToCloud === 'function') {
+            syncToCloud('homepage_config', homepageConfig);
+        }
+
+        showToast('Daily tips saved successfully!');
+    });
+}
+
+// ===== TAB 4: Site Branding Functions =====
+
+function saveTab4Branding() {
+    customConfirm("Apply site branding changes?", "Update Branding", "🎨").then(confirmed => {
+        if (!confirmed) return;
+
+        const homepageConfig = JSON.parse(localStorage.getItem('siteHomepageConfig') || '{}');
+
+        homepageConfig.heroTitle = document.getElementById('common-hero-title').value;
+        homepageConfig.heroSubtitle = document.getElementById('common-hero-subtitle').value;
+        homepageConfig.logoUrl = document.getElementById('common-logo-url').value;
+        homepageConfig.tagline = document.getElementById('common-site-tagline').value;
+
+        localStorage.setItem('siteHomepageConfig', JSON.stringify(homepageConfig));
+
+        // Sync to cloud if available
+        if (typeof syncToCloud === 'function') {
+            syncToCloud('homepage_config', homepageConfig);
+        }
+
+        showToast('Site branding saved successfully!');
+    });
+}
+
+// ===== TAB 6: Detail Page Commons Functions =====
+
+function saveTab6DetailCommons() {
+    customConfirm("Update common settings for all detail pages?", "Save Commons", "⚙️").then(confirmed => {
+        if (!confirmed) return;
+
+        const features = [];
+        for (let i = 1; i <= 4; i++) {
+            features.push({
+                title: document.getElementById(`common-feat-title-${i}`).value,
+                desc: document.getElementById(`common-feat-desc-${i}`).value,
+                color: document.getElementById(`common-feat-color-${i}`).value
+            });
+        }
+
+        const detailCommons = {
+            features: features,
+            showReviewSnippet: document.getElementById('common-detail-show-review-snippet').value,
+            reviewText: document.getElementById('common-review-text').value,
+            reviewAuthor: document.getElementById('common-review-author').value
+        };
+
+        localStorage.setItem('siteDetailCommons', JSON.stringify(detailCommons));
+
+        // Sync to cloud if available
+        if (typeof syncToCloud === 'function') {
+            syncToCloud('detail_commons', detailCommons);
+        }
+
+        showToast('Detail page common settings saved!');
+    });
+}
+
+// Visibility Toggle for Review Snippet
+document.addEventListener('change', (e) => {
+    if (e.target.id === 'common-detail-show-review-snippet') {
+        const fields = document.getElementById('common-review-snippet-fields');
+        if (fields) {
+            fields.style.display = e.target.value === 'yes' ? 'block' : 'none';
+        }
+    }
+});
+
+// ===== TAB 5: Global Book Cover Manager Functions =====
+
+function loadTab5Books() {
+    const select = document.getElementById('common-cover-book-select');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">-- Select a Book --</option>';
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+
+    library.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.id;
+        option.textContent = item.title;
+        select.appendChild(option);
+    });
+}
+
+function loadSelectedBookCover() {
+    const bookId = document.getElementById('common-cover-book-select').value;
+    const fields = document.getElementById('cover-designer-fields');
+    const noSelection = document.getElementById('cover-no-selection');
+
+    if (!bookId) {
+        fields.style.display = 'none';
+        noSelection.style.display = 'block';
+        return;
+    }
+
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const book = library.find(item => item.id === bookId);
+
+    if (!book) return;
+
+    // Show fields
+    fields.style.display = 'block';
+    noSelection.style.display = 'none';
+
+    // Load existing design or defaults
+    const design = book.coverDesign || {};
+    document.getElementById('common-cover-url').value = design.url || book.image || book.cover || '';
+    document.getElementById('common-hero-bg-url').value = design.heroBgUrl || '';
+    document.getElementById('common-cover-title').value = design.title || book.title || '';
+    document.getElementById('common-cover-subtitle').value = design.subtitle || book.author || '';
+    document.getElementById('common-hero-bg-color1').value = design.heroColor1 || '#1e3a8a';
+    document.getElementById('common-hero-bg-color2').value = design.heroColor2 || '#7c3aed';
+
+    // Badge Fields
+    document.getElementById('common-cover-badge-top').value = design.badgeTop || '';
+    document.getElementById('common-cover-badge-bottom').value = design.badgeBottom || '';
+    document.getElementById('common-cover-badge-top-color').value = design.badgeTopColor || '#0d9488';
+    document.getElementById('common-cover-badge-bottom-color').value = design.badgeBottomColor || '#000000';
+
+    document.getElementById('common-cover-align').value = design.align || 'center';
+    document.getElementById('common-cover-valign').value = design.valign || 'middle';
+    document.getElementById('common-cover-text-color').value = design.textColor || '#ffffff';
+    document.getElementById('common-cover-text-hex').value = design.textColor || '#ffffff';
+    document.getElementById('common-cover-shadow').value = design.shadow || '0 4px 10px rgba(0,0,0,0.8)';
+}
+
+function saveTab5Cover() {
+    const bookId = document.getElementById('common-cover-book-select').value;
+    if (!bookId) return;
+
+    customConfirm("Save and apply this cover design?", "Save Design", "🎨").then(confirmed => {
+        if (!confirmed) return;
+
+        const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+        const bookIndex = library.findIndex(item => item.id === bookId);
+
+        if (bookIndex === -1) return;
+
+        // Update cover design
+        const design = {
+            url: document.getElementById('common-cover-url').value,
+            heroBgUrl: document.getElementById('common-hero-bg-url').value,
+            title: document.getElementById('common-cover-title').value,
+            subtitle: document.getElementById('common-cover-subtitle').value,
+            heroColor1: document.getElementById('common-hero-bg-color1').value,
+            heroColor2: document.getElementById('common-hero-bg-color2').value,
+            // Badge Values
+            badgeTop: document.getElementById('common-cover-badge-top').value,
+            badgeBottom: document.getElementById('common-cover-badge-bottom').value,
+            badgeTopColor: document.getElementById('common-cover-badge-top-color').value,
+            badgeBottomColor: document.getElementById('common-cover-badge-bottom-color').value,
+            align: document.getElementById('common-cover-align').value,
+            valign: document.getElementById('common-cover-valign').value,
+            textColor: document.getElementById('common-cover-text-color').value,
+            shadow: document.getElementById('common-cover-shadow').value
+        };
+
+        library[bookIndex].coverDesign = design;
+
+        // Also update the main image/cover reference for legacy compatibility
+        if (design.url) {
+            library[bookIndex].image = design.url;
+            library[bookIndex].cover = design.url;
+        }
+
+        localStorage.setItem('siteLibrary', JSON.stringify(library));
+
+        // Sync to cloud
+        syncToCloud('library', library[bookIndex]);
+
+        showToast('Cover design saved and applied to book!');
+    });
+}
+
+function resetCoverDesigner() {
+    customConfirm('Are you sure you want to reset the design fields?', 'Reset Design', '🧹')
+        .then(confirmed => {
+            if (confirmed) loadSelectedBookCover();
+        });
+}
+
+
+// ===== TAB 1: Carousel Image Management Functions =====
+
+function loadTab1CarouselImages() {
+    const grid = document.getElementById('tab1-carousel-grid');
+    const countBadge = document.getElementById('tab1-carousel-count');
+
+    if (!grid) return;
+
+    let images = getCarouselImages();
+
+    // Update count badge
+    if (countBadge) {
+        countBadge.textContent = `${images.length} Slide${images.length !== 1 ? 's' : ''}`;
+    }
+
+    if (images.length === 0) {
+        grid.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #64748b;">
+                <p style="font-size: 1.2rem; margin: 0;">No carousel images yet</p>
+                <p style="margin: 10px 0 0;">Click the button below to add your first carousel image</p>
+            </div>
+        `;
+        return;
+    }
+
+    grid.innerHTML = images.map((img, index) => `
+        <div class="image-card">
+            <img src="${img.url}" alt="${img.title}" onerror="this.src='assets/logo-new.png'">
+            <div class="image-card-body">
+                <h4>${img.title}</h4>
+                <p>Slide #${index + 1}</p>
+                <div style="margin: 10px 0; padding: 8px; background: rgba(59, 130, 246, 0.1); border-radius: 6px;">
+                    <strong style="color: #3b82f6;">Badge:</strong> ${img.badge || 'None'}<br>
+                    <strong style="color: #3b82f6;">Heading:</strong> ${img.heading || 'None'}
+                </div>
+                <div class="image-card-actions">
+                    <button class="img-action-btn edit" onclick="editTab1CarouselImage('${img.id}')">✏️ Edit</button>
+                    <button class="img-action-btn delete" onclick="deleteTab1CarouselImage('${img.id}')">🗑️ Delete</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openTab1AddImageModal() {
+    const modalHtml = `
+        <div id="tab1-image-modal" class="modal" style="display: flex; align-items: center; justify-content: center;">
+            <div class="modal-content" style="max-width: 600px; margin: 0;">
+                <div class="modal-header">
+                    <h3>Add Carousel Image</h3>
+                    <span class="close-modal" onclick="closeTab1ImageModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group-admin">
+                        <label>Image Title</label>
+                        <input type="text" id="tab1-new-title" placeholder="e.g., Master Your Financial Destiny">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Image URL</label>
+                        <input type="text" id="tab1-new-url" placeholder="Enter image URL or path">
+                        <small style="color: #64748b;">Example: assets/carousel-1.png</small>
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Badge Text</label>
+                        <input type="text" id="tab1-new-badge" placeholder="e.g., Featured Guide, New Arrivals">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Main Heading</label>
+                        <input type="text" id="tab1-new-heading" placeholder="e.g., Master Your Financial Destiny">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Description (Optional)</label>
+                        <textarea id="tab1-new-desc" rows="3" placeholder="Brief description..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-primary" style="background: #ef4444; margin-right: 10px;" onclick="closeTab1ImageModal()">Cancel</button>
+                    <button class="btn-success" style="margin: 0;" onclick="saveTab1NewImage()">Add Image</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function closeTab1ImageModal() {
+    const modal = document.getElementById('tab1-image-modal');
+    if (modal) modal.remove();
+}
+
+function saveTab1NewImage() {
+    const title = document.getElementById('tab1-new-title').value;
+    const url = document.getElementById('tab1-new-url').value;
+    const badge = document.getElementById('tab1-new-badge').value;
+    const heading = document.getElementById('tab1-new-heading').value;
+    const desc = document.getElementById('tab1-new-desc').value;
+
+    if (!title || !url) {
+        showToast('Please fill in the Title and Image URL fields', 'warning');
+        return;
+    }
+
+    const images = getCarouselImages();
+    const newImage = {
+        id: 'carousel-' + Date.now(),
+        title: title,
+        url: url,
+        badge: badge,
+        heading: heading,
+        desc: desc
+    };
+
+    images.push(newImage);
+    saveCarouselImagesStorage(images);
+    loadTab1CarouselImages();
+    closeTab1ImageModal();
+    showToast('Carousel image added successfully!');
+}
+
+function editTab1CarouselImage(imageId) {
+    const images = getCarouselImages();
+    const image = images.find(img => img.id === imageId);
+
+    if (!image) return;
+
+    const modalHtml = `
+        <div id="tab1-image-modal" class="modal" style="display: flex; align-items: center; justify-content: center;">
+            <div class="modal-content" style="max-width: 600px; margin: 0;">
+                <div class="modal-header">
+                    <h3>Edit Carousel Image</h3>
+                    <span class="close-modal" onclick="closeTab1ImageModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group-admin">
+                        <label>Image Title</label>
+                        <input type="text" id="tab1-edit-title" value="${image.title}">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Image URL</label>
+                        <input type="text" id="tab1-edit-url" value="${image.url}">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Badge Text</label>
+                        <input type="text" id="tab1-edit-badge" value="${image.badge || ''}">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Main Heading</label>
+                        <input type="text" id="tab1-edit-heading" value="${image.heading || ''}">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Description (Optional)</label>
+                        <textarea id="tab1-edit-desc" rows="3">${image.desc || ''}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-primary" style="background: #ef4444; margin-right: 10px;" onclick="closeTab1ImageModal()">Cancel</button>
+                    <button class="btn-success" style="margin: 0;" onclick="updateTab1CarouselImage('${imageId}')">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function updateTab1CarouselImage(imageId) {
+    const images = getCarouselImages();
+    const index = images.findIndex(img => img.id === imageId);
+
+    if (index === -1) return;
+
+    images[index] = {
+        ...images[index],
+        title: document.getElementById('tab1-edit-title').value,
+        url: document.getElementById('tab1-edit-url').value,
+        badge: document.getElementById('tab1-edit-badge').value,
+        heading: document.getElementById('tab1-edit-heading').value,
+        desc: document.getElementById('tab1-edit-desc').value
+    };
+
+    saveCarouselImagesStorage(images);
+    loadTab1CarouselImages();
+    closeTab1ImageModal();
+    showToast('Carousel image updated successfully!');
+}
+
+function deleteTab1CarouselImage(imageId) {
+    customConfirm('Are you sure you want to delete this carousel image?', 'Delete Slide', '🗑️')
+        .then(confirmed => {
+            if (!confirmed) return;
+            const images = getCarouselImages().filter(img => img.id !== imageId);
+            saveCarouselImagesStorage(images);
+            loadTab1CarouselImages();
+            showToast('Carousel image deleted!');
+        });
+}
+
+
+// ===== TAB 2: Bottom Image Management Functions =====
+
+function loadTab2BottomImages() {
+    const grid = document.getElementById('tab2-bottom-grid');
+    const countBadge = document.getElementById('tab2-bottom-count');
+
+    if (!grid) return;
+
+    let images = getBottomImages();
+
+    // Update count badge
+    if (countBadge) {
+        countBadge.textContent = `${images.length} Image${images.length !== 1 ? 's' : ''}`;
+    }
+
+    if (images.length === 0) {
+        grid.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #64748b;">
+                <p style="font-size: 1.2rem; margin: 0;">No bottom images yet</p>
+                <p style="margin: 10px 0 0;">Click the button below to add your first bottom image</p>
+            </div>
+        `;
+        return;
+    }
+
+    grid.innerHTML = images.map((img, index) => `
+        <div class="image-card">
+            <img src="${img.url}" alt="${img.title}" onerror="this.src='assets/logo-new.png'">
+            <div class="image-card-body">
+                <h4>${img.title}</h4>
+                <p>Image #${index + 1}</p>
+                <div style="margin: 10px 0; padding: 8px; background: rgba(16, 185, 129, 0.1); border-radius: 6px;">
+                    <strong style="color: #10b981;">Section:</strong> ${img.section || 'General'}
+                </div>
+                <div class="image-card-actions">
+                    <button class="img-action-btn edit" onclick="editTab2BottomImage('${img.id}')">✏️ Edit</button>
+                    <button class="img-action-btn delete" onclick="deleteTab2BottomImage('${img.id}')">🗑️ Delete</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openTab2AddImageModal() {
+    const modalHtml = `
+        <div id="tab2-image-modal" class="modal" style="display: flex; align-items: center; justify-content: center;">
+            <div class="modal-content" style="max-width: 600px; margin: 0;">
+                <div class="modal-header">
+                    <h3>Add Bottom Image</h3>
+                    <span class="close-modal" onclick="closeTab2ImageModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group-admin">
+                        <label>Image Title</label>
+                        <input type="text" id="tab2-new-title" placeholder="e.g., Promotional Banner">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Image URL</label>
+                        <input type="text" id="tab2-new-url" placeholder="Enter image URL or path">
+                        <small style="color: #64748b;">Example: assets/bottom-banner.png</small>
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Section</label>
+                        <select id="tab2-new-section">
+                            <option value="micro-lessons">Micro Lessons</option>
+                            <option value="animation">Animation Banner</option>
+                            <option value="ad-banner">Ad Banner</option>
+                            <option value="promotional">Promotional</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Description (Optional)</label>
+                        <textarea id="tab2-new-desc" rows="3" placeholder="Brief description..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-primary" style="background: #ef4444; margin-right: 10px;" onclick="closeTab2ImageModal()">Cancel</button>
+                    <button class="btn-success" style="margin: 0;" onclick="saveTab2NewImage()">Add Image</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function closeTab2ImageModal() {
+    const modal = document.getElementById('tab2-image-modal');
+    if (modal) modal.remove();
+}
+
+function saveTab2NewImage() {
+    const title = document.getElementById('tab2-new-title').value;
+    const url = document.getElementById('tab2-new-url').value;
+    const section = document.getElementById('tab2-new-section').value;
+    const desc = document.getElementById('tab2-new-desc').value;
+
+    if (!title || !url) {
+        showToast('Please fill in the Title and Image URL fields', 'warning');
+        return;
+    }
+
+    const images = getBottomImages();
+    const newImage = {
+        id: 'bottom-' + Date.now(),
+        title: title,
+        url: url,
+        section: section,
+        desc: desc
+    };
+
+    images.push(newImage);
+    saveBottomImagesStorage(images);
+    loadTab2BottomImages();
+    closeTab2ImageModal();
+    showToast('Bottom image added successfully!');
+}
+
+function editTab2BottomImage(imageId) {
+    const images = getBottomImages();
+    const image = images.find(img => img.id === imageId);
+
+    if (!image) return;
+
+    const modalHtml = `
+        <div id="tab2-image-modal" class="modal" style="display: flex; align-items: center; justify-content: center;">
+            <div class="modal-content" style="max-width: 600px; margin: 0;">
+                <div class="modal-header">
+                    <h3>Edit Bottom Image</h3>
+                    <span class="close-modal" onclick="closeTab2ImageModal()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group-admin">
+                        <label>Image Title</label>
+                        <input type="text" id="tab2-edit-title" value="${image.title}">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Image URL</label>
+                        <input type="text" id="tab2-edit-url" value="${image.url}">
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Section</label>
+                        <select id="tab2-edit-section">
+                            <option value="micro-lessons" ${image.section === 'micro-lessons' ? 'selected' : ''}>Micro Lessons</option>
+                            <option value="animation" ${image.section === 'animation' ? 'selected' : ''}>Animation Banner</option>
+                            <option value="ad-banner" ${image.section === 'ad-banner' ? 'selected' : ''}>Ad Banner</option>
+                            <option value="promotional" ${image.section === 'promotional' ? 'selected' : ''}>Promotional</option>
+                            <option value="other" ${image.section === 'other' ? 'selected' : ''}>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group-admin">
+                        <label>Description (Optional)</label>
+                        <textarea id="tab2-edit-desc" rows="3">${image.desc || ''}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-primary" style="background: #ef4444; margin-right: 10px;" onclick="closeTab2ImageModal()">Cancel</button>
+                    <button class="btn-success" style="margin: 0;" onclick="updateTab2BottomImage('${imageId}')">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function updateTab2BottomImage(imageId) {
+    const images = getBottomImages();
+    const index = images.findIndex(img => img.id === imageId);
+
+    if (index === -1) return;
+
+    images[index] = {
+        ...images[index],
+        title: document.getElementById('tab2-edit-title').value,
+        url: document.getElementById('tab2-edit-url').value,
+        section: document.getElementById('tab2-edit-section').value,
+        desc: document.getElementById('tab2-edit-desc').value
+    };
+
+    saveBottomImagesStorage(images);
+    loadTab2BottomImages();
+    closeTab2ImageModal();
+    showToast('Bottom image updated successfully!');
+}
+
+function deleteTab2BottomImage(imageId) {
+    if (!confirm('Are you sure you want to delete this bottom image?')) return;
+
+    const images = getBottomImages().filter(img => img.id !== imageId);
+    saveBottomImagesStorage(images);
+    loadTab2BottomImages();
+    showToast('Bottom image deleted!');
+}
+
+
+// Save Tab 1 Settings
+function saveTab1Settings() {
+    const settings = JSON.parse(localStorage.getItem('commonSettings') || '{}');
+
+    settings.tab1 = {
+        setting1: document.getElementById('tab1-setting1').value,
+        setting2: document.getElementById('tab1-setting2').value
+    };
+
+    localStorage.setItem('commonSettings', JSON.stringify(settings));
+    showToast('Tab 1 settings saved successfully!');
+}
+
+// Save Tab 2 Settings
+function saveTab2Settings() {
+    const settings = JSON.parse(localStorage.getItem('commonSettings') || '{}');
+
+    settings.tab2 = {
+        setting1: document.getElementById('tab2-setting1').value,
+        setting2: document.getElementById('tab2-setting2').value
+    };
+
+    localStorage.setItem('commonSettings', JSON.stringify(settings));
+    showToast('Tab 2 settings saved successfully!');
+}
+
+// Save Tab 3 Settings
+function saveTab3Settings() {
+    const settings = JSON.parse(localStorage.getItem('commonSettings') || '{}');
+
+    settings.tab3 = {
+        setting1: document.getElementById('tab3-setting1').value,
+        enable: document.getElementById('tab3-enable').checked
+    };
+
+    localStorage.setItem('commonSettings', JSON.stringify(settings));
+    showToast('Tab 3 settings saved successfully!');
+}
+
+// Save Tab 4 Settings
+function saveTab4Settings() {
+    const settings = JSON.parse(localStorage.getItem('commonSettings') || '{}');
+
+    settings.tab4 = {
+        setting1: document.getElementById('tab4-setting1').value,
+        setting2: document.getElementById('tab4-setting2').value
+    };
+
+    localStorage.setItem('commonSettings', JSON.stringify(settings));
+    showToast('Tab 4 settings saved successfully!');
+}
+
+// Initialize Common Settings on section load
+document.addEventListener('DOMContentLoaded', () => {
+    // Check initial hash to show section
+    const initialHash = window.location.hash.substring(1);
+    if (initialHash) {
+        showSection(initialHash);
+    } else {
+        showDashboard();
+    }
+
+    // Load common settings when the section is shown
+    const commonSettingsSection = document.getElementById('common-settings');
+    if (commonSettingsSection) {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    if (commonSettingsSection.classList.contains('active')) {
+                        loadCommonSettings();
+                    }
+                }
+            });
+        });
+
+        observer.observe(commonSettingsSection, { attributes: true });
+    }
+});
+
+// --- ADVANCED TOOLS (UNIFIED CONTENT NAVIGATION) ---
+let activeAdvItem = null;
+
+function initAdvancedTools() {
+    renderUnifiedSidebar();
+}
+
+function renderUnifiedSidebar() {
+    const container = document.getElementById("adv-unified-sidebar");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const library = JSON.parse(localStorage.getItem("siteLibrary") || "[]");
+    const types = Object.keys(categoryMap);
+
+    types.forEach(typeKey => {
+        const typeData = categoryMap[typeKey];
+        const section = document.createElement("div");
+        section.style.display = "flex";
+        section.style.flexDirection = "column";
+        section.style.gap = "8px";
+
+        // Proper Plural Header
+        const label = typeKey.endsWith('y') ? typeKey.slice(0, -1) + 'ies' : (typeKey.endsWith('s') ? typeKey : typeKey + 's');
+
+        const header = document.createElement("div");
+        header.style.cssText = "display: flex; align-items: center; gap: 10px; padding: 5px 0; margin-bottom: 5px; cursor: pointer;";
+        header.innerHTML = `<span style="font-size: 1rem;">${typeData.icon || "📄"}</span>
+                            <span style="color: #475569; font-size: 0.7rem; text-transform: uppercase; font-weight: 800; letter-spacing: 1.5px;">${label}</span>`;
+        header.onclick = () => showTypeOverviewInPane(typeKey);
+        section.appendChild(header);
+
+        // Filter items for this type
+        const items = library.filter(item => item.type === typeKey);
+
+        // Items Container
+        const itemsContainer = document.createElement("div");
+        itemsContainer.style.display = "flex";
+        itemsContainer.style.flexDirection = "column";
+        itemsContainer.style.gap = "4px";
+        itemsContainer.style.paddingLeft = "15px";
+
+        items.forEach(item => {
+            const btn = document.createElement("button");
+            btn.style.cssText = "width: 100%; padding: 8px 12px; background: transparent; border: 1px solid transparent; border-radius: 6px; color: #94a3b8; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s; text-align: left; font-size: 0.85rem;";
+
+            if (activeAdvItem === item.id) {
+                btn.style.background = "rgba(59, 130, 246, 0.1)";
+                btn.style.color = "#3b82f6";
+                btn.style.borderColor = "rgba(59, 130, 246, 0.2)";
+            }
+
+            btn.innerHTML = `<span style="opacity: 0.3;">•</span>
+                             <span style="flex:1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.title}</span>`;
+
+            btn.onclick = () => {
+                activeAdvItem = item.id;
+                renderUnifiedSidebar();
+                showItemDetailInPane(item.id);
+            };
+            itemsContainer.appendChild(btn);
+        });
+
+        // Quick Add Item for this Specific Type
+        const addWrapper = document.createElement("div");
+        addWrapper.style.cssText = "display: flex; gap: 6px; padding-left: 15px; margin-top: 5px; opacity: 0.6; transition: opacity 0.2s;";
+        addWrapper.onmouseover = () => addWrapper.style.opacity = "1";
+        addWrapper.onmouseout = () => addWrapper.style.opacity = "0.6";
+
+        const addInput = document.createElement("input");
+        addInput.type = "text";
+        addInput.placeholder = `Add ${typeKey}...`;
+        addInput.id = `quick-add-input-${typeKey}`;
+        addInput.style.cssText = "flex:1; background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05); border-radius: 4px; color: white; padding: 4px 10px; font-size: 0.75rem;";
+
+        const addBtn = document.createElement("button");
+        addBtn.innerHTML = "+";
+        addBtn.style.cssText = "background: #334155; border: none; color: white; border-radius: 4px; width: 24px; height: 24px; cursor: pointer; font-size: 1rem;";
+        addBtn.onclick = () => quickAddLibraryItem(typeKey);
+
+        addWrapper.appendChild(addInput);
+        addWrapper.appendChild(addBtn);
+        itemsContainer.appendChild(addWrapper);
+
+        section.appendChild(itemsContainer);
+        container.appendChild(section);
+    });
+}
+
+
+function showTypeOverviewInPane(typeKey) {
+    const pane = document.getElementById("adv-tools-content-pane");
+    if (!pane) return;
+
+    const typeData = categoryMap[typeKey];
+    const genres = typeData.genres || [];
+
+    pane.innerHTML = `
+        <div style="text-align: left; width: 100%; max-width: 700px; animation: fadeIn 0.3s ease-out;">
+            <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 40px;">
+                <div style="width: 70px; height: 70px; background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+                    ${typeData.icon || "📄"}
+                </div>
+                <div>
+                    <h2 style="color: #fff; margin: 0; font-size: 2rem; text-transform: capitalize;">${typeKey} Settings</h2>
+                    <p style="color: #64748b; margin: 5px 0 0;">Manage sub-sections (genres) and global configuration for this type.</p>
+                </div>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.02); padding: 30px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 30px;">
+                <h3 style="color: #fff; margin-top: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 10px;">
+                    <span>📂</span> Sub-sections (Genres)
+                </h3>
+                <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 20px;">These are the categories that will appear in the "Genre" dropdown when adding new items.</p>
+                
+                <div id="adv-pane-genres-list" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+                    ${genres.map((g, i) => `
+                        <div style="background: #1e293b; padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 10px; border: 1px solid #334155; color: #cbd5e1;">
+                            <span>${g}</span>
+                            <span style="cursor:pointer; color: #ef4444; font-weight: bold;" onclick="removeGenreFromType('${typeKey}', ${i})">&times;</span>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div style="display: flex; gap: 10px; max-width: 400px;">
+                    <input type="text" id="adv-pane-new-genre" placeholder="e.g. Mystery, Science..." style="flex:1; background: #0f172a; border: 1px solid #1e293b; color: white; padding: 10px; border-radius: 8px;">
+                    <button class="btn-primary" onclick="addGenreToType('${typeKey}')" style="margin:0; padding: 10px 20px; background: #3b82f6;">Add</button>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <button class="btn-primary" onclick="deleteTypePrompt('${typeKey}')" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; justify-content: center;">
+                    🗑️ Delete Type
+                </button>
+                <div style="display:flex; align-items:center; gap:10px; color: #64748b; font-size: 0.8rem;">
+                    💡 Tip: Changes to sub-sections are saved automatically.
+                </div>
+            </div>
+        </div>
+    `;
+
+    pane.style.textAlign = "left";
+    pane.style.justifyContent = "start";
+    pane.style.alignItems = "start";
+}
+
+function addGenreToType(typeKey) {
+    const input = document.getElementById('adv-pane-new-genre');
+    const genre = input.value.trim();
+    if (!genre) return;
+
+    if (!categoryMap[typeKey].genres) categoryMap[typeKey].genres = [];
+    if (categoryMap[typeKey].genres.includes(genre)) {
+        showToast("Sub-section already exists!", 'warning');
+        return;
+    }
+
+    categoryMap[typeKey].genres.push(genre);
+    localStorage.setItem('siteTaxonomy', JSON.stringify(categoryMap));
+    showTypeOverviewInPane(typeKey);
+    if (typeof updateSubcategories === 'function') updateSubcategories();
+}
+
+function removeGenreFromType(typeKey, index) {
+    customConfirm("Are you sure you want to remove this sub-section?", "Remove Genre", "🗑️")
+        .then(confirmed => {
+            if (!confirmed) return;
+            categoryMap[typeKey].genres.splice(index, 1);
+            localStorage.setItem('siteTaxonomy', JSON.stringify(categoryMap));
+            showTypeOverviewInPane(typeKey);
+            if (typeof updateSubcategories === 'function') updateSubcategories();
+        });
+}
+
+function deleteTypePrompt(typeKey) {
+    customConfirm(`CRITICAL: Are you sure you want to delete the "${typeKey}" type? This will remove all its genres and associations.`, "Delete Type", "⚠️")
+        .then(confirmed => {
+            if (!confirmed) return;
+            delete categoryMap[typeKey];
+            localStorage.setItem('siteTaxonomy', JSON.stringify(categoryMap));
+            activeAdvItem = null; // Changed from activeAdvType to activeAdvItem
+            renderUnifiedSidebar(); // Changed from renderMainSections()
+
+            const pane = document.getElementById("adv-tools-content-pane");
+            if (pane) {
+                pane.innerHTML = `
+                    <div style="font-size: 5rem; margin-bottom: 20px; opacity: 0.5;">🛸</div>
+                    <h2 style="color: #fff; font-size: 1.8rem; margin: 0 0 15px;">Section Deleted</h2>
+                    <p style="color: #94a3b8; max-width: 400px; line-height: 1.6;">The content type has been removed. Select another section from the left to continue.</p>
+                `;
+                pane.style.textAlign = "center";
+                pane.style.justifyContent = "center";
+                pane.style.alignItems = "center";
+            }
+        });
+}
+
+function quickAddLibraryItem(typeKey) {
+    const input = document.getElementById(`quick-add-input-${typeKey}`);
+    if (!input) return;
+
+    const title = input.value.trim();
+    if (!title) return;
+
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const newEntry = {
+        id: Date.now().toString(),
+        title: title,
+        author: "Unknown",
+        type: typeKey,
+        genre: categoryMap[typeKey].genres?.[0] || 'General',
+        chapters: [],
+        timestamp: new Date().toISOString()
+    };
+
+    library.push(newEntry);
+    localStorage.setItem('siteLibrary', JSON.stringify(library));
+
+    // Sync to Supabase
+    if (typeof syncToCloud === 'function') syncToCloud('library', newEntry);
+
+    input.value = '';
+    renderUnifiedSidebar();
+    showItemDetailInPane(newEntry.id);
+    updateDashboardStats();
+}
+
+function showItemDetailInPane(itemId) {
+    const pane = document.getElementById("adv-tools-content-pane");
+    if (!pane) return;
+
+    const library = JSON.parse(localStorage.getItem("siteLibrary") || "[]");
+    const item = library.find(i => i.id === itemId);
+
+    if (!item) return;
+
+    const dateStr = new Date(item.timestamp).toLocaleDateString();
+    const chapCount = item.chapters ? item.chapters.length : 0;
+    const typeIcon = categoryMap[item.type]?.icon || "📄";
+
+    pane.innerHTML = `
+        <div style="text-align: left; width: 100%; max-width: 800px; animation: fadeIn 0.3s ease-out;">
+            <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 30px;">
+                <div style="width: 80px; height: 80px; background: rgba(59, 130, 246, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; border: 1px solid rgba(59, 130, 246, 0.2);">
+                    ${typeIcon}
+                </div>
+                <div>
+                    <h2 style="color: #fff; margin: 0; font-size: 2rem;">${item.title}</h2>
+                    <p style="color: #94a3b8; margin: 5px 0 0; text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem; font-weight: 700;">
+                        ${item.type} • ${item.genre || "General"}
+                    </p>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px;">
+                <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <span style="color: #64748b; font-size: 0.8rem; text-transform: uppercase;">Chapters</span>
+                    <div style="color: #fff; font-size: 1.5rem; font-weight: 700; margin-top: 5px;">${chapCount}</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                    <span style="color: #64748b; font-size: 0.8rem; text-transform: uppercase;">Published</span>
+                    <div style="color: #fff; font-size: 1.5rem; font-weight: 700; margin-top: 5px;">${dateStr}</div>
+                </div>
+            </div>
+
+            <!-- TABS MANAGER IN ADVANCED TOOLS -->
+            <div style="background: rgba(255,255,255,0.02); padding: 25px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 30px;">
+                <h3 style="margin-top: 0; color: #fff;">📋 Tabs Management</h3>
+                <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px;">
+                    Edit the tabs that appear on this item's detail page. Click "Edit Content" to add rich text and images.
+                </p>
+
+                <div id="adv-tools-tabs-list">
+                    <!-- Tabs populated here -->
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <input type="text" id="adv-new-tab-name" placeholder="New Tab Name (e.g. 🎁 Bonus)" 
+                           style="flex: 1; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: white; border-radius: 6px;">
+                    <button class="btn-primary" onclick="addAdvTab()" style="margin: 0;">+ Add Tab</button>
+                </div>
+            </div>
+
+            <div style="text-align: right;">
+                <button class="btn-success" onclick="saveAdvPaneChanges('${item.id}')" style="padding: 12px 30px; font-size: 1rem;">
+                    💾 Save All Changes
+                </button>
+            </div>
+            
+            <div style="margin-top: 40px; padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                 <button onclick="editLibraryItem('${item.id}')" style="background:none; border:none; color: #64748b; cursor:pointer;">
+                    To Deep Content Studio →
+                 </button>
+            </div>
+        </div>
+    `;
+
+    // Populate Tabs
+    const tabsList = document.getElementById('adv-tools-tabs-list');
+    const detailSettings = item.detailSettings || {};
+    // Use defaults if no tabs set
+    const tabsData = detailSettings.tabs || [
+        { name: '📖 About', heading: 'About This Item', content: item.description || '' },
+        { name: '📚 Chapters', heading: 'Chapter List', content: 'Chapters available in reader.' },
+        { name: '⭐ Reviews', heading: 'Reader Reviews', content: 'See what others say.' }
+    ];
+
+    tabsData.forEach(tab => {
+        const tabDiv = document.createElement('div');
+        tabDiv.className = 'tab-item';
+        tabDiv.draggable = true;
+        tabDiv.dataset.content = tab.content || "";
+        tabDiv.dataset.heading = tab.heading || "";
+        tabDiv.dataset.subheading = tab.subheading || "";
+        tabDiv.dataset.image = tab.image || "";
+        tabDiv.dataset.headingWeight = tab.headingWeight || "700";
+        tabDiv.dataset.subheadingWeight = tab.subheadingWeight || "400";
+        tabDiv.dataset.imageWidth = tab.imageWidth || "100%";
+
+        tabDiv.style.cssText = 'background: #1e293b; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05);';
+
+        tabDiv.innerHTML = `
+            <span style="font-weight: 500;">${tab.name}</span>
+            <div style="display: flex; gap: 8px;">
+                <button class="toolbar-btn" onclick="openTabEdit(this)" style="background: #3b82f6; border-color: #3b82f6; color: white; padding: 6px 12px; font-size: 0.85rem; border-radius: 4px;">Edit Content</button>
+                <button class="toolbar-btn" onclick="removeTab(this)" style="background: #ef4444; border-color: #ef4444; color: white; padding: 6px 12px; font-size: 0.85rem; border-radius: 4px;">Remove</button>
+            </div>
+        `;
+        tabsList.appendChild(tabDiv);
+    });
+
+    pane.style.textAlign = "left";
+    pane.style.justifyContent = "start";
+    pane.style.alignItems = "start";
+    pane.style.overflowY = "auto";
+    pane.style.height = "100%";
+}
+
+function addAdvTab() {
+    const tabName = document.getElementById('adv-new-tab-name').value.trim();
+    if (!tabName) {
+        showToast('Please enter a tab name', 'warning');
+        return;
+    }
+
+    const tabsList = document.getElementById('adv-tools-tabs-list');
+    const tabDiv = document.createElement('div');
+    tabDiv.className = 'tab-item';
+    tabDiv.draggable = true;
+
+    // Default Empty Data
+    tabDiv.dataset.content = "";
+    tabDiv.dataset.heading = "";
+    tabDiv.dataset.subheading = "";
+    tabDiv.dataset.image = "";
+    tabDiv.dataset.headingWeight = "700";
+    tabDiv.dataset.subheadingWeight = "400";
+    tabDiv.dataset.imageWidth = "100%";
+
+    tabDiv.style.cssText = 'background: #1e293b; padding: 12px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05);';
+    tabDiv.innerHTML = `
+        <span style="font-weight: 500;">${tabName}</span>
+        <div style="display: flex; gap: 8px;">
+            <button class="toolbar-btn" onclick="openTabEdit(this)" style="background: #3b82f6; border-color: #3b82f6; color: white; padding: 6px 12px; font-size: 0.85rem; border-radius: 4px;">Edit Content</button>
+            <button class="toolbar-btn" onclick="removeTab(this)" style="background: #ef4444; border-color: #ef4444; color: white; padding: 6px 12px; font-size: 0.85rem; border-radius: 4px;">Remove</button>
+        </div>
+    `;
+    tabsList.appendChild(tabDiv);
+    document.getElementById('adv-new-tab-name').value = '';
+}
+
+function saveAdvPaneChanges(id) {
+    if (!id) return;
+
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const index = library.findIndex(b => b.id === id);
+
+    if (index === -1) {
+        showToast('Item not found in library', 'error');
+        return;
+    }
+
+    // Collect tabs from the Adv Pane list
+    const tabs = [];
+    document.querySelectorAll('#adv-tools-tabs-list .tab-item').forEach(tabDiv => {
+        const name = tabDiv.querySelector('span').textContent;
+        tabs.push({
+            name,
+            enabled: true,
+            content: tabDiv.dataset.content || '',
+            heading: tabDiv.dataset.heading || '',
+            subheading: tabDiv.dataset.subheading || '',
+            image: tabDiv.dataset.image || '',
+            headingWeight: tabDiv.dataset.headingWeight || '700',
+            subheadingWeight: tabDiv.dataset.subheadingWeight || '400',
+            imageWidth: tabDiv.dataset.imageWidth || '100%'
+        });
+    });
+
+    // Initialize detailSettings if missing
+    if (!library[index].detailSettings) library[index].detailSettings = {};
+
+    // Update tabs
+    library[index].detailSettings.tabs = tabs;
+
+    // Save
+    localStorage.setItem('siteLibrary', JSON.stringify(library));
+
+    // Sync
+    if (typeof syncToCloud === 'function') {
+        syncToCloud('library', library[index]);
+    }
+
+    showToast('Tabs updated successfully for ' + library[index].title);
+
+}
+
+function showItemMetadata(itemId) {
+    // Convenience helper to jump to metadata manager
+    const select = document.getElementById("meta-book-select");
+    if (select) {
+        select.value = itemId;
+        showSection("metadata-manager");
+        if (typeof loadMetaBook === "function") loadMetaBook();
+    }
+}
+
+function quickAddTaxonomyType() {
+    const input = document.getElementById('adv-quick-add-type-name');
+    const nameRaw = input.value.trim();
+    const name = nameRaw.toLowerCase().replace(/\s+/g, '-');
+
+    if (!name) return;
+    if (categoryMap[name]) { showToast("Type already exists!", 'error'); return; }
+
+    // Use default icon
+    categoryMap[name] = { icon: '📄', genres: ['General'] };
+
+    // Save
+    localStorage.setItem('siteTaxonomy', JSON.stringify(categoryMap));
+
+    // Update UI
+    input.value = '';
+    renderMainSections();
+    if (typeof updateEditorTypeDropdown === 'function') updateEditorTypeDropdown();
+
+    showToast(`New type "${nameRaw}" added!`);
+}
+
+// --- Community Manager Functions ---
+let communityActiveTopic = null;
+
+async function initCommunityManager() {
+    const selector = document.getElementById('comm-book-select');
+    if (!selector) return;
+
+    selector.innerHTML = '<option value="">-- Select a Book --</option>';
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('books')
+            .select('id, title')
+            .order('title', { ascending: true });
+
+        if (data) {
+            data.forEach(book => {
+                const opt = document.createElement('option');
+                opt.value = book.id;
+                opt.textContent = book.title;
+                selector.appendChild(opt);
+            });
+        }
+    } catch (e) {
+        console.warn("Failed to load books for community manager:", e);
+    }
+}
+
+async function loadCommunityTopics() {
+    const bookId = document.getElementById('comm-book-select').value;
+    const container = document.getElementById('comm-topics-list');
+    container.innerHTML = '<p style="color: #666;">Loading topics...</p>';
+
+    if (!bookId) return;
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('book_topics')
+            .select('*')
+            .eq('book_id', bookId)
+            .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p style="color: #666;">No topics for this book.</p>';
+            return;
+        }
+
+        container.innerHTML = data.map(topic => `
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px;">
+                <span style="cursor: pointer; color: #fff; font-weight: 600;" onclick="loadTopicMessages('${topic.id}', '${topic.title}')">${topic.title}</span>
+                <button onclick="deleteTopic('${topic.id}')" style="background: none; border: none; color: #ef4444; cursor: pointer;">🗑️</button>
+            </div>
+        `).join('');
+    } catch (e) {
+        container.innerHTML = '<p style="color: #ef4444;">Error loading topics.</p>';
+    }
+}
+
+async function createNewTopic() {
+    const bookId = document.getElementById('comm-book-select').value;
+    const title = document.getElementById('new-comm-topic').value.trim();
+
+    if (!bookId) { showToast("Please select a book first.", 'warning'); return; }
+    if (!title) { showToast("Please enter a topic title.", 'warning'); return; }
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('book_topics')
+            .insert([{ book_id: bookId, title: title }]);
+
+        if (error) throw error;
+
+        document.getElementById('new-comm-topic').value = '';
+        loadCommunityTopics();
+    } catch (e) {
+        showToast("Failed to create topic.", 'error');
+    }
+}
+
+async function deleteTopic(topicId) {
+    customConfirm("Are you sure? This will delete all messages in this topic!", "Delete Topic", "🗑️")
+        .then(async confirmed => {
+            if (!confirmed) return;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('book_topics')
+                    .delete()
+                    .eq('id', topicId);
+
+                if (error) throw error;
+                loadCommunityTopics();
+                document.getElementById('comm-messages-list').innerHTML = '';
+            } catch (e) {
+                showToast("Failed to delete topic.", 'error');
+            }
+        });
+}
+
+async function loadTopicMessages(topicId, topicTitle) {
+    communityActiveTopic = topicId;
+    document.getElementById('comm-topic-header').textContent = topicTitle;
+    const container = document.getElementById('comm-messages-list');
+    container.innerHTML = '<p style="color: #666;">Loading messages...</p>';
+
+    try {
+        const { data, error } = await supabaseClient
+            .from('book_messages')
+            .select('*')
+            .eq('topic_id', topicId)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No messages in this topic.</p>';
+            return;
+        }
+
+        container.innerHTML = data.map(msg => `
+            <div style="background: #1e293b; padding: 15px; border-radius: 10px; border: 1px solid #334155;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #3b82f6; font-weight: 700;">${msg.username}</span>
+                    <button onclick="deleteCommMessage('${msg.id}')" style="background: none; border: none; color: #ef4444; cursor: pointer;">Delete</button>
+                </div>
+                <div style="color: #e2e8f0; line-height: 1.5;">${msg.message}</div>
+                <div style="margin-top: 8px; font-size: 0.75rem; color: #64748b;">
+                    ${new Date(msg.created_at).toLocaleString()} | 👍 ${msg.likes_count || 0}
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        container.innerHTML = '<p style="color: #ef4444;">Error loading messages.</p>';
+    }
+}
+
+async function deleteCommMessage(msgId) {
+    customConfirm("Are you sure you want to delete this message?", "Delete Message", "🗑️")
+        .then(async confirmed => {
+            if (!confirmed) return;
+
+            try {
+                const { error } = await supabaseClient
+                    .from('book_messages')
+                    .delete()
+                    .eq('id', msgId);
+
+                if (error) throw error;
+                loadTopicMessages(communityActiveTopic, document.getElementById('comm-topic-header').textContent);
+            } catch (e) {
+                showToast("Failed to delete message.", 'error');
+            }
+        });
+}
