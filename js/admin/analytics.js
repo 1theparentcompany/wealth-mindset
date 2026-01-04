@@ -9,36 +9,108 @@ window.initCharts = async function () {
     }
 
     // Initialize UI indicators
-    updateAnalyticsMetrics();
+    await updateAnalyticsMetrics();
 
     // Load Charts with Real Data
     await renderTrafficChart();
     await renderDeviceChart();
     await loadRealTimeActivity();
     await loadTopPerformingBooks();
+    await loadAdPerformance();
+};
+
+window.updateAnalyticsMetrics = async function () {
+    const totalUsersEl = document.getElementById('analytics-total-users');
+    const pageViewsEl = document.getElementById('analytics-page-views');
+    const adClicksEl = document.getElementById('analytics-ad-clicks');
+    const chapterReadsEl = document.getElementById('analytics-chapter-reads');
+
+    if (!totalUsersEl) return;
+
+    try {
+        if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured() && window.supabaseClient) {
+
+            // 1. Total Unique Visitors (by IP in last 30 days for performance)
+            const { count: userCount } = await supabaseClient
+                .from('user_activity')
+                .select('ip_address', { count: 'exact', head: true })
+                .gt('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()); // Approx unique for efficiency
+
+            // Note: Accurate unique count requires distinct query which supabase-js simple count doesn't do easily without RPC.
+            // For now, we use a raw count of sessions or simple approximation if table is huge.
+            // Better: Use a dedicated "visitors" table or RPC. Here we'll just show total activity count as proxy or keep it simple.
+            // Let's stick to unique IPs from a small sample or just total rows for "Activity" if scaling is issue.
+            const { data: uniqueIps } = await supabaseClient
+                .from('user_activity')
+                .select('ip_address')
+                .range(0, 1000); // Sample based unique count for speed
+
+            if (uniqueIps) {
+                const uniqueSet = new Set(uniqueIps.map(a => a.ip_address));
+                // Multiplier for estimation if > 1000
+                totalUsersEl.textContent = (uniqueSet.size > 900 ? "1000+" : uniqueSet.size.toLocaleString());
+            }
+
+
+            // 2. Total Page Views
+            const { count: viewCount } = await supabaseClient
+                .from('user_activity')
+                .select('*', { count: 'exact', head: true })
+                .eq('activity_type', 'page_view');
+
+            if (viewCount !== null) {
+                pageViewsEl.textContent = viewCount.toLocaleString();
+            }
+
+            // 3. Ad Clicks
+            const { count: clickCount } = await supabaseClient
+                .from('user_activity')
+                .select('*', { count: 'exact', head: true })
+                .eq('activity_type', 'ad_click');
+
+            if (clickCount !== null) {
+                adClicksEl.textContent = clickCount.toLocaleString();
+            }
+
+            // 4. Chapter Reads
+            const { count: readCount } = await supabaseClient
+                .from('user_activity')
+                .select('*', { count: 'exact', head: true })
+                .eq('activity_type', 'chapter_read');
+
+            if (readCount !== null) {
+                chapterReadsEl.textContent = readCount.toLocaleString();
+            }
+
+        } else {
+            // Demo Data
+            totalUsersEl.textContent = "1,240";
+            pageViewsEl.textContent = "15,400";
+            adClicksEl.textContent = "342";
+            chapterReadsEl.textContent = "8,100";
+        }
+    } catch (e) {
+        console.warn("Analytics metrics load failed", e);
+    }
 };
 
 async function renderTrafficChart() {
     const trafficCanvas = document.getElementById('trafficChart');
     if (!trafficCanvas) return;
 
-    let labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    let visitorData = [0, 0, 0, 0, 0, 0, 0];
+    let labels = [];
+    let visitorData = [];
 
     try {
         if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured() && window.supabaseClient) {
-            // Get last 7 days visitor counts
             const today = new Date();
-            labels = [];
-            visitorData = [];
-
             for (let i = 6; i >= 0; i--) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);
                 const dateStr = date.toISOString().split('T')[0];
                 labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
 
-                const { count, error } = await supabaseClient
+                const { count } = await supabaseClient
                     .from('user_activity')
                     .select('*', { count: 'exact', head: true })
                     .eq('activity_type', 'page_view')
@@ -47,34 +119,51 @@ async function renderTrafficChart() {
 
                 visitorData.push(count || 0);
             }
+        } else {
+            throw new Error("Offline");
         }
     } catch (e) {
-        console.warn("Traffic data fetch failed, using demo fallback", e);
-        visitorData = [120, 190, 150, 220, 280, 310, 350];
+        labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        visitorData = [120, 190, 150, 220, 280, 310, 350]; // Demo
     }
 
     if (trafficChartInstance) trafficChartInstance.destroy();
     const trafficCtx = trafficCanvas.getContext('2d');
+
+    // Gradient
+    const gradient = trafficCtx.createLinearGradient(0, 0, 0, 300);
+    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
+    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+
     window.trafficChartInstance = new Chart(trafficCtx, {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Daily Visitors',
+                label: 'Page Views',
                 data: visitorData,
                 borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                backgroundColor: gradient,
                 fill: true,
-                tension: 0.4
+                tension: 0.4,
+                pointBackgroundColor: '#3b82f6',
+                pointBorderWidth: 2,
+                pointRadius: 4,
+                pointHoverRadius: 6
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
             scales: {
-                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
-                x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' }, border: { display: false } },
+                x: { grid: { display: false }, ticks: { color: '#94a3b8' }, border: { display: false } }
+            },
+            interaction: {
+                mode: 'nearest',
+                axis: 'x',
+                intersect: false
             }
         }
     });
@@ -88,10 +177,10 @@ async function renderDeviceChart() {
 
     try {
         if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured() && window.supabaseClient) {
-            const { data, error } = await supabaseClient
+            const { data } = await supabaseClient
                 .from('user_activity')
                 .select('metadata')
-                .limit(1000);
+                .limit(500); // Sample last 500 for distribution
 
             if (data) {
                 data.forEach(act => {
@@ -99,9 +188,10 @@ async function renderDeviceChart() {
                     if (deviceCounts[device] !== undefined) deviceCounts[device]++;
                 });
             }
+        } else {
+            throw new Error("Offline");
         }
     } catch (e) {
-        console.warn("Device data fetch failed", e);
         deviceCounts = { mobile: 65, desktop: 30, tablet: 5 };
     }
 
@@ -114,188 +204,135 @@ async function renderDeviceChart() {
             datasets: [{
                 data: [deviceCounts.mobile, deviceCounts.desktop, deviceCounts.tablet],
                 backgroundColor: ['#10b981', '#3b82f6', '#eab308'],
-                borderWidth: 0
+                borderColor: '#1e293b',
+                borderWidth: 5
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            cutout: '70%',
             plugins: {
-                legend: { position: 'right', labels: { color: '#cbd5e1', font: { size: 11 } } }
+                legend: { position: 'right', labels: { color: '#cbd5e1', font: { size: 11 }, usePointStyle: true, pointStyle: 'circle' } }
             }
         }
     });
 }
 
 window.loadRealTimeActivity = async function () {
-    const container = document.getElementById('activity-feed-container');
+    const container = document.getElementById('ip-activity-log-body');
     if (!container) return;
 
     try {
         if (typeof isSupabaseConfigured !== 'function' || !isSupabaseConfigured() || !window.supabaseClient) {
-            renderDemoActivity(container);
-            return;
+            throw new Error("Offline");
         }
 
         const { data, error } = await supabaseClient
             .from('user_activity')
             .select('*')
             .order('created_at', { ascending: false })
-            .limit(15);
+            .limit(20);
 
         if (error) throw error;
 
         container.innerHTML = data.map(act => {
-            const device = act.metadata?.device || 'desktop';
-            const deviceIcon = device === 'mobile' ? '📱' : (device === 'tablet' ? '平板' : '💻');
+            const typeLabels = {
+                'page_view': '<span style="color:#3b82f6">Page View</span>',
+                'ad_click': '<span style="color:#f59e0b">Ad Click</span>',
+                'chapter_read': '<span style="color:#a855f7">Chapter Read</span>',
+                'cookie_accept': '<span style="color:#10b981">Cookie Consent</span>'
+            };
+            const label = typeLabels[act.activity_type] || act.activity_type;
+            const detail = act.page_url ? act.page_url.split('/').pop() : 'N/A';
+            const location = act.metadata?.ad_location ? `(${act.metadata.ad_location})` : '';
 
             return `
-            <div style="display: flex; gap: 15px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-                <div style="width: 40px; height: 40px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                    ${getActivityIcon(act.activity_type)}
-                </div>
-                <div style="flex: 1;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: #fff; font-weight: 600; font-size: 0.85rem;">
-                            ${act.activity_type.replace(/_/g, ' ').toUpperCase()}
-                        </span>
-                        <span style="color: #64748b; font-size: 0.75rem;">${new Date(act.created_at).toLocaleTimeString()}</span>
-                    </div>
-                    <p style="color: #94a3b8; font-size: 0.8rem; margin: 4px 0 0;">
-                        ${deviceIcon} ${act.ip_address} • 📍 ${act.page_url.split('/').pop() || 'Home'}
-                    </p>
-                </div>
-            </div>
+            <tr style="border-bottom: 1px solid #1e293b; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+                <td style="padding: 12px; font-family: monospace; color: #94a3b8;">${new Date(act.created_at).toLocaleTimeString()}</td>
+                <td style="padding: 12px; font-weight: 600;">${label}</td>
+                <td style="padding: 12px; color: #cbd5e1;">${detail} ${location}</td>
+                <td style="padding: 12px; font-family: monospace; color: #64748b;">${act.ip_address}</td>
+            </tr>
         `}).join('');
     } catch (e) {
-        renderDemoActivity(container);
-    }
-};
-
-window.updateAnalyticsMetrics = async function () {
-    const totalUsersEl = document.getElementById('analytics-total-users');
-    const pageViewsEl = document.getElementById('analytics-page-views');
-    const revenueEl = document.getElementById('analytics-ad-revenue');
-    const popularEl = document.getElementById('analytics-avg-session');
-
-    if (!totalUsersEl) return;
-
-    try {
-        if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured() && window.supabaseClient) {
-            // 1. Total Unique Visitors (by IP)
-            const { data: uniqueIps, error: ipError } = await supabaseClient
-                .from('user_activity')
-                .select('ip_address');
-
-            if (uniqueIps) {
-                const uniqueSet = new Set(uniqueIps.map(a => a.ip_address));
-                totalUsersEl.textContent = uniqueSet.size.toLocaleString();
-            }
-
-            // 2. Total Page Views
-            const { count: viewCount, error: viewError } = await supabaseClient
-                .from('user_activity')
-                .select('*', { count: 'exact', head: true })
-                .eq('activity_type', 'page_view');
-
-            if (viewCount !== null) {
-                pageViewsEl.textContent = viewCount.toLocaleString();
-                // 3. Estimated Revenue (Simplified: $2.50 RPM)
-                const estRevenue = (viewCount / 1000) * 2.50;
-                revenueEl.textContent = `$${estRevenue.toFixed(2)}`;
-            }
-
-            // 4. Most Popular Content
-            const { data: topContent, error: topError } = await supabaseClient
-                .from('user_activity')
-                .select('metadata')
-                .eq('activity_type', 'page_view')
-                .limit(100);
-
-            if (topContent && topContent.length > 0) {
-                const counts = {};
-                topContent.forEach(a => {
-                    const title = a.metadata?.title || 'Unknown';
-                    counts[title] = (counts[title] || 0) + 1;
-                });
-                const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
-                if (top) popularEl.textContent = top[0].length > 15 ? top[0].substring(0, 15) + '...' : top[0];
-            }
-        }
-    } catch (e) {
-        console.warn("Analytics metrics load failed", e);
+        container.innerHTML = `<tr><td colspan="4" style="padding: 20px; text-align: center; color: #64748b;">Offline Mode - Real-time data unavailable.</td></tr>`;
     }
 };
 
 async function loadTopPerformingBooks() {
-    const tbody = document.querySelector('#site-analytics table tbody');
+    const tbody = document.getElementById('top-books-body');
     if (!tbody) return;
 
     try {
         if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured() && window.supabaseClient) {
-            // This is a simplified aggregation. In a real app, you'd use a RPC or specialized table.
-            // For now, we'll fetch recently viewed books/chapters.
-            const { data, error } = await supabaseClient
+            const { data } = await supabaseClient
                 .from('user_activity')
                 .select('metadata')
-                .eq('activity_type', 'page_view')
+                .in('activity_type', ['page_view', 'chapter_read'])
                 .limit(500);
 
-            const bookCounts = {};
+            const counts = {};
             if (data) {
                 data.forEach(act => {
-                    const title = act.metadata?.title || 'Unknown Page';
-                    bookCounts[title] = (bookCounts[title] || 0) + 1;
+                    const title = act.metadata?.title || (act.metadata?.book_id ? `Book ${act.metadata.book_id.substr(0, 8)}` : 'Unknown');
+                    counts[title] = (counts[title] || 0) + 1;
                 });
             }
 
-            const sorted = Object.entries(bookCounts)
-                .sort((a, b) => b[1] - a[1])
-                .slice(0, 5);
+            const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
             if (sorted.length > 0) {
                 tbody.innerHTML = sorted.map(([title, count]) => `
                     <tr style="border-bottom: 1px solid #1e293b;">
-                        <td style="padding: 10px;">${title}</td>
-                        <td style="padding: 10px;">${count.toLocaleString()}</td>
-                        <td style="padding: 10px; color: #eab308;">${'★'.repeat(5)}</td>
+                        <td style="padding: 12px; font-weight: 500; color: #fff;">${title}</td>
+                        <td style="padding: 12px; color: #3b82f6; font-weight: 700;">${count.toLocaleString()}</td>
                     </tr>
                 `).join('');
                 return;
             }
         }
     } catch (e) { }
+
+    tbody.innerHTML = `<tr><td colspan="2" style="padding: 20px; text-align: center; color: #64748b;">No analytics data available.</td></tr>`;
 }
 
-function getActivityIcon(type) {
-    switch (type) {
-        case 'page_view': return '👁️';
-        case 'cookie_accept': return '🍪';
-        case 'ad_click': return '💰';
-        case 'feedback_submit': return '📨';
-        default: return '⚡';
-    }
+async function loadAdPerformance() {
+    const tbody = document.getElementById('ad-performance-body');
+    if (!tbody) return;
+
+    try {
+        if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured() && window.supabaseClient) {
+            const { data } = await supabaseClient
+                .from('user_activity')
+                .select('metadata')
+                .eq('activity_type', 'ad_click')
+                .limit(200);
+
+            const stats = {}; // { location: count }
+
+            if (data) {
+                data.forEach(act => {
+                    const loc = act.metadata?.ad_location || 'unknown';
+                    stats[loc] = (stats[loc] || 0) + 1;
+                });
+            }
+
+            const sorted = Object.entries(stats).sort((a, b) => b[1] - a[1]);
+
+            if (sorted.length > 0) {
+                tbody.innerHTML = sorted.map(([loc, count]) => `
+                    <tr style="border-bottom: 1px solid #1e293b;">
+                         <td style="padding: 12px; color: #fff;">Generic Ad</td>
+                         <td style="padding: 12px; font-weight: 700; color: #f59e0b;">${count}</td>
+                         <td style="padding: 12px; color: #94a3b8; text-transform: capitalize;">${loc.replace('_', ' ')}</td>
+                    </tr>
+                 `).join('');
+                return;
+            }
+        }
+    } catch (e) { }
+
+    tbody.innerHTML = `<tr><td colspan="3" style="padding: 20px; text-align: center; color: #64748b;">No ad clicks recorded yet.</td></tr>`;
 }
 
-function renderDemoActivity(container) {
-    const demoData = [
-        { type: 'page_view', ip: '192.168.1.1', page: '/index.html', time: 'Just now' },
-        { type: 'cookie_accept', ip: '172.16.0.42', page: '/reader.html', time: '2 mins ago' },
-        { type: 'page_view', ip: '10.0.0.15', page: '/book-detail.html', time: '5 mins ago' }
-    ];
-
-    container.innerHTML = demoData.map(act => `
-        <div style="display: flex; gap: 15px; background: rgba(255,255,255,0.02); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
-            <div style="width: 40px; height: 40px; background: #1e293b; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                ${getActivityIcon(act.type)}
-            </div>
-            <div style="flex: 1;">
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="color: #fff; font-weight: 600; font-size: 0.85rem;">${act.type.toUpperCase()}</span>
-                    <span style="color: #64748b; font-size: 0.75rem;">${act.time}</span>
-                </div>
-                <p style="color: #94a3b8; font-size: 0.8rem; margin: 4px 0 0;">IP: ${act.ip} • Page: ${act.page}</p>
-            </div>
-        </div>
-    `).join('');
-}

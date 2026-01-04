@@ -14,6 +14,7 @@
     <!-- Supabase SDK -->
     <script src="js/lib/supabase-js.js"></script>
     <script src="js/supabase-config.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script src="js/image-utils.js"></script>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/admin.css">
@@ -979,154 +980,232 @@
 
         <!-- Site Analytics Section -->
         <div id="site-analytics" class="content-section">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                 <div>
                     <h2 style="margin: 0; color: #fff; display: flex; align-items: center; gap: 15px;">
-                        <span style="font-size: 1.8rem;">📊</span> Site Analytics
+                        <span
+                            style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: rgba(59, 130, 246, 0.2); color: #3b82f6; border-radius: 12px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M3 3v18h18" />
+                                <path d="M18 17V9" />
+                                <path d="M13 17V5" />
+                                <path d="M8 17v-3" />
+                            </svg>
+                        </span>
+                        Site Analytics Suite
                     </h2>
-                    <p style="color: #94a3b8; font-size: 0.95rem; margin: 5px 0 0 45px;">Track visitor behavior,
-                        popular
-                        chapters, and ad performance.</p>
+                    <p style="color: #94a3b8; font-size: 0.95rem; margin: 5px 0 0 55px;">Comprehensive insights into
+                        traffic, reader engagement, and monetization.</p>
                 </div>
-                <button class="btn-primary" onclick="showSection('dashboard-view')" style="background: #334155;">←
-                    Back</button>
+                <button class="btn-primary" onclick="showSection('dashboard-view')"
+                    style="background: #334155; display: flex; align-items: center; gap: 8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5m7 7-7-7 7-7" />
+                    </svg>
+                    Back to Dashboard
+                </button>
             </div>
 
-            <!-- Key Metrics Cards -->
-            <div class="dashboard-stats" style="margin-bottom: 30px;">
-                <div class="stat-card">
+            <!-- Key Metrics Cards - Grid of 4 -->
+            <div class="dashboard-stats"
+                style="margin-bottom: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px;">
+                <!-- Visitors -->
+                <div class="stat-card" style="position: relative; overflow: hidden;">
                     <span class="stat-number" id="analytics-total-users">--</span>
                     <span class="stat-label">Total Visitors</span>
-                    <span id="users-trend" style="color: #10b981; font-size: 0.8rem;">Live Data</span>
+                    <span id="users-trend"
+                        style="color: #10b981; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;">● Live
+                        Data</span>
+                    <div
+                        style="position: absolute; right: -10px; bottom: -10px; opacity: 0.1; transform: rotate(-15deg);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="9" cy="7" r="4" />
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                        </svg>
+                    </div>
                 </div>
-                <div class="stat-card">
+
+                <!-- Page Views -->
+                <div class="stat-card" style="position: relative; overflow: hidden;">
                     <span class="stat-number" id="analytics-page-views">--</span>
-                    <span class="stat-label">Page Views</span>
-                    <span id="views-trend" style="color: #10b981; font-size: 0.8rem;">Real-time</span>
+                    <span class="stat-label">Total Page Views</span>
+                    <span id="views-trend" style="color: #3b82f6; font-size: 0.8rem;">All-time</span>
+                    <div
+                        style="position: absolute; right: -10px; bottom: -10px; opacity: 0.1; transform: rotate(-15deg);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                        </svg>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <span class="stat-number" id="analytics-ad-revenue">--</span>
-                    <span class="stat-label">Ad Revenue (Est)</span>
-                    <span style="color: #3b82f6; font-size: 0.8rem;">● RPM Based</span>
+
+                <!-- Ad Clicks -->
+                <div class="stat-card" style="position: relative; overflow: hidden;">
+                    <span class="stat-number" id="analytics-ad-clicks">--</span>
+                    <span class="stat-label">Ad Interactions</span>
+                    <span class="stat-sub" style="color: #f59e0b; font-size: 0.8rem;">Click-throughs</span>
+                    <div
+                        style="position: absolute; right: -10px; bottom: -10px; opacity: 0.1; transform: rotate(-15deg);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <path d="m16 12-4-4-4 4" />
+                            <path d="M12 16V8" />
+                        </svg>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <span class="stat-number" id="analytics-avg-session">--</span>
-                    <span class="stat-label">Popular Book</span>
-                    <span style="color: #eab308; font-size: 0.8rem;">Top Rank</span>
+
+                <!-- Chapter Reads -->
+                <div class="stat-card" style="position: relative; overflow: hidden;">
+                    <span class="stat-number" id="analytics-chapter-reads">--</span>
+                    <span class="stat-label">Chapters Completed</span>
+                    <span class="stat-sub" style="color: #8b5cf6; font-size: 0.8rem;">Reader Engagement</span>
+                    <div
+                        style="position: absolute; right: -10px; bottom: -10px; opacity: 0.1; transform: rotate(-15deg);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+                        </svg>
+                    </div>
                 </div>
             </div>
 
-            <!-- Charts Grid -->
+            <!-- Main Charts Row -->
             <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px;">
                 <!-- Main Traffic Graph -->
                 <div class="action-card" style="cursor: default;">
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 style="margin:0;">Traffic Overview (Last 7 Days)</h3>
+                        <h3 style="margin:0; display: flex; align-items: center; gap: 8px;">
+                            <span style="width: 8px; height: 8px; background: #3b82f6; border-radius: 50%;"></span>
+                            Traffic Overview (7 Days)
+                        </h3>
                         <button class="btn-primary" onclick="renderTrafficChart()"
-                            style="padding: 4px 10px; font-size: 0.7rem;">Refresh</button>
+                            style="padding: 4px 12px; font-size: 0.75rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Refresh</button>
                     </div>
                     <div style="height: 300px;">
                         <canvas id="trafficChart"></canvas>
                     </div>
                 </div>
 
-
                 <!-- Device/Category Pie -->
                 <div class="action-card" style="cursor: default;">
                     <div
                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 style="margin:0;">User Devices</h3>
+                        <h3 style="margin:0; display: flex; align-items: center; gap: 8px;">
+                            <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></span>
+                            Devices
+                        </h3>
                         <button class="btn-primary" onclick="renderDeviceChart()"
-                            style="padding: 4px 10px; font-size: 0.7rem;">Refresh</button>
+                            style="padding: 4px 12px; font-size: 0.75rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">Refresh</button>
                     </div>
                     <div style="height: 250px;">
                         <canvas id="deviceChart"></canvas>
                     </div>
                 </div>
-
             </div>
 
-            <!-- Detailed Data Tables -->
+            <!-- Detailed Analysis Row -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+
+                <!-- NEW: Ad Performance Table -->
+                <div class="action-card" style="cursor: default;">
+                    <h3 style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
+                        <span style="color: #f59e0b;">💰</span> Ad Performance
+                    </h3>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; color: #cbd5e1; font-size: 0.9rem;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid #334155; text-align: left;">
+                                    <th
+                                        style="padding: 10px; color: #64748b; font-weight: 600; font-size: 0.8rem; text-transform: uppercase;">
+                                        Ad Slot</th>
+                                    <th
+                                        style="padding: 10px; color: #64748b; font-weight: 600; font-size: 0.8rem; text-transform: uppercase;">
+                                        Clicks</th>
+                                    <th
+                                        style="padding: 10px; color: #64748b; font-weight: 600; font-size: 0.8rem; text-transform: uppercase;">
+                                        Location</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ad-performance-body">
+                                <tr>
+                                    <td colspan="3" style="padding: 20px; text-align: center; opacity: 0.5;">Loading Ad
+                                        Data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
                 <!-- Top Performing Books -->
                 <div class="action-card" style="cursor: default;">
-                    <h3 style="margin-bottom: 15px;">🏆 Top Performing Books</h3>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                            <span style="color: #eab308;">🏆</span> Popular Content
+                        </h3>
+                        <span style="font-size: 0.75rem; color: #64748b;">Most Read</span>
+                    </div>
+
                     <table style="width: 100%; border-collapse: collapse; color: #cbd5e1; font-size: 0.9rem;">
                         <thead>
                             <tr style="border-bottom: 1px solid #334155; text-align: left;">
-                                <th style="padding: 10px;">Book Title</th>
-                                <th style="padding: 10px;">Reads</th>
-                                <th style="padding: 10px;">Rating</th>
+                                <th
+                                    style="padding: 10px; color: #64748b; font-weight: 600; font-size: 0.8rem; text-transform: uppercase;">
+                                    Book Title</th>
+                                <th
+                                    style="padding: 10px; color: #64748b; font-weight: 600; font-size: 0.8rem; text-transform: uppercase;">
+                                    Reads</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <tr style="border-bottom: 1px solid #1e293b;">
-                                <td style="padding: 10px;">Psychology of Money</td>
-                                <td style="padding: 10px;">5,230</td>
-                                <td style="padding: 10px; color: #eab308;">★★★★★</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid #1e293b;">
-                                <td style="padding: 10px;">Atomic Habits</td>
-                                <td style="padding: 10px;">4,105</td>
-                                <td style="padding: 10px; color: #eab308;">★★★★☆</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid #1e293b;">
-                                <td style="padding: 10px;">Wealth & Mindset</td>
-                                <td style="padding: 10px;">3,800</td>
-                                <td style="padding: 10px; color: #eab308;">★★★★★</td>
-                            </tr>
+                        <tbody id="top-books-body">
                             <tr>
-                                <td style="padding: 10px;">The Alchemist</td>
-                                <td style="padding: 10px;">2,450</td>
-                                <td style="padding: 10px; color: #eab308;">★★★★☆</td>
+                                <td colspan="2" style="padding: 20px; text-align: center; opacity: 0.5;">Loading Content
+                                    Data...</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Recent Activity Feed (Dynamic) -->
-                <div class="action-card" style="cursor: default;">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 style="margin: 0;">⚡ Real-time Activity</h3>
-                        <button class="btn-primary" onclick="loadRealTimeActivity()"
-                            style="padding: 5px 10px; font-size: 0.75rem;">Refresh</button>
-                    </div>
-                    <div id="activity-feed-container"
-                        style="display: flex; flex-direction: column; gap: 15px; max-height: 400px; overflow-y: auto;">
-                        <p style="color: #64748b; font-size: 0.9rem;">Loading latest activity...</p>
-                    </div>
-                </div>
-
             </div>
 
-            <!-- IP Activity & Cookie Acceptance Logs -->
+            <!-- Logs Section -->
             <div class="action-card" style="margin-top: 30px; cursor: default;">
-                <h3 style="margin-bottom: 20px;">🔒 IP-Based User Behavior & Cookie Logs</h3>
-                <div style="overflow-x: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0;">⚡ Real-time Event Log</h3>
+                    <button class="btn-primary" onclick="loadRealTimeActivity()"
+                        style="padding: 5px 12px; font-size: 0.75rem; background: rgba(255,255,255,0.1);">Refresh
+                        Logs</button>
+                </div>
+                <div style="overflow-x: auto; max-height: 400px; overflow-y: auto;">
                     <table style="width: 100%; border-collapse: collapse; color: #cbd5e1; font-size: 0.85rem;">
                         <thead>
-                            <tr style="border-bottom: 2px solid #334155; text-align: left;">
-                                <th style="padding: 12px; min-width: 120px;">IP Address</th>
-                                <th style="padding: 12px;">Activity Type</th>
-                                <th style="padding: 12px;">Page URL / Detail</th>
-                                <th style="padding: 12px; min-width: 160px;">Time (UTC)</th>
-                                <th style="padding: 12px;">Status</th>
+                            <tr
+                                style="border-bottom: 2px solid #334155; text-align: left; position: sticky; top: 0; background: #1e293b;">
+                                <th style="padding: 12px; min-width: 130px;">Time</th>
+                                <th style="padding: 12px;">Event</th>
+                                <th style="padding: 12px;">Details</th>
+                                <th style="padding: 12px;">IP Address</th>
                             </tr>
                         </thead>
                         <tbody id="ip-activity-log-body">
-                            <!-- Data populated via js/admin.js -->
                             <tr>
-                                <td colspan="5" style="padding: 20px; text-align: center; color: #64748b;">Waiting
-                                    for
-                                    data from Supabase...</td>
+                                <td colspan="4" style="padding: 20px; text-align: center; color: #64748b;">Waiting for
+                                    data stream...</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
+
         </div>
 
 

@@ -20,16 +20,16 @@ async function verifyAdminCode() {
         return;
     }
 
-    // 3. Verify user has admin role
+    // 3. Verify user has admin role from user_roles table
     try {
-        const { data: profile, error: roleError } = await window.supabaseClient
-            .from('profiles')
+        const { data: roleData, error: roleError } = await window.supabaseClient
+            .from('user_roles')
             .select('role')
-            .eq('id', session.user.id)
-            .single();
+            .eq('user_id', session.user.id)
+            .maybeSingle();
 
-        if (roleError || !profile) {
-            console.error("Failed to fetch user role:", roleError);
+        if (roleError || !roleData) {
+            console.error("Failed to fetch user role or no role found:", roleError);
             await window.supabaseClient.auth.signOut();
             localStorage.removeItem('admin_ui_access');
             sessionStorage.removeItem('adminAuthenticated');
@@ -37,8 +37,8 @@ async function verifyAdminCode() {
             return;
         }
 
-        if (profile.role !== 'admin') {
-            console.warn(`User ${session.user.email} does not have admin role (current role: ${profile.role})`);
+        if (roleData.role !== 'admin') {
+            console.warn(`User ${session.user.email} does not have admin role (current role: ${roleData.role})`);
             alert('Access Denied: Admin privileges required.');
             await window.supabaseClient.auth.signOut();
             localStorage.removeItem('admin_ui_access');
@@ -48,7 +48,7 @@ async function verifyAdminCode() {
         }
 
         // 4. User is authenticated AND has admin role
-        console.log(`✓ Admin authenticated: ${session.user.email} (role: ${profile.role})`);
+        console.log(`✓ Admin authenticated: ${session.user.email} (role: ${roleData.role})`);
         sessionStorage.setItem('adminAuthenticated', 'true');
         launchAdmin();
 
@@ -96,11 +96,8 @@ async function launchAdmin() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (sessionStorage.getItem('adminAuthenticated') === 'true') {
-        launchAdmin();
-    } else {
-        verifyAdminCode();
-    }
+    // Force fresh Supabase session verification on every load/refresh
+    verifyAdminCode();
 });
 
 function setupTabDragAndDrop() {

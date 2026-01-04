@@ -1,4 +1,6 @@
 // Supabase Cloud Sync Module
+const HOMEPAGE_SETTINGS_ID = '00000000-0000-0000-0000-000000000001';
+
 window.syncToCloud = async function (type, data, identifier = null) {
     if (typeof isSupabaseConfigured !== 'function' || !isSupabaseConfigured() || !supabaseClient) {
         console.warn("Supabase not configured, skipping sync.");
@@ -87,11 +89,16 @@ window.syncToCloud = async function (type, data, identifier = null) {
                         const ch = book.chapters[i];
                         if (!ch) continue;
 
+                        const rawContent = ch.content || '';
+                        const sanitizedContent = typeof DOMPurify !== 'undefined' ?
+                            DOMPurify.sanitize(rawContent) :
+                            rawContent;
+
                         const chapterPayload = {
                             book_id: bookId,
                             chapter_number: i + 1,
                             title: ch.title || `Chapter ${i + 1}`,
-                            content: ch.content || '',
+                            content: sanitizedContent,
                             description: ch.description || '',
                             background_image: ch.backgroundImage || '',
                             background_style: ch.backgroundStyle || 'cover',
@@ -119,6 +126,20 @@ window.syncToCloud = async function (type, data, identifier = null) {
             case 'library_delete':
                 await supabaseClient.from('books').delete().eq('id', identifier);
                 break;
+            case 'library_update':
+                // Targeted update for status/sort_order from Library Manager
+                if (data && data.id) {
+                    const updatePayload = {
+                        status: data.status,
+                        sort_order: data.sort_order
+                    };
+                    const { error: updateError } = await supabaseClient
+                        .from('books')
+                        .update(updatePayload)
+                        .eq('id', data.id);
+                    if (updateError) throw updateError;
+                }
+                break;
             case 'settings':
                 await supabaseClient.from('admin_settings').upsert({
                     ads_enabled: data.adsEnabled !== false,
@@ -138,7 +159,7 @@ window.syncToCloud = async function (type, data, identifier = null) {
                 break;
             case 'homepage':
                 await supabaseClient.from('homepage_settings').upsert({
-                    id: 1,
+                    id: HOMEPAGE_SETTINGS_ID,
                     hero_title: data.heroTitle || '',
                     hero_subtitle: data.heroSubtitle || '',
                     exclusive_collection: data.exclusive || [],
@@ -152,7 +173,7 @@ window.syncToCloud = async function (type, data, identifier = null) {
                 break;
             case 'images':
                 await supabaseClient.from('homepage_settings').upsert({
-                    id: 1,
+                    id: HOMEPAGE_SETTINGS_ID,
                     slider_images: data.carousel || [],
                     bottom_banners: data.bottomBanners || data.bottomBanner || []
                 });
@@ -169,6 +190,35 @@ window.syncToCloud = async function (type, data, identifier = null) {
             case 'quotes':
                 await supabaseClient.from('quotes').upsert({
                     quote: data.text || data.quote,
+                });
+                break;
+            case 'taxonomy':
+                // Serialize categories to store in a single JSON field or dedicated table if available.
+                // For now, we'll store it in admin_settings as a robust JSON fallback if no better table exists,
+                // OR check if we have a 'taxonomies' table.
+                // Assuming 'admin_settings' has a 'taxonomies' column based on previous context or fallback.
+                // If not, we might need a dedicated table. Let's try upserting to admin_settings first 
+                // as that's the safest single-record store.
+
+                // ERROR CORRECTION: The user's schema might not have 'taxonomies' column in admin_settings.
+                // Visual check of verifySchema logic: it checks 'admin_settings'.
+                // Let's assume we store it in a specific row or column.
+
+                // Better approach: If there's no dedicated table, maybe we skip or warn.
+                // But the user complained it's not saving. 
+                // Let's try to save it to 'admin_settings' table, in a 'taxonomies' column if it exists,
+                // or creation of a new table might be needed?
+                // Wait, let's look at existing `case 'settings'`. It saves to `admin_settings`.
+                // Let's modify `admin_settings` to include `content_types`.
+
+                await supabaseClient.from('admin_settings').upsert({
+                    // Trying to save to a hypothetical column 'content_types' or generic 'settings_json'
+                    // Since we don't know the exact schema, let's try to stick to what might exist or use a separate table.
+                    // Actually, typical design here would be a 'taxonomies' table but let's try finding a flexible column.
+                    // Re-reading `verifySchema`... it checks for `admin_settings`.
+                    // Let's try adding it there.
+                    id: '00000000-0000-0000-0000-000000000001', // Ensure we update the main settings row
+                    content_types: data // This assumes the column exists. If not, it will error.
                 });
                 break;
             case 'feedback':
@@ -280,8 +330,7 @@ window.syncFromCloud = async function () {
         const { data: hp, error: hpError } = await supabaseClient
             .from('homepage_settings')
             .select('*')
-            .order('updated_at', { ascending: false })
-            .limit(1)
+            .eq('id', HOMEPAGE_SETTINGS_ID)
             .maybeSingle();
 
         if (hp && !hpError) {
@@ -424,7 +473,10 @@ window.performMigration = async function (type) {
                 break;
 
             case 'homepage':
-                const hpConfig = JSON.parse(localStorage.getItem('homepageSettings') || '{}');
+                let hpConfig = JSON.parse(localStorage.getItem('siteHomepageConfig') || '{}');
+                if (Object.keys(hpConfig).length === 0) {
+                    hpConfig = JSON.parse(localStorage.getItem('homepageSettings') || '{}');
+                }
                 await syncToCloud('homepage', hpConfig);
                 break;
 

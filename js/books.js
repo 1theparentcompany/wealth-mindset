@@ -307,7 +307,7 @@ function updateLibraryView() {
                     <h2>${esc(displayName)}</h2>
                     <button class="btn-view-all" onclick="toggleExpandSection('${type}')" id="btn-view-all-${type}">View All</button>
                     <span style="margin-left: auto; opacity: 0.7; font-size: 0.9rem; color: var(--color-text); background: var(--color-secondary-bg); padding: 6px 14px; border-radius: 100px; display: flex; align-items: center; gap: 8px;">
-                        <span>📋</span> ${items.length} items
+                        <span>📋</span> <span id="count-number-${type}">0</span> items
                     </span>
                 </div>
                 <div class="section-scroll-wrapper" id="wrapper-${type}">
@@ -354,6 +354,13 @@ function updateLibraryView() {
                 </div>
             `;
             container.appendChild(section);
+
+            // Trigger animation for the count
+            if (typeof window.animateNumber === 'function') {
+                window.animateNumber(`#count-number-${type}`, items.length, 1000);
+            } else {
+                document.getElementById(`count-number-${type}`).textContent = items.length;
+            }
         }
     });
 

@@ -61,3 +61,80 @@ window.fixSupabaseImagesInHtml = function (html) {
         return match;
     });
 };
+
+/**
+ * Reusable utility to animate a numeric value in an element
+ * @param {HTMLElement|string} element - The element or selector to update
+ * @param {number} target - The final value to animate to
+ * @param {number} duration - Duration in milliseconds (default: 1500)
+ * @param {number} decimals - Number of decimal places to show (default: 0)
+ * @param {string} prefix - Optional prefix (e.g. "⭐ ")
+ * @param {string} suffix - Optional suffix (e.g. " Chapters")
+ * @param {boolean} useCommas - Whether to format with commas (default: true)
+ */
+window.animateNumber = function (element, target, duration = 1500, decimals = 0, prefix = '', suffix = '', useCommas = true) {
+    const el = (typeof element === 'string') ? document.querySelector(element) : element;
+    if (!el) return;
+
+    // Try to get starting value from current text
+    let currentText = el.textContent.replace(prefix, '').replace(suffix, '').replace(/,/g, '').trim();
+    let startValue = parseFloat(currentText) || 0;
+
+    // Handle cases where the target might be a string (like "12.5K")
+    let finalTarget = target;
+    let multiplier = 1;
+    if (typeof target === 'string') {
+        if (target.toUpperCase().endsWith('K')) {
+            multiplier = 1000;
+            finalTarget = parseFloat(target) * multiplier;
+        } else if (target.toUpperCase().endsWith('M')) {
+            multiplier = 1000000;
+            finalTarget = parseFloat(target) * multiplier;
+        } else {
+            finalTarget = parseFloat(target.replace(/,/g, '')) || 0;
+        }
+    }
+
+    const startTime = performance.now();
+
+    function format(value) {
+        // If we used a multiplier (K/M), convert back for display if decimals are needed or just keep as is
+        // But usually, if they pass "12.5K", they want it to end at "12.5K"
+        // Here we handle the animation of the numeric part
+        let valToDisplay = value;
+        if (multiplier > 1) valToDisplay = value / multiplier;
+
+        let formatted = valToDisplay.toFixed(decimals);
+        if (useCommas) {
+            const parts = formatted.split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            formatted = parts.join('.');
+        }
+
+        // Add K/M suffix back if it was there
+        let unitSuffix = '';
+        if (multiplier === 1000) unitSuffix = 'K';
+        else if (multiplier === 1000000) unitSuffix = 'M';
+
+        return prefix + formatted + unitSuffix + suffix;
+    }
+
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Ease out quad
+        const easeProgress = progress * (2 - progress);
+
+        const currentValue = startValue + (finalTarget - startValue) * easeProgress;
+        el.textContent = format(currentValue);
+
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            el.textContent = format(finalTarget);
+        }
+    }
+
+    requestAnimationFrame(update);
+};

@@ -17,6 +17,7 @@
     <!-- Supabase SDK -->
     <script src="js/lib/supabase-js.js" defer></script>
     <script src="js/supabase-config.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script src="js/image-utils.js" defer></script>
     <script src="js/modal-utils.js" defer></script>
     <style>
@@ -1267,7 +1268,13 @@
             // Use innerHTML to support Bold, Italic, and Headings
             const contentDisplay = document.getElementById('reader-content-display');
             const chapterContent = window.fixSupabaseImagesInHtml(chapter.content || "");
-            contentDisplay.innerHTML = chapterContent;
+
+            // Sanitize HTML content before rendering (XSS Prevention)
+            const cleanContent = typeof DOMPurify !== 'undefined' ?
+                DOMPurify.sanitize(chapterContent) :
+                chapterContent; // Fallback if library fails to load
+
+            contentDisplay.innerHTML = cleanContent;
 
             // Apply formatting fixes (convert newlines to paragraphs if no HTML tags found)
             const hasHTML = /<p|<div|<h[1-6]|<img|<table|<ul|<ol|<blockquote/i.test(chapterContent);
@@ -2060,6 +2067,33 @@
                 audio.pause();
                 if (musicBtn) musicBtn.classList.remove('playing');
                 if (musicStatus) musicStatus.textContent = 'Music: OFF';
+            }
+        });
+
+        // --- Tracking Logic ---
+        // 1. Scroll Depth for Chapter Reads
+        let hasTrackedRead = false;
+        window.addEventListener('scroll', () => {
+            if (hasTrackedRead) return;
+            const scrollPercent = (window.innerHeight + window.scrollY) / document.body.offsetHeight;
+            if (scrollPercent > 0.8) {
+                hasTrackedRead = true;
+                const urlParams = new URLSearchParams(window.location.search);
+                const bookId = urlParams.get('id');
+                const chIdx = urlParams.get('ch') || '0';
+                if (bookId && window.trackChapterRead) {
+                    window.trackChapterRead(bookId, chIdx, 0); // 0 for time (can be improved)
+                }
+            }
+        });
+
+        // 2. Ad Click Tracking
+        document.addEventListener('click', (e) => {
+            const adContainer = e.target.closest('.ad-container, .vertical-ad-banner');
+            if (adContainer && window.trackAdClick) {
+                const isVertical = adContainer.classList.contains('vertical-ad-banner');
+                const location = isVertical ? 'sidebar' : (adContainer.classList.contains('ad-middle') ? 'content_middle' : 'footer');
+                window.trackAdClick('generic_ad_unit', location);
             }
         });
 

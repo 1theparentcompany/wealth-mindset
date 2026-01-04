@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Analytics Helper ---
-    async function logActivity(type, metadata = {}) {
+    window.logActivity = async function (type, metadata = {}) {
         if (typeof isSupabaseConfigured !== 'function' || !isSupabaseConfigured() || !window.supabaseClient) return;
 
         try {
@@ -257,7 +257,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     device: deviceType,
                     browser: navigator.appName,
                     platform: navigator.platform,
-                    userAgent: ua
+                    userAgent: ua,
+                    timestamp: new Date().toISOString()
                 }
             };
 
@@ -269,7 +270,16 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
             // console.warn("Analytics error", e); // Silenced for cleaner production log
         }
-    }
+    };
+
+    // Global Tracking Helpers
+    window.trackAdClick = function (adId, location) {
+        window.logActivity('ad_click', { ad_id: adId, ad_location: location });
+    };
+
+    window.trackChapterRead = function (bookId, chapterId, timeSpentSeconds) {
+        window.logActivity('chapter_read', { book_id: bookId, chapter_id: chapterId, time_spent: timeSpentSeconds });
+    };
 
     // --- Daily Mindset Modal ---
     window.openDailyModal = async function () {

@@ -18,6 +18,17 @@ window.saveHomepageSettings = function () {
     customConfirm("Update the homepage layout and configuration?", "Save Home", "🏠").then(confirmed => {
         if (!confirmed) return;
 
+        // Fetch latest to avoid overwriting changes from other tabs
+        const saved = localStorage.getItem('siteHomepageConfig');
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                window.homepageConfig = { ...window.homepageConfig, ...parsed };
+            } catch (e) {
+                console.error("Homepage config load failed", e);
+            }
+        }
+
         homepageConfig.heroTitle = document.getElementById('home-hero-title')?.value || "";
         homepageConfig.heroSubtitle = document.getElementById('home-hero-subtitle')?.value || "";
 

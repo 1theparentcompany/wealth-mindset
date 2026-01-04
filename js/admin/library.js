@@ -178,7 +178,7 @@ window.openVariantsModal = async function (id, familyId, title) {
 
         const { data: variants, error } = await supabaseClient
             .from('books')
-            .select('id, title, language, chapters')
+            .select('id, title, language, chapters(id)')
             .or(`id.eq.${familyId},original_book_id.eq.${familyId}`)
             .order('language', { ascending: true });
 
@@ -313,43 +313,24 @@ window.editLibraryItem = function (id) {
         return;
     }
 
-    window.currentEditId = id;
-    window.chaptersArray = item.chapters || [];
-    window.currentChapterIndex = 0;
+    // Initialize Editor State
+    window.currentEditorBookId = id;
 
-    document.getElementById('book-title').value = item.title;
-    document.getElementById('book-author').value = item.author || "";
-    document.getElementById('book-cover').value = item.image || "";
-    document.getElementById('book-desc').value = item.description || "";
-    document.getElementById('content-type').value = item.type;
-
-    if (typeof updateSubcategories === 'function') updateSubcategories();
-
-    setTimeout(() => {
-        const genreEl = document.getElementById('content-genre');
-        if (genreEl) genreEl.value = item.genre || '';
-    }, 0);
-
-    if (chaptersArray.length > 0) {
-        const previewBox = document.getElementById('preview-box');
-        if (previewBox) {
-            previewBox.value = chaptersArray[0].content;
-            if (typeof updateLineNumbers === 'function') updateLineNumbers();
-        }
+    // Select the book in the dropdown (if it exists)
+    const bookSelect = document.getElementById('content-editor-book-select');
+    if (bookSelect) {
+        // We need to refresh the list first to ensure this book is in it
+        if (typeof loadContentEditorBooks === 'function') loadContentEditorBooks();
+        bookSelect.value = id;
     }
 
-    if (typeof renderChapters === 'function') renderChapters();
+    // Switch to the correct section
+    showSection('content-editor');
 
-    const publishBtn = document.querySelector('.split-results-panel .btn-success');
-    if (publishBtn) publishBtn.innerHTML = '<span>💾</span> Save Update';
+    // Trigger the load logic
+    if (typeof loadContentEditorBook === 'function') loadContentEditorBook();
 
-    showSection('manage-content');
-
-    const status = document.getElementById('extraction-status');
-    if (status) {
-        status.textContent = `Editing: ${item.title}`;
-        status.style.color = "#3b82f6";
-    }
+    showToast(`Editing: ${item.title}`);
 };
 
 window.renderFeedbackTable = async function () {
@@ -476,6 +457,20 @@ window.updateDashboardStats = async function () {
     const readersEl = document.querySelector('.stats-grid .stat-card:nth-child(1) .stat-number');
     const feedbackEl = document.querySelector('.stats-grid .stat-card:nth-child(2) .stat-number');
 
-    if (readersEl) readersEl.textContent = (1284 + library.length).toLocaleString();
-    if (feedbackEl) feedbackEl.textContent = feedbackCount;
+    if (readersEl) {
+        const targetVal = 1284 + library.length;
+        if (typeof window.animateNumber === 'function') {
+            window.animateNumber(readersEl, targetVal);
+        } else {
+            readersEl.textContent = targetVal.toLocaleString();
+        }
+    }
+
+    if (feedbackEl) {
+        if (typeof window.animateNumber === 'function') {
+            window.animateNumber(feedbackEl, feedbackCount);
+        } else {
+            feedbackEl.textContent = feedbackCount;
+        }
+    }
 };

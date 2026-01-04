@@ -1177,7 +1177,7 @@
           }
 
           // Fetch Homepage Config
-          const { data: cfgData, error: cfgError } = await supabaseClient.from('homepage_settings').select('*').limit(1).single();
+          const { data: cfgData, error: cfgError } = await supabaseClient.from('homepage_settings').select('*').eq('id', '00000000-0000-0000-0000-000000000001').maybeSingle();
           if (cfgData) {
             // Apply Hero Text
             if (cfgData.hero_title) {

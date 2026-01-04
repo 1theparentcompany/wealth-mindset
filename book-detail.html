@@ -3921,15 +3921,33 @@
                 const val = document.getElementById(stat.id).value.trim();
                 const displayEl = document.getElementById(stat.el);
                 if (displayEl) {
-                    displayEl.textContent = val;
+                    if (typeof window.animateNumber === 'function' && val) {
+                        window.animateNumber(displayEl, val);
+                    } else {
+                        displayEl.textContent = val;
+                    }
                     const parent = displayEl.closest('.meta-item');
                     if (parent) parent.style.display = val ? 'flex' : 'none';
                 }
             });
 
             // Update hero likes/reviews
-            if (document.getElementById('detail-rating-pct')) document.getElementById('detail-rating-pct').textContent = document.getElementById('admin-edit-likes').value;
-            if (document.getElementById('detail-rating-count')) document.getElementById('detail-rating-count').textContent = document.getElementById('admin-edit-reviews').value + ' Reviews >';
+            if (document.getElementById('detail-rating-pct')) {
+                const likesVal = document.getElementById('admin-edit-likes').value;
+                if (typeof window.animateNumber === 'function') {
+                    window.animateNumber('#detail-rating-pct', likesVal);
+                } else {
+                    document.getElementById('detail-rating-pct').textContent = likesVal;
+                }
+            }
+            if (document.getElementById('detail-rating-count')) {
+                const reviewsVal = document.getElementById('admin-edit-reviews').value;
+                if (typeof window.animateNumber === 'function') {
+                    window.animateNumber('#detail-rating-count', reviewsVal, 1500, 0, '', ' >');
+                } else {
+                    document.getElementById('detail-rating-count').textContent = reviewsVal + ' >';
+                }
+            }
 
             // Apply Author Info UI
             const authName = document.getElementById('admin-edit-author').value;
@@ -4096,17 +4114,17 @@
             if (document.getElementById('author-avatar') && detailSettings.authorPhoto) document.getElementById('author-avatar').src = resolveImg(detailSettings.authorPhoto);
 
             // Stats
-            if (document.getElementById('stat-rating-stars') && detailSettings.rating) document.getElementById('stat-rating-stars').textContent = detailSettings.rating;
-            if (document.getElementById('stat-likes-pct') && detailSettings.likes) document.getElementById('stat-likes-pct').textContent = detailSettings.likes;
-            if (document.getElementById('stat-reviews-count') && detailSettings.reviews) document.getElementById('stat-reviews-count').textContent = detailSettings.reviews;
-            if (document.getElementById('stat-chapters-count') && detailSettings.chapters) document.getElementById('stat-chapters-count').textContent = detailSettings.chapters;
+            if (document.getElementById('stat-rating-stars') && detailSettings.rating) window.animateNumber('#stat-rating-stars', detailSettings.rating);
+            if (document.getElementById('stat-likes-pct') && detailSettings.likes) window.animateNumber('#stat-likes-pct', detailSettings.likes);
+            if (document.getElementById('stat-reviews-count') && detailSettings.reviews) window.animateNumber('#stat-reviews-count', detailSettings.reviews);
+            if (document.getElementById('stat-chapters-count') && detailSettings.chapters) window.animateNumber('#stat-chapters-count', detailSettings.chapters);
             if (document.getElementById('stat-license') && detailSettings.license) document.getElementById('stat-license').textContent = detailSettings.license;
             if (document.getElementById('stat-lang') && detailSettings.language) document.getElementById('stat-lang').textContent = detailSettings.language;
             if (document.getElementById('stat-release') && detailSettings.release) document.getElementById('stat-release').textContent = detailSettings.release;
 
             // Updated Hero Stats
-            if (document.getElementById('detail-rating-pct') && detailSettings.likes) document.getElementById('detail-rating-pct').textContent = detailSettings.likes;
-            if (document.getElementById('detail-rating-count') && detailSettings.reviews) document.getElementById('detail-rating-count').textContent = detailSettings.reviews + ' >';
+            if (document.getElementById('detail-rating-pct') && detailSettings.likes) window.animateNumber('#detail-rating-pct', detailSettings.likes);
+            if (document.getElementById('detail-rating-count') && detailSettings.reviews) window.animateNumber('#detail-rating-count', detailSettings.reviews, 1500, 0, '', ' >');
 
 
             // Gradient Background

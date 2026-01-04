@@ -438,14 +438,14 @@
                     throw new Error('No user returned');
                 }
 
-                // Check if user has admin role
-                const { data: profile, error: roleError } = await window.supabaseClient
-                    .from('profiles')
+                // Check if user has admin role in user_roles table
+                const { data: roleData, error: roleError } = await window.supabaseClient
+                    .from('user_roles')
                     .select('role')
-                    .eq('id', data.user.id)
-                    .single();
+                    .eq('user_id', data.user.id)
+                    .maybeSingle();
 
-                if (roleError || !profile || profile.role !== 'admin') {
+                if (roleError || !roleData || roleData.role !== 'admin') {
                     // Sign out and show error
                     await window.supabaseClient.auth.signOut();
                     throw new Error('Access denied: Admin role required');
@@ -504,20 +504,35 @@
             };
 
             // Try to sync to Supabase
-            if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-                const { error } = await supabaseClient.from('feedback').insert({
+            if (typeof window.supabaseClient !== 'undefined' && window.supabaseClient) {
+                const { error } = await window.supabaseClient.from('feedback').insert({
                     name: feedback.name,
                     email: feedback.email,
                     topic: feedback.topic,
                     message: feedback.message,
                     status: feedback.status
                 });
-                if (error) console.error("Supabase feedback error:", error);
+
+                if (error) {
+                    console.error("Supabase feedback error:", error);
+                    alert("Error sending message: " + error.message);
+
+                    const btn = this.querySelector('button');
+                    btn.textContent = 'Send Failed';
+                    btn.style.background = '#ef4444';
+                    btn.disabled = false;
+                    return; // Stop here if failed
+                }
+            } else {
+                console.warn("Supabase client not ready.");
+                alert("Connection error. Please try again later.");
+                return;
             }
 
-            const existingFeedback = JSON.parse(localStorage.getItem('siteFeedback') || '[]');
-            existingFeedback.unshift(feedback);
-            localStorage.setItem('siteFeedback', JSON.stringify(existingFeedback));
+            // Removed insecure localStorage storage of feedback
+            // const existingFeedback = JSON.parse(localStorage.getItem('siteFeedback') || '[]');
+            // existingFeedback.unshift(feedback);
+            // localStorage.setItem('siteFeedback', JSON.stringify(existingFeedback));
 
             const originalText = btn.textContent;
             btn.textContent = 'Message Sent! Thank You.';
