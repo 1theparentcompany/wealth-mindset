@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="css/style.css">
   <!-- Security: Content Security Policy -->
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://nlgdthlwmagvjvzrubif.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://nlgdthlwmagvjvzrubif.supabase.co wss://nlgdthlwmagvjvzrubif.supabase.co; font-src 'self' https://fonts.gstatic.com; media-src 'self' https://www.soundjay.com; frame-src 'self'; object-src 'none';">
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://nlgdthlwmagvjvzrubif.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://nlgdthlwmagvjvzrubif.supabase.co wss://nlgdthlwmagvjvzrubif.supabase.co https://api.ipify.org; font-src 'self' https://fonts.gstatic.com; media-src 'self' https://www.soundjay.com; frame-src 'self'; object-src 'none';">
   <!-- Supabase SDK -->
   <script src="js/lib/supabase-js.js" defer></script>
   <script src="js/supabase-config.js" defer></script>
@@ -549,8 +549,9 @@
                 <span>📂</span> Explore All Topics →
               </a>
             </div>
-            <div
+            <div id="topics-container"
               style="display: grid; grid-template-columns: repeat(auto-fit, minmax(clamp(250px, 30%, 400px), 1fr)); gap: 24px;">
+              <!-- Dynamic Topics injected here -->
               <a href="books.html?cat=mindset" class="category-card-home hover-lift glass">
                 <span class="icon">🧠</span>
                 <div>
@@ -688,7 +689,8 @@
       <div class="scroll-wrapper">
         <button class="scroll-nav-btn prev" id="collection-prev" aria-label="Scroll left">❮</button>
         <button class="scroll-nav-btn next" id="collection-next" aria-label="Scroll right">❯</button>
-        <div class="book-scroll-container" id="collection-scroll">
+        <div class="book-scroll-container" id="exclusive-scroll-container">
+          <!-- Dynamic Content injected here -->
           <!-- Vol 5 -->
           <div class="premium-book-card" onclick="window.location.href='book-detail.html?id=al-mizan-5'">
             <img src="assets/al_mizan_cover.png" alt="Al-Mizan Volume 5" loading="lazy">
@@ -1019,6 +1021,7 @@
 
     </div>
     </div>
+    <div id="custom-sections-area"></div>
   </main>
 
   <footer

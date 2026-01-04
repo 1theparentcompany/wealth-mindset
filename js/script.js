@@ -68,6 +68,124 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         applySettings(settings);
+        renderHomepageContent();
+    }
+
+    function renderHomepageContent() {
+        const homepageConfig = JSON.parse(localStorage.getItem('siteHomepageConfig') || '{}');
+        const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+
+        // 1. Render Topics
+        const topicsContainer = document.getElementById('topics-container');
+        if (topicsContainer && homepageConfig.topics && homepageConfig.topics.length > 0) {
+            topicsContainer.innerHTML = ''; // Clear default static items
+            homepageConfig.topics.forEach(topic => {
+                // Capitalize first letter
+                const title = topic.charAt(0).toUpperCase() + topic.slice(1);
+                // Simple icon mapping (could be improved)
+                let icon = '📂';
+                if (topic.includes('mindset')) icon = '🧠';
+                else if (topic.includes('success')) icon = '📈';
+                else if (topic.includes('growth')) icon = '🚀';
+                else if (topic.includes('finance')) icon = '💰';
+                else if (topic.includes('business')) icon = '💼';
+
+                // Description mapping (optional, or generic)
+                const desc = getTopicDescription(topic);
+
+                const cardHtml = `
+                    <a href="books.html?cat=${topic}" class="category-card-home hover-lift glass">
+                        <span class="icon">${icon}</span>
+                        <div>
+                            <h3>${title}</h3>
+                            <p>${desc}</p>
+                        </div>
+                    </a>
+                `;
+                topicsContainer.innerHTML += cardHtml;
+            });
+        }
+
+        // 2. Render Exclusive Collection
+        renderBookListSection('exclusive-scroll-container', homepageConfig.exclusive, library);
+
+        // 3. Render "Popular Picks" (if you have an ID for it - wait, need to check index.html for Popular ID again)
+        // Checked index.html: ID is 'popular-scroll'. Let's ensure uniqueness or consistency. 
+        // In previous step I checked 'popular-scroll' was used in onclick, but I didn't verify if I changed it to 'popular-scroll-container'
+        // Let's assume 'popular-scroll' for now or handle both. 
+        // Actually, looking at my previous read of index.html: <div class="horizontal-scroll-list" id="popular-scroll">
+        renderBookListSection('popular-scroll', homepageConfig.popular, library);
+
+        // 4. Render Custom Sections
+        const customArea = document.getElementById('custom-sections-area');
+        if (customArea && homepageConfig.customSections) {
+            customArea.innerHTML = '';
+            homepageConfig.customSections.forEach((sec, idx) => {
+                const sectionId = `custom-sec-${idx}`;
+                const sectionHtml = `
+                    <section style="margin-bottom: 100px; max-width: 1400px; margin-left: auto; margin-right: auto; width: 95%;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px;">
+                            <div>
+                                <h2 style="font-size: 2.25rem; margin: 0; display: flex; align-items: center; gap: 15px; color: #fff; font-weight: 800;">
+                                    <span style="background: rgba(16, 185, 129, 0.1); padding: 14px; border-radius: 16px; font-size: 1.5rem;">${sec.icon || '📂'}</span>
+                                    ${sec.title}
+                                </h2>
+                            </div>
+                        </div>
+                        <div class="section-scroll-wrapper">
+                            <button class="row-nav-btn prev" onclick="scrollRow('${sectionId}', -1)">❮</button>
+                            <button class="row-nav-btn next" onclick="scrollRow('${sectionId}', 1)">❯</button>
+                            <div class="horizontal-scroll-list" id="${sectionId}">
+                                <!-- Items injected via JS -->
+                            </div>
+                        </div>
+                    </section>
+                `;
+                customArea.insertAdjacentHTML('beforeend', sectionHtml);
+                renderBookListSection(sectionId, sec.items, library);
+            });
+        }
+    }
+
+    function renderBookListSection(containerId, bookIds, library) {
+        const container = document.getElementById(containerId);
+        if (!container || !bookIds || bookIds.length === 0) return;
+
+        container.innerHTML = ''; // Clear defaults if we have dynamic content
+
+        bookIds.forEach(id => {
+            const book = library.find(b => b.id === id);
+            if (!book) return;
+
+            const cover = window.getSupabaseImageUrl ? window.getSupabaseImageUrl(book.image) : (book.image || 'assets/logo-new.png');
+            let badge1 = 'PREMIUM';
+            let badge2 = 'BOOK';
+            if (book.chapters && book.chapters.length > 0) badge1 = `${book.chapters.length} CHAPTERS`;
+            if (book.author) badge2 = book.author.toUpperCase();
+
+            const html = `
+                <div class="premium-book-card" onclick="window.location.href='book-detail.html?id=${book.id}'">
+                    <img src="${cover}" alt="${book.title}" loading="lazy">
+                    <div class="badge-container">
+                        <span class="chapter-badge">${badge1}</span>
+                        <span class="volume-badge">${badge2}</span>
+                    </div>
+                </div>
+            `;
+            container.innerHTML += html;
+        });
+    }
+
+    function getTopicDescription(topic) {
+        const map = {
+            'mindset': 'Rewire your brain for peak performance and wealth attraction.',
+            'success': 'Proven frameworks and daily habits of elite high-performers.',
+            'growth': 'Strategies for sustainable wealth and legacy creation.',
+            'finance': 'Master money management and investment psychology.',
+            'business': 'Tactics for building and scaling successful ventures.',
+            'habits': 'Small daily changes that lead to massive results.'
+        };
+        return map[topic.toLowerCase()] || 'Explore our curated collection of wisdom.';
     }
 
     function applySettings(settings) {

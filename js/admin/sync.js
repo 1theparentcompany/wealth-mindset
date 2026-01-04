@@ -25,12 +25,14 @@ window.syncToCloud = async function (type, data, identifier = null) {
                     background_image: (book.backgroundSettings && book.backgroundSettings.detailUrl) || book.background_image || book.backgroundImage || '',
                     original_book_id: book.original_book_id || null,
                     language: book.language || 'en',
-                    category: book.genre || book.category || '', // Map genre to category
+                    // CRITICAL FIX: Map 'type' (Book/Article) to 'category' column because reader.html/books.js uses 'category' column as 'type'
+                    category: book.type || 'book',
                     detail_settings: {
                         ...(book.detailSettings || {}),
                         coverDesign: book.coverDesign || {},
-                        type: book.type || 'book', // Store type in detail_settings
-                        genre: book.genre || ''
+                        type: book.type || 'book',
+                        genre: book.genre || (book.detailSettings && book.detailSettings.genres) || '',
+                        relatedItems: book.relatedItems || []
                     },
                     status: book.status || 'published',
                     sort_order: book.sort_order || 100

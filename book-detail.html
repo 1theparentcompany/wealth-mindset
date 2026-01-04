@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="css/style.css">
     <!-- Security: Content Security Policy -->
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://nlgdthlwmagvjvzrubif.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://nlgdthlwmagvjvzrubif.supabase.co wss://nlgdthlwmagvjvzrubif.supabase.co; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; media-src 'self' https://www.soundjay.com; frame-src 'self'; object-src 'none';">
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://nlgdthlwmagvjvzrubif.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://nlgdthlwmagvjvzrubif.supabase.co wss://nlgdthlwmagvjvzrubif.supabase.co https://api.ipify.org; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; media-src 'self' https://www.soundjay.com; frame-src 'self'; object-src 'none';">
     <!-- Supabase SDK -->
     <script src="js/lib/supabase-js.js"></script>
     <script src="js/supabase-config.js"></script>
@@ -4014,6 +4014,76 @@
             document.getElementById('tab-content-modal').style.display = 'none';
         }
 
+        // --- Related Books Logic ---
+        async function loadRecommendedBooks(book) {
+            const container = document.getElementById('recommended-books-grid');
+            const wrapper = document.getElementById('related-content-container');
+            const heading = document.getElementById('related-heading');
+
+            if (!container || !wrapper || !book) return;
+
+            // 1. Get IDs from detailSettings (Admin syncs to this)
+            const relatedIds = (book.detailSettings && book.detailSettings.relatedItems) || [];
+
+            if (relatedIds.length === 0) {
+                // Optional: Fallback to same Category/Genre logic if empty? 
+                // For now, hide it as requested "updates reflected" - implies exact control.
+                wrapper.style.display = 'none';
+                return;
+            }
+
+            wrapper.style.display = 'block';
+            if (heading) heading.textContent = "Related Titles";
+            container.innerHTML = '<p style="padding:20px; color:#666;">Loading related titles...</p>';
+
+            // 2. Fetch specific items from Supabase
+            if (typeof supabaseClient !== 'undefined') {
+                try {
+                    const { data: items, error } = await supabaseClient
+                        .from('books')
+                        .select('id, title, cover_image, category, author')
+                        .in('id', relatedIds)
+                        .eq('status', 'published');
+
+                    if (error) throw error;
+
+                    if (items && items.length > 0) {
+                        // Helper for image
+                        const getImg = (typeof window.getSupabaseImageUrl === 'function') ? window.getSupabaseImageUrl : (p => p || 'assets/logo-new.png');
+
+                        container.innerHTML = items.map(item => `
+                            <a href="book-detail.html?id=${item.id}" style="text-decoration:none; display:block;" class="fade-in">
+                                <div style="background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); overflow: hidden; transition: all 0.2s;" 
+                                     onmouseover="this.style.transform='translateY(-5px)'; this.style.background='rgba(59, 130, 246, 0.1)';" 
+                                     onmouseout="this.style.transform='translateY(0)'; this.style.background='rgba(255,255,255,0.03)';">
+                                     <div style="aspect-ratio: 2/3; overflow: hidden; position:relative;">
+                                         <img src="${getImg(item.cover_image)}" alt="${item.title}" style="width:100%; height:100%; object-fit:cover;">
+                                     </div>
+                                     <div style="padding: 12px;">
+                                         <div style="font-weight:700; color:#fff; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom: 4px;">${item.title}</div>
+                                         <div style="font-size:0.75rem; color:#94a3b8;">${item.author || 'Unknown'}</div>
+                                     </div>
+                                </div>
+                            </a>
+                         `).join('');
+                    } else {
+                        container.innerHTML = '<p style="color:#666;">Related titles not available.</p>';
+                    }
+                } catch (e) {
+                    console.error("Error fetching related books:", e);
+                    container.innerHTML = '';
+                }
+            } else {
+                // Fallback to local storage if offline (less likely for related, but good practice)
+                const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+                const items = library.filter(b => relatedIds.includes(b.id));
+                if (items.length > 0) {
+                    // Render local... (Simplified)
+                    // ... reuse render logic ...
+                }
+            }
+        }
+
         // --- Cloud-First Initialization Logic ---
         document.addEventListener('DOMContentLoaded', async () => {
             const params = new URLSearchParams(window.location.search);
@@ -4078,7 +4148,8 @@
 
                     // Also load related books if logic exists
                     if (typeof loadRecommendedBooks === 'function') {
-                        loadRecommendedBooks(id);
+                        // PASS FULL OBJECT to avoid double fetch
+                        loadRecommendedBooks(bookData);
                     }
                 }
             }

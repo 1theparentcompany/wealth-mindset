@@ -67,17 +67,19 @@ async function initLibrary() {
                 stored = libData.map(item => {
                     const stats = ratingMap[item.id];
                     const avgRating = stats ? (stats.sum / stats.count).toFixed(1) : '4.9';
+                    const details = item.detail_settings || {};
 
                     return {
                         id: item.id,
                         title: item.title,
                         author: item.author,
-                        type: item.category,
+                        type: item.category, // Category column now holds 'type' (book/article)
                         description: item.description,
                         image: item.cover_image,
                         isFeatured: item.is_featured,
                         backgroundSettings: { detailUrl: item.background_image },
-                        detailSettings: item.detail_settings, // Added detailSettings
+                        detailSettings: details,
+                        genre: details.genre || item.genre || 'General', // Fallback to item.genre if valid, but prioritize details
                         rating: avgRating
                     };
                 });
