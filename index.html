@@ -198,10 +198,12 @@
     </section>
 
     <!-- NEW: Image 1 Manager Layout -->
-    <div id="home-image-layout-1"
-      style="max-width: var(--max-width); margin: 0 auto 40px; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; padding: 0 20px;">
-      <!-- Images injected via JS -->
-    </div>
+    <section style="max-width: var(--max-width); margin: 0 auto 60px; padding: 0 20px;">
+      <div id="home-image-layout-1"
+        style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; padding: 20px;">
+        <!-- Images injected via JS -->
+      </div>
+    </section>
 
     <!-- Search Bar Section -->
     <div style="max-width: 800px; margin: 0 auto 60px;">
@@ -626,53 +628,7 @@
       </div>
     </section>
 
-    <!-- 📄 Short Success Stories -->
-    <section
-      style="margin-bottom: 80px; max-width: var(--max-width); margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box; padding: 0 var(--spacing-unit);">
-      <div
-        style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;">
-        <div>
-          <h2
-            style="font-size: var(--font-size-h3); margin: 0; display: flex; align-items: center; gap: 15px; color: #fff;">
-            <span style="background: rgba(37, 99, 235, 0.1); padding: 10px; border-radius: 12px;">📖</span> Success
-            Stories
-          </h2>
-        </div>
-        <a href="books.html"
-          style="color: var(--color-accent); font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px;">
-          <span>📋</span> View All →
-        </a>
-      </div>
-      <div class="section-scroll-wrapper">
-        <button class="row-nav-btn prev" onclick="scrollRow('stories-scroll', -1)">❮</button>
-        <button class="row-nav-btn next" onclick="scrollRow('stories-scroll', 1)">❯</button>
-        <div class="horizontal-scroll-list" id="stories-scroll">
-          <div class="premium-book-card" onclick="window.location.href='books.html'">
-            <div class="badge-container">
-              <span class="chapter-badge">SIX FIGURES</span>
-              <span class="volume-badge">SAVINGS</span>
-            </div>
-            <div
-              style="padding: 30px; height: 100%; display: flex; flex-direction: column; justify-content: center; background: rgba(255,255,255,0.05);">
-              <h3 style="color: #fff; margin-bottom: 10px; font-size: 1.2rem;">The Power of $10</h3>
-              <p style="font-size: 0.85rem; opacity: 0.6;">A daily saving habit turned into a legacy.</p>
-            </div>
-          </div>
-          <div class="premium-book-card" onclick="window.location.href='books.html'">
-            <div class="badge-container">
-              <span class="chapter-badge">MINDSET</span>
-              <span class="volume-badge">HABITS</span>
-            </div>
-            <div
-              style="padding: 30px; height: 100%; display: flex; flex-direction: column; justify-content: center; background: rgba(255,255,255,0.05);">
-              <h3 style="color: #fff; margin-bottom: 10px; font-size: 1.2rem;">The 5 AM Reflection</h3>
-              <p style="font-size: 0.85rem; opacity: 0.6;">How early mornings redefined success.</p>
-            </div>
-          </div>
-          <!-- Add more story cards as needed -->
-        </div>
-      </div>
-    </section>
+
 
     <!-- DYNAMIC CUSTOM SECTIONS CONTAINER -->
     <div id="dynamic-home-sections"></div>

@@ -102,7 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // 2. Fetch Homepage Settings
-                const { data: homeData } = await supabaseClient.from('homepage_settings').select('*').limit(1).single();
+                const { data: homeData } = await supabaseClient
+                    .from('homepage_settings')
+                    .select('*')
+                    .eq('id', '00000000-0000-0000-0000-000000000001')
+                    .maybeSingle();
                 if (homeData) {
                     const homeConfig = {
                         hero: { title: homeData.hero_title, subtitle: homeData.hero_subtitle },
@@ -167,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // 2. Render Success Stories
-        renderSuccessStories(homepageConfig.stories);
+        // renderSuccessStories(homepageConfig.stories);
 
         // 3. Render Exclusive Collection
         renderBookListSection('exclusive-scroll-container', homepageConfig.exclusive, library);
@@ -258,23 +262,70 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderImageManager1(images) {
         const container = document.getElementById('home-image-layout-1');
-        if (!container || !images || images.length === 0) return;
+        if (!container) {
+            console.warn("Image Manager: Container #home-image-layout-1 not found.");
+            return;
+        }
 
+        if (!images || images.length === 0) {
+            console.log("Image Manager: No images to render.");
+            container.style.display = 'none';
+            return;
+        }
+
+        console.log("Image Manager: Creating carousel with " + images.length + " images.");
+        container.style.display = 'block';
+        container.style.position = 'relative';
         container.innerHTML = '';
-        images.forEach(img => {
-            const div = document.createElement('div');
-            div.className = 'glass hover-lift';
-            div.style.cssText = `
-                border-radius: 16px; 
-                overflow: hidden; 
-                width: 300px; 
-                height: 180px; 
-                position: relative;
-                border: 1px solid rgba(255,255,255,0.1);
-             `;
-            div.innerHTML = \`<img src="\${img.url}" alt="\${img.alt || 'Image'}" style="width: 100%; height: 100%; object-fit: cover; display: block;">\`;
-             container.appendChild(div);
+
+        // Create carousel wrapper
+        const carouselWrapper = document.createElement('div');
+        carouselWrapper.style.cssText = `
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+        `;
+
+        // Add all images as slides
+        images.forEach((img, index) => {
+            if (!img.url) return;
+            const slide = document.createElement('div');
+            slide.className = 'carousel-slide';
+            slide.style.cssText = `
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                opacity: ${index === 0 ? '1' : '0'};
+                transition: opacity 1s ease-in-out;
+            `;
+            slide.innerHTML = `<img src="${img.url}" alt="${img.alt || 'Image'}" style="width: 100%; height: 100%; object-fit: cover; display: block;">`;
+            carouselWrapper.appendChild(slide);
         });
+
+        container.appendChild(carouselWrapper);
+
+        // Auto-rotate carousel
+        if (images.length > 1) {
+            let currentIndex = 0;
+            const slides = carouselWrapper.querySelectorAll('.carousel-slide');
+
+            setInterval(() => {
+                // Hide current slide
+                slides[currentIndex].style.opacity = '0';
+
+                // Move to next slide
+                currentIndex = (currentIndex + 1) % images.length;
+
+                // Show next slide
+                slides[currentIndex].style.opacity = '1';
+            }, 5000); // Change image every 5 seconds
+        }
     }
 
     function renderCustomHomeSections(sections, library) {
@@ -290,11 +341,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // Skip if no items to show, to prevent empty rows
             if (!sec.items || sec.items.length === 0) return;
 
-            const sectionId = `custom - sec - ${ idx } `;
-            const iconHtml = sec.icon ? `< span style = "margin-right: 10px;" > ${ sec.icon }</span > ` : '';
+            const sectionId = `custom-sec-${idx}`;
+            const iconHtml = sec.icon ? `<span style="margin-right: 10px;">${sec.icon}</span>` : '';
 
             const html = `
-                < section style = "margin-bottom: 80px; max-width: var(--max-width); margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box; padding: 0 var(--spacing-unit);" >
+                <section style="margin-bottom: 80px; max-width: var(--max-width); margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box; padding: 0 var(--spacing-unit);">
                   <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px;">
                     <h2 style="font-size: var(--font-size-h3); margin: 0; color: #fff; display: flex; align-items: center;">
                         ${iconHtml}
@@ -307,8 +358,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="row-nav-btn next" onclick="scrollRow('${sectionId}', 1)">❯</button>
                     <div class="horizontal-scroll-list" id="${sectionId}"></div>
                   </div>
-                </section >
-                `;
+                </section>
+            `;
             container.innerHTML += html;
             renderBookListSection(sectionId, sec.items || [], library);
         });
@@ -322,7 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const query = searchInput.value.trim();
         if (query) {
-            window.location.href = `books.html ? q = ${ encodeURIComponent(query) } `;
+            window.location.href = `books.html ? q = ${encodeURIComponent(query)} `;
         }
     };
 
@@ -357,17 +408,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const cover = window.getSupabaseImageUrl ? window.getSupabaseImageUrl(book.image) : (book.image || 'assets/logo-new.png');
             let badge1 = 'PREMIUM';
             let badge2 = 'BOOK';
-            if (book.chapters && book.chapters.length > 0) badge1 = `${ book.chapters.length } CHAPTERS`;
+            if (book.chapters && book.chapters.length > 0) badge1 = `${book.chapters.length} CHAPTERS`;
             if (book.author) badge2 = book.author.toUpperCase();
 
             const html = `
-                < div class="premium-book-card" onclick = "window.location.href='book-detail.html?id=${book.id}'" >
+                <div class="premium-book-card" onclick="window.location.href='book-detail.html?id=${book.id}'">
                     <img src="${cover}" alt="${book.title}" loading="lazy">
-                        <div class="badge-container">
-                            <span class="chapter-badge">${badge1}</span>
-                            <span class="volume-badge">${badge2}</span>
-                        </div>
+                    <div class="badge-container">
+                        <span class="chapter-badge">${badge1}</span>
+                        <span class="volume-badge">${badge2}</span>
                     </div>
+                </div>
             `;
             container.innerHTML += html;
         });

@@ -2,6 +2,8 @@
 // Image Manager Logic for Admin Panel
 
 let currentImage1Data = [];
+// Expose globally for homepage.js to access during save
+window.currentImage1Data = currentImage1Data;
 
 // Ensure we sync with global config if available
 if (typeof homepageConfig !== 'undefined' && homepageConfig.imageManager1) {
@@ -10,6 +12,9 @@ if (typeof homepageConfig !== 'undefined' && homepageConfig.imageManager1) {
 
 // Update global config whenever we change data
 function updateGlobalConfig() {
+    // Sync with local variable first
+    window.currentImage1Data = currentImage1Data;
+
     if (typeof homepageConfig !== 'undefined') {
         homepageConfig.imageManager1 = currentImage1Data;
     }
@@ -29,11 +34,14 @@ async function loadImage1Settings() {
         const { data, error } = await supabaseClient
             .from('homepage_settings')
             .select('image_manager_1')
+            .eq('id', '00000000-0000-0000-0000-000000000001')
             .single();
 
         if (error) throw error;
 
         currentImage1Data = data.image_manager_1 || [];
+        window.currentImage1Data = currentImage1Data; // Sync global
+        updateGlobalConfig(); // Ensure homepageConfig is in sync immediately
         renderImage1List();
 
     } catch (err) {
@@ -85,10 +93,12 @@ function addImage1() {
     const idInput = document.getElementById('new-image-1-id');
     const urlInput = document.getElementById('new-image-1-url');
     const altInput = document.getElementById('new-image-1-alt');
+    const descInput = document.getElementById('new-image-1-description');
 
     const id = idInput.value.trim();
     const url = urlInput.value.trim();
     const alt = altInput.value.trim();
+    const description = descInput.value.trim();
 
     if (!id || !url) {
         alert('Please provide both ID and URL.');
@@ -101,13 +111,14 @@ function addImage1() {
         return;
     }
 
-    currentImage1Data.push({ id, url, alt });
+    currentImage1Data.push({ id, url, alt, description });
     updateGlobalConfig();
 
     // Reset inputs
     idInput.value = '';
     urlInput.value = '';
     altInput.value = '';
+    descInput.value = '';
 
     renderImage1List();
 }
@@ -135,7 +146,7 @@ function editImage1(index) {
 
 async function saveImage1Settings() {
     try {
-        const { error } = await supabase
+        const { error } = await supabaseClient
             .from('homepage_settings')
             .update({ image_manager_1: currentImage1Data })
             .eq('id', '00000000-0000-0000-0000-000000000001'); // Assuming single row config
