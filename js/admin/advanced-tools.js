@@ -261,11 +261,16 @@ window.confirmBulkSave = async function () {
             // num = parseInt(numMatch[0]); 
         }
 
+        const rawContent = chunk.content;
+        const sanitizedContent = typeof DOMPurify !== 'undefined' ?
+            DOMPurify.sanitize(rawContent) :
+            rawContent;
+
         const dbRow = {
             book_id: targetBookId,
             chapter_number: num,
             title: chunk.title,
-            content: chunk.content,
+            content: sanitizedContent,
             language: lang,
             created_at: new Date().toISOString()
         };
@@ -476,11 +481,16 @@ window.saveSingleTranslation = async function () {
         return;
     }
 
+    const rawContent = content;
+    const sanitizedContent = typeof DOMPurify !== 'undefined' ?
+        DOMPurify.sanitize(rawContent) :
+        rawContent;
+
     const dbRow = {
         book_id: targetBookId,
         chapter_number: parseInt(num),
         title: title,
-        content: content,
+        content: sanitizedContent,
         language: lang,
         created_at: new Date().toISOString()
     };

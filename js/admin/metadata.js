@@ -22,24 +22,29 @@ window.renderMetadataItemList = function () {
 
     // -- Filter Tabs --
     const filterContainer = document.createElement('div');
-    filterContainer.style.cssText = "display: flex; gap: 10px; margin-bottom: 15px; padding: 0 5px;";
+    filterContainer.style.cssText = "display: flex; gap: 8px; margin-bottom: 20px; padding: 0 5px; flex-wrap: wrap;";
 
-    const mkBtn = (label, type) => {
+    const mkBtn = (type) => {
         const isActive = currentMetaFilter === type;
-        return `<button onclick="setMetaFilter('${type}')" style="flex: 1; padding: 8px; border-radius: 6px; border: 1px solid ${isActive ? '#3b82f6' : 'rgba(255,255,255,0.1)'}; background: ${isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent'}; color: ${isActive ? '#3b82f6' : '#64748b'}; cursor: pointer; font-weight: 700; transition: all 0.2s;">${label}</button>`;
+        const info = categoryMap[type] || { icon: '📄', label: type };
+        const label = info.icon + ' ' + (type.charAt(0).toUpperCase() + type.slice(1)) + 's';
+
+        return `<button onclick="setMetaFilter('${type}')" style="padding: 8px 12px; border-radius: 6px; border: 1px solid ${isActive ? '#3b82f6' : 'rgba(255,255,255,0.1)'}; background: ${isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent'}; color: ${isActive ? '#3b82f6' : '#64748b'}; cursor: pointer; font-weight: 700; transition: all 0.2s; font-size: 0.8rem; white-space: nowrap;">${label}</button>`;
     };
 
-    filterContainer.innerHTML = mkBtn('📚 Books', 'book') + mkBtn('📄 Articles', 'article');
+    // Add 'All' filter or just use categoryMap keys
+    let filterHtml = '';
+    Object.keys(categoryMap).forEach(key => {
+        filterHtml += mkBtn(key);
+    });
+
+    filterContainer.innerHTML = filterHtml;
     grid.appendChild(filterContainer);
 
     // -- Filter Items --
-    // Normalize type check: if type is missing, assume 'book'
     const filtered = library.filter(item => {
         const itemType = (item.type || 'book').toLowerCase();
-        // If filter is book, show 'book' or undefined/null
-        if (currentMetaFilter === 'book') return itemType === 'book';
-        // If filter is article, show anything NOT 'book'
-        return itemType !== 'book';
+        return itemType === currentMetaFilter;
     });
 
     if (filtered.length === 0) {
@@ -72,7 +77,8 @@ window.renderMetadataItemList = function () {
         };
         div.onclick = () => selectMetadataItem(item.id);
 
-        const icon = currentMetaFilter === 'book' ? '📚' : '📄';
+        const typeInfo = categoryMap[currentMetaFilter] || { icon: '📄' };
+        const icon = typeInfo.icon;
         div.innerHTML = `
             <span style="font-size: 1.2rem;">${icon}</span>
             <div style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
@@ -174,8 +180,11 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
                     <div style="flex: 1;">
                         <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px;">
                             <span style="background: #fbbf24; color: #000; font-size: 0.65rem; font-weight: 900; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px;">PREMIUM</span>
-                            <span style="background: ${item.type === 'article' ? '#10b981' : '#3b82f6'}; color: #fff; font-size: 0.65rem; font-weight: 900; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px;">${item.type === 'article' ? 'ARTICLE' : 'BOOK'}</span>
-                            <span onclick="editMetadataField('${item.id}', 'type', 'Classification (book/article/story)')" style="color: #64748b; cursor: pointer; font-size: 0.8rem; margin-left: 10px;">✎ ${item.type || 'book'}</span>
+                            <span style="background: #3b82f6; color: #fff; font-size: 0.65rem; font-weight: 900; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 4px;">
+                                <span>${(categoryMap[item.type] && categoryMap[item.type].icon) || '📚'}</span>
+                                ${item.type ? item.type.toUpperCase() : 'BOOK'}
+                            </span>
+                            <span onclick="editMetadataField('${item.id}', 'type', 'Classification (book/story/laws/guide/custom)')" style="color: #64748b; cursor: pointer; font-size: 0.8rem; margin-left: 10px;">✎ ${item.type || 'book'}</span>
                         </div>
                         
                         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">

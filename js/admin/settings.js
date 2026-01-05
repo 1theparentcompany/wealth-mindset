@@ -38,9 +38,12 @@ window.saveSettings = function () {
         settings.footerText = document.getElementById('set-footer-text').value;
         settings.headerTags = document.getElementById('set-header-tags').value;
 
+        // Flags
+        settings.maintenanceMode = settings.maintenanceMode || false;
+
         localStorage.setItem('siteSettings', JSON.stringify(settings));
         if (typeof syncToCloud === 'function') syncToCloud('settings', settings);
-        showToast("Site settings saved successfully!");
+        showToast("Site settings saved and synced!");
     });
 };
 

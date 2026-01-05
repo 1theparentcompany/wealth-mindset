@@ -2,50 +2,73 @@
 
 // Default Configuration
 window.homepageConfig = {
-    heroTitle: "Wealth & Mindset",
-    heroSubtitle: "Mastering the Psychology of Success & Financial Freedom",
-    tips: ["Save 20% of income", "Read everyday", "Network aggressively"],
-    tipHeadings: ["Finance", "Mindset", "Success"],
+    hero: {
+        title: "Wealth & Mindset",
+        subtitle: "Mastering the Psychology of Success & Financial Freedom"
+    },
+    microLessons: ["Save 20% of income", "Read everyday", "Network aggressively"],
+    microLessonHeadings: ["Finance", "Mindset", "Success"],
     topics: ['mindset', 'success', 'growth', 'finance', 'business', 'habits'],
     customTopics: [],
-    customSections: [], // { id, title, icon, items: [] }
+    customSections: [],
     exclusive: [],
     popular: [],
-    stories: []
+    stories: [],
+    bottomBanners: []
+};
+
+// Helper to clear all sections (Requested by User)
+window.clearAllHomepageBooks = function () {
+    if (!confirm("Are you sure you want to remove ALL books from the homepage sections? This cannot be undone.")) return;
+
+    homepageConfig.exclusive = [];
+    homepageConfig.popular = [];
+    homepageConfig.stories = [];
+    // Custom sections: keep sections but remove items? Or remove sections?
+    // "remove all thse book appearin these sction" -> likely remove items.
+    // User said "fromthese section", implying sections stay.
+    if (homepageConfig.customSections) {
+        homepageConfig.customSections.forEach(s => s.items = []);
+    }
+    renderHomepageSectionLists();
+    showToast("All books removed. Please click Save to persist.", "success");
 };
 
 window.saveHomepageSettings = function () {
     customConfirm("Update the homepage layout and configuration?", "Save Home", "🏠").then(confirmed => {
         if (!confirmed) return;
 
-        // Fetch latest to avoid overwriting changes from other tabs
-        const saved = localStorage.getItem('siteHomepageConfig');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                window.homepageConfig = { ...window.homepageConfig, ...parsed };
-            } catch (e) {
-                console.error("Homepage config load failed", e);
-            }
-        }
+        // Ensure nested objects exist
+        if (!homepageConfig.hero) homepageConfig.hero = {};
 
-        homepageConfig.heroTitle = document.getElementById('home-hero-title')?.value || "";
-        homepageConfig.heroSubtitle = document.getElementById('home-hero-subtitle')?.value || "";
+        homepageConfig.hero.title = document.getElementById('home-hero-title')?.value || "";
+        homepageConfig.hero.subtitle = document.getElementById('home-hero-subtitle')?.value || "";
+
+        // Reset arrays to ensure clean state before populating
+        homepageConfig.microLessons = [];
+        homepageConfig.microLessonHeadings = [];
 
         for (let i = 1; i <= 3; i++) {
             const tipEl = document.getElementById(`homepage-tip-${i}`) || document.getElementById(`home-tip-${i}`);
             const headEl = document.getElementById('home-tip-head-' + i);
-            if (tipEl) homepageConfig.tips[i - 1] = tipEl.value;
-            if (headEl) homepageConfig.tipHeadings[i - 1] = headEl.value;
+            if (tipEl) homepageConfig.microLessons[i - 1] = tipEl.value;
+            if (headEl) homepageConfig.microLessonHeadings[i - 1] = headEl.value;
         }
 
         const topicChecks = document.querySelectorAll('#topics-container input:checked');
         homepageConfig.topics = Array.from(topicChecks).map(cb => cb.value);
 
+        // Explicitly sync Image Manager data if available in global scope but not in config yet
+        if (typeof currentImage1Data !== 'undefined' && (!homepageConfig.imageManager1 || homepageConfig.imageManager1.length !== currentImage1Data.length)) {
+            homepageConfig.imageManager1 = currentImage1Data;
+        }
+
         localStorage.setItem('siteHomepageConfig', JSON.stringify(homepageConfig));
         if (typeof syncToCloud === 'function') syncToCloud('homepage', homepageConfig);
         showToast('Homepage configuration saved successfully!');
         if (typeof renderHomepageSectionLists === 'function') renderHomepageSectionLists();
+    }).catch(err => {
+        console.error("Save failed:", err);
     });
 };
 
@@ -114,37 +137,45 @@ window.renderHomepageSectionLists = function () {
     const customContainer = document.getElementById('sections-container');
     if (customContainer) {
         customContainer.innerHTML = '';
-        if (homepageConfig.customSections) {
-            homepageConfig.customSections.forEach(sec => {
+        if (homepageConfig.customSections && homepageConfig.customSections.length > 0) {
+            homepageConfig.customSections.forEach((sec, secIdx) => {
                 const items = sec.items || [];
                 let itemsHtml = '';
 
                 if (items.length === 0) {
-                    itemsHtml = '<li style="color:#64748b; font-style:italic;">No items added yet.</li>';
+                    itemsHtml = '<div style="color:#64748b; font-style:italic; padding: 10px; text-align: center; background: rgba(0,0,0,0.2); border-radius: 6px;">No books added yet. Click "+ Add" to populate this list.</div>';
                 } else {
                     items.forEach((id, idx) => {
-                        const book = library.find(b => b.id === id) || { title: 'Unknown Content' };
+                        const book = library.find(b => b.id === id) || { title: 'Unknown Content', image: 'assets/logo-new.png' };
+                        const cover = book.image || book.cover || 'assets/logo-new.png';
+
                         itemsHtml += `
-                            <li style="background:#0f172a; padding:10px; margin-bottom:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; border:1px solid #334155;">
-                                <span>${book.title}</span>
-                                <button onclick="removeCustomSectionItem('${sec.id}', ${idx})" style="background:#ef4444; border:none; color:white; padding:4px 8px; border-radius:4px; cursor:pointer;">Remove</button>
-                            </li>
+                            <div style="background:#1e293b; padding:8px 12px; margin-bottom:8px; border-radius:6px; display:flex; justify-content:space-between; align-items:center; border:1px solid #334155;">
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <img src="${cover}" style="width: 30px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                    <span style="font-size: 0.9rem; color: #e2e8f0;">${book.title}</span>
+                                </div>
+                                <button onclick="removeCustomSectionItem('${sec.id}', ${idx})" style="background:none; border:none; color:#ef4444; padding:4px; border-radius:4px; cursor:pointer;" title="Remove Book">✕</button>
+                            </div>
                         `;
                     });
                 }
 
                 const cardHtml = `
-                    <div class="action-card" style="cursor: default; margin-top: 20px;">
-                        <h3 style="display:flex; justify-content:space-between; align-items:center;">
-                            <span>${sec.icon || '📂'} ${sec.title}</span>
-                            <div>
-                                <button class="btn-primary" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; font-size:0.8rem; padding:4px 10px; margin-right: 10px;" onclick="deleteSection('${sec.id}')">Delete Section</button>
-                                <button class="btn-primary" style="font-size:0.8rem; padding:4px 10px;" onclick="openItemAdder('${sec.id}')">+ Add</button>
+                    <div class="action-card" style="cursor: default; margin-top: 20px; border-top: 4px solid var(--color-accent);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
+                            <h3 style="margin:0; display:flex; align-items:center; gap: 8px;">
+                                <span style="font-size: 1.5rem;">${sec.icon || '📂'}</span> 
+                                <span>${sec.title}</span>
+                            </h3>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-primary" style="font-size:0.8rem; padding:6px 12px;" onclick="openItemAdder('${sec.id}')">+ Add Book</button>
+                                <button class="btn-primary" style="background: transparent; border: 1px solid #ef4444; color: #ef4444; font-size:0.8rem; padding:6px 12px;" onclick="deleteSection('${sec.id}')">Delete Section</button>
                             </div>
-                        </h3>
-                        <ul style="list-style:none; padding:0; margin-top:15px;">
+                        </div>
+                        <div style="background: rgba(15, 23, 42, 0.5); padding: 10px; border-radius: 8px;">
                             ${itemsHtml}
-                        </ul>
+                        </div>
                     </div>
                 `;
                 customContainer.insertAdjacentHTML('beforeend', cardHtml);
@@ -237,14 +268,20 @@ window.confirmAddItem = function () {
         }
     }
 
+    // Auto-save intermediate state to LocalStorage so it persists across refreshes even if not synced to cloud yet
+    localStorage.setItem('siteHomepageConfig', JSON.stringify(homepageConfig));
+
     renderHomepageSectionLists();
     const modal = document.getElementById('item-adder-modal');
     if (modal) modal.style.display = 'none';
 };
 
 window.createNewSection = function () {
-    const title = document.getElementById('new-section-title').value.trim();
-    const icon = document.getElementById('new-section-icon').value.trim() || '📂';
+    const titleInput = document.getElementById('new-section-title');
+    const iconInput = document.getElementById('new-section-icon');
+
+    const title = titleInput.value.trim();
+    const icon = iconInput.value.trim() || '📂';
 
     if (!title) {
         showToast("Please enter a section title.", 'warning');
@@ -261,10 +298,14 @@ window.createNewSection = function () {
     if (!homepageConfig.customSections) homepageConfig.customSections = [];
     homepageConfig.customSections.push(newSection);
 
-    document.getElementById('new-section-title').value = '';
-    document.getElementById('new-section-icon').value = '';
+    // Clear inputs
+    titleInput.value = '';
+    iconInput.value = '';
 
+    // Auto-save to ensure persistence immediately
+    localStorage.setItem('siteHomepageConfig', JSON.stringify(homepageConfig));
     renderHomepageSectionLists();
+    showToast("New section created! Don't forget to save changes.", 'success');
 };
 
 window.initHomepageManager = function () {
@@ -280,14 +321,18 @@ window.initHomepageManager = function () {
     }
 
     if (document.getElementById('home-hero-title')) {
-        document.getElementById('home-hero-title').value = homepageConfig.heroTitle || "";
-        document.getElementById('home-hero-subtitle').value = homepageConfig.heroSubtitle || "";
+        const hero = homepageConfig.hero || {};
+        document.getElementById('home-hero-title').value = hero.title || "";
+        document.getElementById('home-hero-subtitle').value = hero.subtitle || "";
+
+        const lessons = homepageConfig.microLessons || [];
+        const headings = homepageConfig.microLessonHeadings || [];
 
         for (let i = 1; i <= 3; i++) {
             const tipEl = document.getElementById(`homepage-tip-${i}`) || document.getElementById(`home-tip-${i}`);
             const headEl = document.getElementById('home-tip-head-' + i);
-            if (tipEl) tipEl.value = homepageConfig.tips[i - 1] || "";
-            if (headEl) headEl.value = homepageConfig.tipHeadings[i - 1] || "";
+            if (tipEl) tipEl.value = lessons[i - 1] || "";
+            if (headEl) headEl.value = headings[i - 1] || "";
         }
     }
 

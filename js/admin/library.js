@@ -63,6 +63,8 @@ window.renderLibraryTable = async function () {
         const tr = document.createElement('tr');
         tr.style.borderBottom = '1px solid #1e293b';
 
+        const itemType = item.category || item.type || 'book';
+
         // Status Toggle Logic
         const isHidden = item.status === 'hidden';
         const visibilityIcon = isHidden ? '👁️‍🗨️' : '👁️';
@@ -78,8 +80,9 @@ window.renderLibraryTable = async function () {
                 <small style="color:#64748b; text-transform: capitalize;">${item.author || 'Unknown Author'}</small>
             </td>
             <td style="padding: 15px;">
-                <span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; text-transform: uppercase; font-weight: bold;">
-                    ${item.type || 'Book'}
+                <span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; text-transform: uppercase; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; border: 1px solid rgba(59, 130, 246, 0.2);">
+                    <span style="font-size: 1.1rem;">${(window.categoryMap[itemType] && window.categoryMap[itemType].icon) || '📚'}</span>
+                    ${itemType}
                 </span>
             </td>
             <td style="padding: 15px;">
@@ -346,7 +349,7 @@ window.renderFeedbackTable = async function () {
     if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured() && window.supabaseClient) {
         try {
             const { data, error } = await supabaseClient
-                .from('feedback')
+                .from('site_feedback')
                 .select('*')
                 .order('created_at', { ascending: false });
 
@@ -404,7 +407,7 @@ window.renderFeedbackTable = async function () {
 
 window.markFeedbackRead = async function (id) {
     if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured() && window.supabaseClient && id.length > 20) {
-        const { error } = await supabaseClient.from('feedback').update({ status: 'read' }).eq('id', id);
+        const { error } = await supabaseClient.from('site_feedback').update({ status: 'read' }).eq('id', id);
         if (error) {
             showToast('Failed to update cloud status', 'error');
             return;
@@ -423,7 +426,7 @@ window.deleteFeedbackItem = async function (id) {
         if (!confirmed) return;
 
         if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured() && window.supabaseClient && id.length > 20) {
-            const { error } = await supabaseClient.from('feedback').delete().eq('id', id);
+            const { error } = await supabaseClient.from('site_feedback').delete().eq('id', id);
             if (error) {
                 showToast('Failed to delete from cloud', 'error');
                 return;
@@ -447,7 +450,7 @@ window.updateDashboardStats = async function () {
     if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured() && window.supabaseClient) {
         try {
             const { count, error } = await supabaseClient
-                .from('feedback')
+                .from('site_feedback')
                 .select('*', { count: 'exact', head: true });
 
             if (count !== null) feedbackCount = count;

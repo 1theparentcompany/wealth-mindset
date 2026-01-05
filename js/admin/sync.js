@@ -1,5 +1,7 @@
 // Supabase Cloud Sync Module
-const HOMEPAGE_SETTINGS_ID = '00000000-0000-0000-0000-000000000001';
+if (!window.HOMEPAGE_SETTINGS_ID) {
+    window.HOMEPAGE_SETTINGS_ID = '00000000-0000-0000-0000-000000000001';
+}
 
 window.syncToCloud = async function (type, data, identifier = null) {
     if (typeof isSupabaseConfigured !== 'function' || !isSupabaseConfigured() || !supabaseClient) {
@@ -144,24 +146,25 @@ window.syncToCloud = async function (type, data, identifier = null) {
                 break;
             case 'settings':
                 await supabaseClient.from('admin_settings').upsert({
-                    ads_enabled: data.adsEnabled !== false,
-                    audio_enabled: data.audioEnabled !== false,
-                    background_enabled: data.bgEnabled !== false,
+                    id: '00000000-0000-0000-0000-000000000001',
+                    site_title: data.title || '',
+                    site_description: data.desc || '',
+                    ga_id: data.gaId || '',
+                    site_url: data.siteUrl || '',
+                    adsense_id: data.adsenseId || '',
+                    auto_ads_enabled: data.autoAds === 'true',
+                    sidebar_ad_slot: data.sidebarAdSlot || '',
+                    ad_frequency: data.adFrequency || 'med',
+                    support_email: data.email || '',
+                    admin_access_code: data.adminCode || '',
+                    footer_copyright: data.footerText || '',
+                    header_tags: data.headerTags || '',
                     maintenance_mode: data.maintenanceMode === true
                 });
-
-                // Also sync the secret code to feedback table so launcher.js can verify it
-                if (data.adminCode) {
-                    await supabaseClient.from('feedback').insert({
-                        name: 'System',
-                        message: 'Admin Code Update',
-                        secret_code: data.adminCode
-                    });
-                }
                 break;
             case 'homepage':
                 await supabaseClient.from('homepage_settings').upsert({
-                    id: HOMEPAGE_SETTINGS_ID,
+                    id: window.HOMEPAGE_SETTINGS_ID,
                     hero_title: data.heroTitle || '',
                     hero_subtitle: data.heroSubtitle || '',
                     exclusive_collection: data.exclusive || [],
@@ -170,13 +173,14 @@ window.syncToCloud = async function (type, data, identifier = null) {
                     browse_topics: data.topics || [],
                     micro_lessons: data.tips || [],
                     micro_lesson_headings: data.tipHeadings || [],
-                    custom_sections: data.customSections || []
+                    custom_sections: data.customSections || [],
+                    image_manager_1: data.imageManager1 || []
                 });
                 break;
             case 'images':
                 await supabaseClient.from('homepage_settings').upsert({
-                    id: HOMEPAGE_SETTINGS_ID,
-                    slider_images: data.carousel || [],
+                    id: window.HOMEPAGE_SETTINGS_ID,
+                    // slider_images: data.carousel || [], // Removed
                     bottom_banners: data.bottomBanners || data.bottomBanner || []
                 });
                 break;
@@ -192,39 +196,18 @@ window.syncToCloud = async function (type, data, identifier = null) {
             case 'quotes':
                 await supabaseClient.from('quotes').upsert({
                     quote: data.text || data.quote,
+                    author: data.author || 'Anonymous'
                 });
                 break;
             case 'taxonomy':
-                // Serialize categories to store in a single JSON field or dedicated table if available.
-                // For now, we'll store it in admin_settings as a robust JSON fallback if no better table exists,
-                // OR check if we have a 'taxonomies' table.
-                // Assuming 'admin_settings' has a 'taxonomies' column based on previous context or fallback.
-                // If not, we might need a dedicated table. Let's try upserting to admin_settings first 
-                // as that's the safest single-record store.
-
-                // ERROR CORRECTION: The user's schema might not have 'taxonomies' column in admin_settings.
-                // Visual check of verifySchema logic: it checks 'admin_settings'.
-                // Let's assume we store it in a specific row or column.
-
-                // Better approach: If there's no dedicated table, maybe we skip or warn.
-                // But the user complained it's not saving. 
-                // Let's try to save it to 'admin_settings' table, in a 'taxonomies' column if it exists,
-                // or creation of a new table might be needed?
-                // Wait, let's look at existing `case 'settings'`. It saves to `admin_settings`.
-                // Let's modify `admin_settings` to include `content_types`.
-
                 await supabaseClient.from('admin_settings').upsert({
-                    // Trying to save to a hypothetical column 'content_types' or generic 'settings_json'
-                    // Since we don't know the exact schema, let's try to stick to what might exist or use a separate table.
-                    // Actually, typical design here would be a 'taxonomies' table but let's try finding a flexible column.
-                    // Re-reading `verifySchema`... it checks for `admin_settings`.
-                    // Let's try adding it there.
-                    id: '00000000-0000-0000-0000-000000000001', // Ensure we update the main settings row
-                    content_types: data // This assumes the column exists. If not, it will error.
+                    id: '00000000-0000-0000-0000-000000000001',
+                    content_types: data
                 });
                 break;
+            case 'site_feedback':
             case 'feedback':
-                await supabaseClient.from('feedback').insert({
+                await supabaseClient.from('site_feedback').insert({
                     name: data.name,
                     email: data.email || '',
                     topic: data.topic || 'general',
@@ -298,8 +281,10 @@ window.syncFromCloud = async function () {
                 author: book.author,
                 description: book.description,
                 image: book.cover_image,
-                type: book.detail_settings?.type || (book.title.toLowerCase().includes('article') ? 'article' : 'book'),
-                genre: book.category || book.detail_settings?.genre || '',
+                // CRITICAL FIX: Read 'type' from 'category' column (matches reader logic)
+                type: book.category || 'book',
+                // CRITICAL FIX: Read 'genre' from 'detail_settings.genre'
+                genre: (book.detail_settings && book.detail_settings.genre) || book.genre || '',
                 status: book.status,
                 sort_order: book.sort_order,
                 language: book.language,
@@ -321,18 +306,32 @@ window.syncFromCloud = async function () {
 
         if (settings && !settingsError) {
             localStorage.setItem('siteSettings', JSON.stringify({
-                adsEnabled: settings.ads_enabled,
-                audioEnabled: settings.audio_enabled,
-                bgEnabled: settings.background_enabled,
+                title: settings.site_title || '',
+                desc: settings.site_description || '',
+                gaId: settings.ga_id || '',
+                siteUrl: settings.site_url || '',
+                adsenseId: settings.adsense_id || '',
+                autoAds: settings.auto_ads_enabled ? 'true' : 'false',
+                sidebarAdSlot: settings.sidebar_ad_slot || '',
+                adFrequency: settings.ad_frequency || 'med',
+                email: settings.support_email || '',
+                adminCode: settings.admin_access_code || '',
+                footerText: settings.footer_copyright || '',
+                headerTags: settings.header_tags || '',
                 maintenanceMode: settings.maintenance_mode
             }));
+
+            if (settings.content_types) {
+                localStorage.setItem('siteTaxonomy', JSON.stringify(settings.content_types));
+                window.categoryMap = settings.content_types;
+            }
         }
 
         // 3. Fetch Homepage Data
         const { data: hp, error: hpError } = await supabaseClient
             .from('homepage_settings')
             .select('*')
-            .eq('id', HOMEPAGE_SETTINGS_ID)
+            .eq('id', window.HOMEPAGE_SETTINGS_ID)
             .maybeSingle();
 
         if (hp && !hpError) {
@@ -351,31 +350,26 @@ window.syncFromCloud = async function () {
             localStorage.setItem('siteHomepageConfig', JSON.stringify(homepageConfig));
             localStorage.setItem('homepageSettings', JSON.stringify(homepageConfig)); // Keep legacy key for safety
 
-            // B. Update siteImageConfig (Visuals: Carousel & Banners)
-            const carouselRaw = hp.slider_images || [];
+            // B. Update siteImageConfig (Visuals: Banners only)
+            // const carouselRaw = hp.slider_images || []; // Removed
             const bannersRaw = hp.bottom_banners || [];
 
             // Save raw lists for Admin Panel Common Settings
-            localStorage.setItem('carouselImages', JSON.stringify(carouselRaw));
+            // localStorage.setItem('carouselImages', JSON.stringify(carouselRaw));
             localStorage.setItem('bottomImages', JSON.stringify(bannersRaw));
 
             // Construct config for index.html
+            // Construct config for index.html (Now using raw format for consistency)
             const imageConfig = {
-                carousel: carouselRaw.map(img => ({
-                    img: img.url || img.img, // Handle both formats
-                    title: img.heading || img.title, // Map Heading to Title (big text)
-                    desc: img.title || '',   // Map Title to Desc (smaller text) - or adjust based on preference
-                    badge: img.badge || '',
-                    color: '#3b82f6'
-                })),
-                bottomBanners: bannersRaw.map(img => (typeof img === 'string' ? img : img.url))
+                // carousel: carouselRaw,
+                bottomBanners: bannersRaw
             };
             localStorage.setItem('siteImageConfig', JSON.stringify(imageConfig));
         }
 
         // 4. Fetch Feedback (Optional, but good for consistency)
         const { data: feedback, error: fbError } = await supabaseClient
-            .from('feedback')
+            .from('site_feedback')
             .select('*')
             .order('created_at', { ascending: false });
 
@@ -493,9 +487,9 @@ window.performMigration = async function (type) {
                 break;
 
             case 'feedback':
-                const feedback = JSON.parse(localStorage.getItem('feedbackData') || '[]');
+                const feedback = JSON.parse(localStorage.getItem('siteFeedback') || '[]');
                 for (const fb of feedback) {
-                    await syncToCloud('feedback', fb);
+                    await syncToCloud('site_feedback', fb);
                 }
                 break;
         }
@@ -570,7 +564,7 @@ window.verifySchema = async function () {
         return;
     }
 
-    const tables = ['books', 'chapters', 'admin_settings', 'homepage_settings', 'stories', 'quotes', 'feedback'];
+    const tables = ['books', 'chapters', 'admin_settings', 'homepage_settings', 'stories', 'quotes', 'site_feedback'];
     let missing = [];
 
     updateSupabaseStatus("Verifying Schema...");

@@ -13,7 +13,8 @@
     <link rel="stylesheet" href="css/style.css">
     <!-- Security: Content Security Policy -->
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://nlgdthlwmagvjvzrubif.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://nlgdthlwmagvjvzrubif.supabase.co wss://nlgdthlwmagvjvzrubif.supabase.co https://api.ipify.org; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; media-src 'self' https://www.soundjay.com; frame-src 'self'; object-src 'none';">
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://nlgdthlwmagvjvzrubif.supabase.co https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://nlgdthlwmagvjvzrubif.supabase.co wss://nlgdthlwmagvjvzrubif.supabase.co https://api.ipify.org; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; media-src 'self' https://www.soundjay.com; frame-src 'self'; object-src 'none';">
+
     <!-- Supabase SDK -->
     <script src="js/lib/supabase-js.js"></script>
     <script src="js/supabase-config.js"></script>
@@ -1490,26 +1491,7 @@
         </div>
         <!-- Admin Edit Icon & Panel (Only visible when admin authenticated) -->
         <div id="admin-edit-controls" style="display: none;">
-            <!-- Floating Edit Button --><button id="floating-admin-edit" onclick="toggleAdminEditPanel()" style="
- position: fixed;
-            bottom: 30px;
-            right: 30px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
-            z-index: 9999;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            " onmouseover=" this.style.transform='scale(1.1) rotate(5deg)' "
-                onmouseout="this.style.transform='scale(1) rotate(0deg)'">✏️ </button>
+
             <!-- Admin Edit Panel (Full-screen Overlay) -->
             <div id="admin-edit-panel" style="
  display: none;
@@ -4084,155 +4066,18 @@
             }
         }
 
-        // --- Cloud-First Initialization Logic ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            const params = new URLSearchParams(window.location.search);
-            const id = params.get('id');
-            if (!id) return;
-
-            // Helper to resolve Supabase Image URL
-            function getImageUrl(path) {
-                if (!path) return 'assets/logo-new.png';
-                if (path.startsWith('http')) return path;
-                // Assuming supabase project url is available in config, but if not we can rely on relative or standard logic
-                if (typeof window.publicSupabaseUrl !== 'undefined') {
-                    return `${window.publicSupabaseUrl}/storage/v1/object/public/book-covers/${path}`;
-                }
-                return path; // Fallback
+        // --- Ad Tracking ---
+        document.addEventListener('click', (e) => {
+            const adContainer = e.target.closest('.ad-container, .vertical-ad-banner');
+            if (adContainer && window.trackAdClick) {
+                const isVertical = adContainer.classList.contains('vertical-ad-banner');
+                const location = isVertical ? 'sidebar' : 'banner';
+                window.trackAdClick('generic_ad_unit', location);
             }
-
-            // Ensure we have the correct resolver
-            const resolveImg = (typeof window.getSupabaseImageUrl === 'function') ? window.getSupabaseImageUrl : getImageUrl;
-
-            async function fetchAndRenderBook() {
-                let bookData = null;
-
-                // 1. Try Supabase
-                if (typeof supabaseClient !== 'undefined') {
-                    try {
-                        // Check if ID is UUID
-                        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-                        let query = supabaseClient.from('books').select('*');
-
-                        if (isUuid) {
-                            query = query.eq('id', id);
-                        } else {
-                            // Try ID column first
-                            query = query.eq('id', id);
-                        }
-
-                        const { data, error } = await query.maybeSingle();
-
-                        if (data && !error) {
-                            bookData = data;
-                            // Normalize naming
-                            bookData.image = bookData.cover_image;
-                            bookData.detailSettings = bookData.detail_settings;
-                            console.log('Loaded book from Cloud:', bookData.title);
-                        }
-                    } catch (e) {
-                        console.warn('Cloud fetch failed:', e);
-                    }
-                }
-
-                // 2. Fallback to LocalStorage
-                if (!bookData) {
-                    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
-                    bookData = library.find(b => b.id === id);
-                    if (bookData) console.log('Loaded book from LocalStorage:', bookData.title);
-                }
-
-                // 3. Render
-                if (bookData) {
-                    renderBookUI(bookData, resolveImg);
-
-                    // Also load related books if logic exists
-                    if (typeof loadRecommendedBooks === 'function') {
-                        // PASS FULL OBJECT to avoid double fetch
-                        loadRecommendedBooks(bookData);
-                    }
-                }
-            }
-
-            // Trigger fetch
-            await fetchAndRenderBook();
         });
 
-        function renderBookUI(item, resolveImg) {
-            const detailSettings = item.detailSettings || {};
-
-            // Title & Meta
-            const titleEl = document.getElementById('detail-title');
-            if (titleEl) titleEl.textContent = item.title;
-
-            // Cover
-            const coverEl = document.getElementById('detail-cover');
-            if (coverEl) coverEl.src = resolveImg(item.image);
-
-            const heroCoverEl = document.getElementById('hero-cover');
-            if (heroCoverEl) heroCoverEl.src = resolveImg(item.image);
-
-            // Description
-            const shortDesc = document.getElementById('detail-description-short');
-            if (shortDesc) shortDesc.textContent = item.description || '';
-            const fullDesc = document.getElementById('detail-description-details');
-            if (fullDesc) fullDesc.textContent = detailSettings.aboutText || item.description || '';
-
-            // Author
-            if (document.getElementById('detail-author')) document.getElementById('detail-author').textContent = item.author;
-            if (document.getElementById('author-name-tab')) document.getElementById('author-name-tab').textContent = item.author;
-            if (document.getElementById('author-bio') && detailSettings.authorBio) document.getElementById('author-bio').textContent = detailSettings.authorBio;
-            if (document.getElementById('author-avatar') && detailSettings.authorPhoto) document.getElementById('author-avatar').src = resolveImg(detailSettings.authorPhoto);
-
-            // Stats
-            if (document.getElementById('stat-rating-stars') && detailSettings.rating) window.animateNumber('#stat-rating-stars', detailSettings.rating);
-            if (document.getElementById('stat-likes-pct') && detailSettings.likes) window.animateNumber('#stat-likes-pct', detailSettings.likes);
-            if (document.getElementById('stat-reviews-count') && detailSettings.reviews) window.animateNumber('#stat-reviews-count', detailSettings.reviews);
-            if (document.getElementById('stat-chapters-count') && detailSettings.chapters) window.animateNumber('#stat-chapters-count', detailSettings.chapters);
-            if (document.getElementById('stat-license') && detailSettings.license) document.getElementById('stat-license').textContent = detailSettings.license;
-            if (document.getElementById('stat-lang') && detailSettings.language) document.getElementById('stat-lang').textContent = detailSettings.language;
-            if (document.getElementById('stat-release') && detailSettings.release) document.getElementById('stat-release').textContent = detailSettings.release;
-
-            // Updated Hero Stats
-            if (document.getElementById('detail-rating-pct') && detailSettings.likes) window.animateNumber('#detail-rating-pct', detailSettings.likes);
-            if (document.getElementById('detail-rating-count') && detailSettings.reviews) window.animateNumber('#detail-rating-count', detailSettings.reviews, 1500, 0, '', ' >');
-
-
-            // Gradient Background
-            if (detailSettings.gradientStart && detailSettings.gradientEnd) {
-                const heroEl = document.querySelector('.detail-hero-ref');
-                if (heroEl) {
-                    heroEl.style.backgroundImage = `
-                         linear-gradient(to right, ${detailSettings.gradientStart}cc, ${detailSettings.gradientEnd}cc),
-                         url('https://wallpapers.com/images/hd/dark-gradient-background-1920-x-1080-87-l12a781.jpg')
-                     `;
-                }
-            }
-
-            // Buttons Color
-            if (detailSettings.buttonColor) {
-                document.querySelectorAll('.btn-start-reading').forEach(btn => {
-                    btn.style.background = detailSettings.buttonColor;
-                });
-            }
-
-            // Tabs
-            if (typeof renderCustomTabs === 'function' && detailSettings.tabs && Array.isArray(detailSettings.tabs)) {
-                renderCustomTabs(detailSettings.tabs, item);
-            }
-
-            // Custom CSS
-            if (detailSettings.customCss) {
-                let styleEl = document.getElementById('dynamic-custom-styles');
-                if (!styleEl) {
-                    styleEl = document.createElement('style');
-                    styleEl.id = 'dynamic-custom-styles';
-                    document.head.appendChild(styleEl);
-                }
-                styleEl.textContent = detailSettings.customCss;
-            }
-        }
     </script>
+    <script src="js/book-detail-init.js"></script>
 </body>
 
 </html>

@@ -14,7 +14,7 @@ window.loadCommonSettings = function () {
     const settings = JSON.parse(localStorage.getItem('commonSettings') || '{}');
     const homepageConfig = JSON.parse(localStorage.getItem('siteHomepageConfig') || '{}');
 
-    if (typeof loadTab1CarouselImages === 'function') loadTab1CarouselImages();
+    // if (typeof loadTab1CarouselImages === 'function') loadTab1CarouselImages();
     if (typeof loadTab2BottomImages === 'function') loadTab2BottomImages();
 
     if (homepageConfig.tips && Array.isArray(homepageConfig.tips)) {
@@ -49,7 +49,7 @@ window.loadCommonSettings = function () {
             if (document.getElementById(`common-feat-desc-${i}`))
                 document.getElementById(`common-feat-desc-${i}`).value = feat.desc || '';
             if (document.getElementById(`common-feat-color-${i}`))
-                document.getElementById(`common-feat-color-${i}`).value = feat.color || '';
+                document.getElementById(`common-feat-color-${i}`).value = feat.color || '#000000';
         }
     }
     if (document.getElementById('common-detail-show-review-snippet')) {
@@ -231,206 +231,21 @@ window.resetCoverDesigner = function () {
 
 // --- From Media.js: Carousel and Banners ---
 
-window.getCarouselImages = function () {
-    return JSON.parse(localStorage.getItem('carouselImages') || '[]');
-};
+// Carousel functions removed
 
-window.saveCarouselImagesStorage = function (images) {
-    localStorage.setItem('carouselImages', JSON.stringify(images));
-    syncSiteImageConfig();
-};
 
 window.syncSiteImageConfig = function () {
-    const carouselImages = getCarouselImages();
-    const bottomImages = getBottomImages();
-
     const config = {
-        carousel: carouselImages.map(img => ({
-            img: img.url,
-            title: img.heading || img.title,
-            desc: img.title || '',
-            badge: img.badge || '',
-            color: '#3b82f6'
-        })),
-        bottomBanners: bottomImages.map(img => img.url)
+        // carousel: carouselImages, // Removed
+        bottomBanners: bottomImages
     };
 
     localStorage.setItem('siteImageConfig', JSON.stringify(config));
     if (typeof syncToCloud === 'function') syncToCloud('images', config);
 };
 
-window.loadTab1CarouselImages = function () {
-    const grid = document.getElementById('tab1-carousel-grid');
-    const countBadge = document.getElementById('tab1-carousel-count');
-    if (!grid) return;
+// Tab 1 Carousel functions removed
 
-    let images = getCarouselImages();
-    if (countBadge) countBadge.textContent = `${images.length} Slide${images.length !== 1 ? 's' : ''}`;
-
-    if (images.length === 0) {
-        grid.innerHTML = '<div style="text-align: center; padding: 40px; color: #64748b;"><p style="font-size: 1.2rem; margin: 0;">No carousel images yet</p></div>';
-        return;
-    }
-
-    grid.innerHTML = images.map((img, index) => {
-        const displayUrl = (img.url === 'logo-new.png') ? 'assets/logo-new.png' : img.url;
-        return `
-        <div class="image-card">
-            <img src="${displayUrl}" alt="${img.title}" onerror="this.src='assets/logo-new.png'">
-            <div class="image-card-body">
-                <h4>${img.title}</h4>
-                <p>Slide #${index + 1}</p>
-                <div style="margin: 10px 0; padding: 8px; background: rgba(59, 130, 246, 0.1); border-radius: 6px;">
-                    <strong style="color: #3b82f6;">Badge:</strong> ${img.badge || 'None'}<br>
-                    <strong style="color: #3b82f6;">Heading:</strong> ${img.heading || 'None'}
-                </div>
-                <div class="image-card-actions">
-                    <button class="img-action-btn edit" onclick="editTab1CarouselImage('${img.id}')">✏️ Edit</button>
-                    <button class="img-action-btn delete" onclick="deleteTab1CarouselImage('${img.id}')">🗑️ Delete</button>
-                </div>
-            </div>
-        </div>
-    `}).join('');
-};
-
-window.openTab1AddImageModal = function () {
-    const modalHtml = `
-        <div id="tab1-image-modal" class="modal" style="display: flex; align-items: center; justify-content: center;">
-            <div class="modal-content" style="max-width: 600px; margin: 0;">
-                <div class="modal-header">
-                    <h3>Add Carousel Image</h3>
-                    <span class="close-modal" onclick="closeTab1ImageModal()">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <img id="tab1-prev-img" src="assets/logo-new.png" style="max-height: 120px; max-width: 100%; border-radius: 8px; border: 2px solid #334155; object-fit: cover;" onerror="this.src='assets/logo-new.png'">
-                    </div>
-                    <div class="form-group-admin">
-                        <label>Image Title</label>
-                        <input type="text" id="tab1-new-title" placeholder="e.g., Master Your Financial Destiny">
-                    </div>
-                    <div class="form-group-admin">
-                        <label>Image URL</label>
-                        <input type="text" id="tab1-new-url" placeholder="Enter image URL or path"
-                            oninput="document.getElementById('tab1-prev-img').src = this.value || 'assets/logo-new.png'">
-                    </div>
-                    <div class="form-group-admin">
-                        <label>Badge Text</label>
-                        <input type="text" id="tab1-new-badge" placeholder="e.g., Featured Guide">
-                    </div>
-                    <div class="form-group-admin">
-                        <label>Main Heading</label>
-                        <input type="text" id="tab1-new-heading" placeholder="e.g., Master Your Financial Destiny">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn-primary" style="background: #ef4444; margin-right: 10px;" onclick="closeTab1ImageModal()">Cancel</button>
-                    <button class="btn-success" style="margin: 0;" onclick="saveTab1NewImage()">Add Image</button>
-                </div>
-            </div>
-        </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-};
-
-window.closeTab1ImageModal = function () {
-    const modal = document.getElementById('tab1-image-modal');
-    if (modal) modal.remove();
-};
-
-window.saveTab1NewImage = function () {
-    const title = document.getElementById('tab1-new-title').value;
-    const url = document.getElementById('tab1-new-url').value;
-    if (!title || !url) {
-        showToast('Please fill in required fields', 'warning');
-        return;
-    }
-    const images = getCarouselImages();
-    images.push({
-        id: 'carousel-' + Date.now(),
-        title: title,
-        url: url,
-        badge: document.getElementById('tab1-new-badge').value,
-        heading: document.getElementById('tab1-new-heading').value
-    });
-    saveCarouselImagesStorage(images);
-    loadTab1CarouselImages();
-    closeTab1ImageModal();
-    showToast('Carousel image added!');
-};
-
-window.editTab1CarouselImage = function (imageId) {
-    const images = getCarouselImages();
-    const image = images.find(img => img.id === imageId);
-    if (!image) return;
-
-    const modalHtml = `
-        <div id="tab1-image-modal" class="modal" style="display: flex; align-items: center; justify-content: center;">
-            <div class="modal-content" style="max-width: 600px; margin: 0;">
-                <div class="modal-header">
-                    <h3>Edit Carousel Image</h3>
-                    <span class="close-modal" onclick="closeTab1ImageModal()">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <img id="tab1-edit-prev-img" src="${image.url}" style="max-height: 120px; max-width: 100%; border-radius: 8px; border: 2px solid #334155; object-fit: cover;" onerror="this.src='assets/logo-new.png'">
-                    </div>
-                    <div class="form-group-admin">
-                        <label>Image Title</label>
-                        <input type="text" id="tab1-edit-title" value="${image.title}">
-                    </div>
-                    <div class="form-group-admin">
-                        <label>Image URL</label>
-                        <input type="text" id="tab1-edit-url" value="${image.url}"
-                            oninput="document.getElementById('tab1-edit-prev-img').src = this.value || 'assets/logo-new.png'">
-                    </div>
-                    <div class="form-group-admin">
-                        <label>Badge Text</label>
-                        <input type="text" id="tab1-edit-badge" value="${image.badge || ''}">
-                    </div>
-                    <div class="form-group-admin">
-                        <label>Main Heading</label>
-                        <input type="text" id="tab1-edit-heading" value="${image.heading || ''}">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn-primary" style="background: #ef4444; margin-right: 10px;" onclick="closeTab1ImageModal()">Cancel</button>
-                    <button class="btn-success" style="margin: 0;" onclick="updateTab1CarouselImage('${imageId}')">Save Changes</button>
-                </div>
-            </div>
-        </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-};
-
-window.updateTab1CarouselImage = function (imageId) {
-    const images = getCarouselImages();
-    const index = images.findIndex(img => img.id === imageId);
-    if (index === -1) return;
-
-    images[index] = {
-        ...images[index],
-        title: document.getElementById('tab1-edit-title').value,
-        url: document.getElementById('tab1-edit-url').value,
-        badge: document.getElementById('tab1-edit-badge').value,
-        heading: document.getElementById('tab1-edit-heading').value
-    };
-
-    saveCarouselImagesStorage(images);
-    loadTab1CarouselImages();
-    closeTab1ImageModal();
-    showToast('Carousel image updated!');
-};
-
-window.deleteTab1CarouselImage = function (imageId) {
-    customConfirm('Delete this carousel image?', 'Delete Slide', '🗑️').then(confirmed => {
-        if (!confirmed) return;
-        const images = getCarouselImages().filter(img => img.id !== imageId);
-        saveCarouselImagesStorage(images);
-        loadTab1CarouselImages();
-        showToast('Carousel image deleted!');
-    });
-};
 
 window.getBottomImages = function () {
     return JSON.parse(localStorage.getItem('bottomImages') || '[]');
@@ -438,6 +253,17 @@ window.getBottomImages = function () {
 
 window.saveBottomImagesStorage = function (images) {
     localStorage.setItem('bottomImages', JSON.stringify(images));
+
+    // Also update siteHomepageConfig for frontend visibility
+    const homeConfig = JSON.parse(localStorage.getItem('siteHomepageConfig') || '{}');
+    homeConfig.bottomBanners = images;
+    localStorage.setItem('siteHomepageConfig', JSON.stringify(homeConfig));
+
+    if (typeof syncToCloud === 'function') {
+        syncToCloud('images', { bottomBanners: images });
+        syncToCloud('homepage', homeConfig);
+    }
+
     syncSiteImageConfig();
 };
 
@@ -454,7 +280,7 @@ window.loadTab2BottomImages = function () {
         return;
     }
 
-    grid.innerHTML = images.map((img, index) => {
+    grid.innerHTML = images.filter(img => img).map((img, index) => {
         const displayUrl = (img.url === 'logo-new.png') ? 'assets/logo-new.png' : img.url;
         return `
         <div class="image-card">

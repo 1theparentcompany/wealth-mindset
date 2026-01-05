@@ -481,8 +481,14 @@ window.loadContentEditorBook = function () {
 
     const mainEl = document.getElementById('content-editor-main');
     const panelEl = document.getElementById('chapter-editor-panel');
+    // chapterSelect is already declared above 
+
+
     if (mainEl) mainEl.style.display = 'block';
     if (panelEl) panelEl.style.display = 'none';
+
+    // Visual feedback: clear chapter selection
+    if (chapterSelect) chapterSelect.value = "";
 };
 
 window.loadChapterForEditing = function () {
@@ -578,49 +584,68 @@ window.saveChapterEdits = function () {
         return;
     }
 
+    const title = document.getElementById('editor-chapter-title')?.value.trim();
+    if (!title) {
+        showToast('Chapter title is required', 'error');
+        return;
+    }
+
+    const content = document.getElementById('editor-chapter-content')?.value.trim();
+    if (!content) {
+        showToast('Chapter content cannot be empty', 'warning');
+    }
+
     customConfirm("Save updates to this chapter?", "Update Content", "📝").then(confirmed => {
         if (!confirmed) return;
 
-        const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
-        const bookIndex = library.findIndex(item => item.id === currentEditorBookId);
+        try {
+            const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+            const bookIndex = library.findIndex(item => item.id === currentEditorBookId);
 
-        if (bookIndex === -1 || !library[bookIndex].chapters[currentEditorChapterIndex]) {
-            showToast('Error: Book or chapter not found', 'error');
-            return;
+            if (bookIndex === -1 || !library[bookIndex].chapters || !library[bookIndex].chapters[currentEditorChapterIndex]) {
+                showToast('Error: Book or chapter not found in library', 'error');
+                return;
+            }
+
+            const getValue = (id, fallback = '') => {
+                const el = document.getElementById(id);
+                return el ? el.value : fallback;
+            };
+
+            const chapter = library[bookIndex].chapters[currentEditorChapterIndex];
+
+            // Update chapter data
+            chapter.title = title;
+            chapter.description = getValue('editor-chapter-desc');
+            chapter.content = getValue('editor-chapter-content');
+
+            chapter.backgroundImage = getValue('editor-chapter-bg');
+            chapter.backgroundStyle = getValue('editor-chapter-bg-style', 'cover');
+            chapter.musicUrl = getValue('editor-chapter-music');
+            chapter.musicVolume = parseInt(getValue('editor-chapter-volume', '30'));
+
+            const loopBtn = document.getElementById('editor-chapter-music-loop');
+            chapter.musicLoop = loopBtn ? loopBtn.checked : true;
+
+            chapter.readingTime = getValue('editor-chapter-reading-time', '5 min');
+            chapter.chapterType = getValue('editor-chapter-type', 'standard');
+            chapter.visibility = getValue('editor-chapter-visibility', 'public');
+            chapter.language = getValue('editor-chapter-language', 'en');
+            chapter.customCss = getValue('editor-chapter-custom-css');
+
+            chapter.lastModified = new Date().toISOString();
+
+            localStorage.setItem('siteLibrary', JSON.stringify(library));
+            if (typeof syncToCloud === 'function') {
+                syncToCloud('library', library[bookIndex]);
+            }
+
+            showToast(`Chapter "${chapter.title}" saved successfully!`, 'success');
+            loadChapterForEditing();
+        } catch (error) {
+            console.error('Failed to save chapter edits:', error);
+            showToast('Failed to save changes. Please check console.', 'error');
         }
-
-        const getValue = (id, fallback = '') => {
-            const el = document.getElementById(id);
-            return el ? el.value : fallback;
-        };
-
-        const chapter = library[bookIndex].chapters[currentEditorChapterIndex];
-
-        chapter.title = getValue('editor-chapter-title');
-        chapter.description = getValue('editor-chapter-desc');
-        chapter.content = getValue('editor-chapter-content');
-
-        chapter.backgroundImage = getValue('editor-chapter-bg');
-        chapter.backgroundStyle = getValue('editor-chapter-bg-style', 'cover');
-        chapter.musicUrl = getValue('editor-chapter-music');
-        chapter.musicVolume = parseInt(getValue('editor-chapter-volume', '30'));
-
-        const loopBtn = document.getElementById('editor-chapter-music-loop');
-        chapter.musicLoop = loopBtn ? loopBtn.checked : true;
-
-        chapter.readingTime = getValue('editor-chapter-reading-time', '5 min');
-        chapter.chapterType = getValue('editor-chapter-type', 'standard');
-        chapter.visibility = getValue('editor-chapter-visibility', 'public');
-        chapter.language = getValue('editor-chapter-language', 'en');
-        chapter.customCss = getValue('editor-chapter-custom-css');
-
-        chapter.lastModified = new Date().toISOString();
-
-        localStorage.setItem('siteLibrary', JSON.stringify(library));
-        if (typeof syncToCloud === 'function') syncToCloud('library', library[bookIndex]);
-
-        showToast(`Chapter "${chapter.title}" has been successfully updated!`);
-        loadChapterForEditing();
     });
 };
 
@@ -806,4 +831,81 @@ window.moveChapter = function (direction) {
         // Don't reload the full form as data is same, just update list order
     }
     showToast('Chapter order updated');
+};
+
+window.previewChapter = function () {
+    const title = document.getElementById('editor-chapter-title')?.value || 'Untitled Chapter';
+    const content = document.getElementById('editor-chapter-content')?.value || '';
+    const bgImage = document.getElementById('editor-chapter-bg')?.value || '';
+    const bgStyle = document.getElementById('editor-chapter-bg-style')?.value || 'cover';
+    const customCss = document.getElementById('editor-chapter-custom-css')?.value || '';
+
+    const previewWindow = window.open('', '_blank');
+    if (!previewWindow) {
+        showToast('Pop-up blocked! Please allow pop-ups to preview chapters.', 'error');
+        return;
+    }
+
+    const html = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Preview: ${title}</title>
+            <link rel="stylesheet" href="css/style.css">
+            <style>
+                body {
+                    margin: 0;
+                    padding: 0;
+                    min-height: 100vh;
+                    background: #0f172a;
+                    color: white;
+                    font-family: 'Inter', sans-serif;
+                    ${bgImage ? `background-image: url('${bgImage}'); background-size: ${bgStyle}; background-position: center; background-attachment: fixed;` : ''}
+                }
+                .preview-overlay {
+                    background: rgba(15, 23, 42, 0.85);
+                    min-height: 100vh;
+                    padding: 60px 20px;
+                }
+                .chapter-container {
+                    max-width: 800px;
+                    margin: 0 auto;
+                    line-height: 1.8;
+                    font-size: 1.1rem;
+                }
+                .chapter-title {
+                    font-size: 2.5rem;
+                    font-family: 'Outfit', sans-serif;
+                    margin-bottom: 40px;
+                    text-align: center;
+                    background: linear-gradient(to right, #60a5fa, #a855f7);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                }
+                ${customCss}
+            </style>
+        </head>
+        <body>
+            <div class="preview-overlay">
+                <div class="chapter-container">
+                    <h1 class="chapter-title">${title}</h1>
+                    <div class="chapter-content">${content}</div>
+                </div>
+            </div>
+            <script>
+                // Basic formatting for the preview
+                const contentDiv = document.querySelector('.chapter-content');
+                if (contentDiv) {
+                    // Simple newline to paragraph conversion if no HTML tags found
+                    if (!/<[a-z][\s\S]*>/i.test(contentDiv.innerHTML)) {
+                        contentDiv.innerHTML = contentDiv.innerHTML.split('\\n').map(p => p.trim() ? \`<p>\${p}</p>\` : '').join('');
+                    }
+                }
+            </script>
+        </body>
+        </html>
+    `;
+
+    previewWindow.document.write(html);
+    previewWindow.document.close();
 };

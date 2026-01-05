@@ -153,10 +153,10 @@ window.saveReviewEdit = async function () {
             comment: comment
         };
 
-        // Only update reviewer_name/username if the name field has a value
+        // Update both columns for compatibility, but prioritize reviewer_name in schema
         if (name && name.trim()) {
+            updateData.reviewer_name = name;
             updateData.username = name;
-            // Try to update reviewer_name too, but don't fail if column doesn't exist
         }
 
         const { error } = await supabaseClient.from('book_reviews').update(updateData).eq('id', id);
@@ -287,7 +287,7 @@ async function toggleAdminInteraction(reviewId, bookId, type) {
 window.featureReviewAdmin = function (name, comment) {
     const showCheckbox = document.getElementById('common-review-show');
     const textInput = document.getElementById('common-review-text');
-    const nameInput = document.getElementById('common-review-name');
+    const nameInput = document.getElementById('common-review-author');
 
     if (showCheckbox) showCheckbox.checked = true;
     if (textInput) textInput.value = comment;

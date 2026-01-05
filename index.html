@@ -14,7 +14,8 @@
   <link rel="stylesheet" href="css/style.css">
   <!-- Security: Content Security Policy -->
   <meta http-equiv="Content-Security-Policy"
-    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://nlgdthlwmagvjvzrubif.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self' https://nlgdthlwmagvjvzrubif.supabase.co wss://nlgdthlwmagvjvzrubif.supabase.co https://api.ipify.org; font-src 'self' https://fonts.gstatic.com; media-src 'self' https://www.soundjay.com; frame-src 'self'; object-src 'none';">
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://nlgdthlwmagvjvzrubif.supabase.co https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://nlgdthlwmagvjvzrubif.supabase.co wss://nlgdthlwmagvjvzrubif.supabase.co https://api.ipify.org https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; media-src 'self' https://www.soundjay.com; frame-src 'self'; object-src 'none';">
+
   <!-- Supabase SDK -->
   <script src="js/lib/supabase-js.js" defer></script>
   <script src="js/supabase-config.js" defer></script>
@@ -196,6 +197,12 @@
       </div>
     </section>
 
+    <!-- NEW: Image 1 Manager Layout -->
+    <div id="home-image-layout-1"
+      style="max-width: var(--max-width); margin: 0 auto 40px; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; padding: 0 20px;">
+      <!-- Images injected via JS -->
+    </div>
+
     <!-- Search Bar Section -->
     <div style="max-width: 800px; margin: 0 auto 60px;">
       <div class="glass"
@@ -217,6 +224,7 @@
         <a href="books.html?filter=story" class="chapter-tab-link">Stories</a>
         <a href="books.html?filter=guide" class="chapter-tab-link">Guides</a>
         <a href="books.html?filter=laws" class="chapter-tab-link">Laws</a>
+        <a href="books.html?filter=custom" class="chapter-tab-link">Custom</a>
         <a href="books.html?filter=quotes" class="chapter-tab-link">Quotes</a>
         <a href="books.html" class="chapter-tab-link browse-all hover-lift">Library</a>
         <a href="#" onclick="openDailyModal(); return false;" class="chapter-tab-link highlight-tab">
@@ -295,289 +303,12 @@
         animation: pulse 2s infinite;
       }
 
-      /* Carousel Navigation & FX */
-      .home-carousel {
-        max-width: 1400px;
-        width: 95%;
-        margin: 0 auto 40px;
-        border-radius: 20px;
-        overflow: hidden;
-        position: relative;
-        height: 480px;
-        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-      }
 
-      .carousel-track-container {
-        position: relative;
-        height: 100%;
-        z-index: 1;
-      }
+      </section>< !-- Hero Carousel Removed -->< !-- Hero Carousel Navigation Placeholder --><script> // Navigation is now handled by the unified script below
+      </script></section>< !-- Categories / Topics Section --><section style="margin-bottom: 80px; max-width: 1400px; margin-left: auto; margin-right: auto; width: 95%;"><div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px;"><div><h2 <section style="margin-bottom: 80px; max-width: var(--max-width); margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box; padding: 0 var(--spacing-unit);"><div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;"><h2 style="font-size: var(--font-size-h3); margin: 0; color: #fff;">Browse Topics</h2><a href="books.html"
+      style="color: var(--color-accent); font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px;"><span>📂</span>Explore All Topics → </a></div><div id="topics-container"
 
-      /* Ambient depth background behind carousel */
-      .carousel-ambient-glow {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 120%;
-        height: 120%;
-        background: radial-gradient(circle, rgba(26, 115, 232, 0.15) 0%, transparent 70%);
-        z-index: 0;
-        pointer-events: none;
-      }
-
-      .carousel-nav {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        background: rgba(15, 23, 42, 0.6) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        color: #fff !important;
-        width: 54px;
-        height: 54px;
-        border-radius: 50%;
-        cursor: pointer;
-        font-size: 1.2rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(10px);
-        transition: all 0.3s !important;
-        z-index: 10;
-      }
-
-      .carousel-nav:hover {
-        background: var(--color-accent) !important;
-        border-color: var(--color-accent) !important;
-        transform: translateY(-50%) scale(1.1);
-        box-shadow: 0 0 20px rgba(26, 115, 232, 0.4);
-      }
-
-      .carousel-nav.prev {
-        left: 30px;
-      }
-
-      .carousel-nav.next {
-        right: 30px;
-      }
-
-      .carousel-overlay {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        padding: 80px 50px;
-        background: linear-gradient(transparent, rgba(6, 11, 25, 0.95));
-        z-index: 2;
-      }
-
-      .dot {
-        width: 25px;
-        height: 4px;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 2px;
-        cursor: pointer;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-
-      .dot.active {
-        width: 50px;
-        background: var(--color-accent);
-      }
-    </style>
-    </section>
-
-    <!-- Hero Carousel Section -->
-    <div style="position: relative;">
-      <div class="carousel-ambient-glow"
-        style="background: radial-gradient(circle, rgba(37, 99, 235, 0.1) 0%, transparent 80%);"></div>
-      <section class="home-carousel"
-        style="border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 40px 80px rgba(0, 0, 0, 0.4);">
-        <div class="carousel-track" id="carousel-track"
-          style="display: flex; transition: transform 0.8s cubic-bezier(0.65, 0, 0.35, 1); height: 100%;">
-          <!-- Individual slides follow -->
-          <div class="carousel-slide" style="min-width: 100%; position: relative;">
-            <img src="assets/carousel-1.png" style="width:100%; height:100%; object-fit:cover;"
-              alt="Wealth & Mindset Banner 1">
-            <div class="carousel-overlay glass"
-              style="background: linear-gradient(transparent, rgba(15, 23, 42, 0.9)); backdrop-filter: none; border: none;">
-              <span class="premium-badge" style="margin-bottom: 20px;">Featured Vision</span>
-              <h2 class="premium-gradient-text"
-                style="font-size: 3.5rem; margin: 10px 0; font-weight: 900; letter-spacing: -2px;">Master Your Financial
-                Destiny</h2>
-              <p style="color: #94a3b8; font-size: 1.2rem; max-width: 650px; opacity: 0.9; line-height: 1.6;">Build an
-                unshakeable mindset and learn the hidden laws of wealth accumulation from the world's most successful
-                individuals.</p>
-            </div>
-          </div>
-          <div class="carousel-slide" style="min-width: 100%; position: relative;">
-            <img src="assets/carousel-2.png" style="width:100%; height:100%; object-fit:cover;"
-              alt="Wealth & Mindset Banner 2">
-            <div class="carousel-overlay glass"
-              style="background: linear-gradient(transparent, rgba(15, 23, 42, 0.9)); backdrop-filter: none; border: none;">
-              <span class="premium-badge" style="margin-bottom: 20px; border-color: #60a5fa; color: #60a5fa;">Public
-                Library</span>
-              <h2 class="premium-gradient-text"
-                style="font-size: 3.5rem; margin: 10px 0; font-weight: 900; letter-spacing: -2px;">The Archive of Wisdom
-              </h2>
-              <p style="color: #94a3b8; font-size: 1.2rem; max-width: 650px; opacity: 0.9; line-height: 1.6;">Gain
-                unlimited access to a collection of transformative guides, stories, and strategy documents designed for
-                growth.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Navigation Arrows -->
-        <button class="carousel-nav prev" id="carousel-prev" aria-label="Previous">❮</button>
-        <button class="carousel-nav next" id="carousel-next" aria-label="Next">❯</button>
-
-        <!-- Indicators -->
-        <div class="carousel-indicators" id="carousel-dots"
-          style="position:absolute; bottom:40px; right:60px; display:flex; gap:12px; z-index: 10;">
-        </div>
-      </section>
-    </div>
-
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        const track = document.getElementById('carousel-track');
-        const dotsContainer = document.getElementById('carousel-dots');
-        const nextBtn = document.getElementById('carousel-next');
-        const prevBtn = document.getElementById('carousel-prev');
-
-        // 1. Dynamic Image Loading
-        const savedImgConfig = localStorage.getItem('siteImageConfig');
-        if (savedImgConfig) {
-          const imgConfig = JSON.parse(savedImgConfig);
-          if (imgConfig.carousel && Array.isArray(imgConfig.carousel) && track) {
-            const validSlides = imgConfig.carousel.filter(s => s && (s.img || s.title));
-            if (validSlides.length > 0) {
-              track.innerHTML = '';
-              if (dotsContainer) dotsContainer.innerHTML = '';
-
-              validSlides.forEach((slide, idx) => {
-                const badgeStyle = slide.color ? `border-color: ${slide.color}; color: ${slide.color};` : '';
-                const slideHtml = `
-                  <div class="carousel-slide" style="min-width: 100%; position: relative;">
-                    <img src="${window.getSupabaseImageUrl(slide.img) || 'https://via.placeholder.com/1200x480?text=No+Image'}" style="width:100%; height:100%; object-fit:cover;" alt="${slide.title || 'Banner'}" ${idx === 0 ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"'}>
-                    <div class="carousel-overlay">
-                      ${slide.badge ? `<span class="premium-badge" style="margin-bottom: 15px; ${badgeStyle}">${slide.badge}</span>` : ''}
-                      <h2 style="font-size: 2.8rem; color: #fff; margin: 10px 0; font-weight: 800;">${slide.title || ''}</h2>
-                      <p style="color: #cbd5e1; font-size: 1.2rem; max-width: 600px; opacity: 0.9;">${slide.desc || ''}</p>
-                    </div>
-                  </div>
-                `;
-                track.innerHTML += slideHtml;
-
-                if (dotsContainer) {
-                  const dot = document.createElement('div');
-                  dot.className = idx === 0 ? 'dot active' : 'dot';
-                  dot.dataset.index = idx;
-                  dotsContainer.appendChild(dot);
-                }
-              });
-            }
-          }
-        }
-
-        // 2. Carousel Logic
-        const slides = Array.from(track.children);
-        const dots = Array.from(document.querySelectorAll('.dot'));
-        let currentIdx = 0;
-        let intervalId;
-
-        function updateCarousel(idx) {
-          if (idx < 0 || idx >= slides.length) return;
-          track.style.transform = `translateX(-${idx * 100}%)`;
-          dots.forEach((dot, i) => {
-            if (dot) {
-              if (i === idx) dot.classList.add('active');
-              else dot.classList.remove('active');
-            }
-          });
-          currentIdx = idx;
-        }
-
-        function nextSlide() {
-          if (slides.length <= 1) return;
-          let next = (currentIdx + 1) % slides.length;
-          updateCarousel(next);
-        }
-
-        function prevSlide() {
-          if (slides.length <= 1) return;
-          let prev = (currentIdx - 1 + slides.length) % slides.length;
-          updateCarousel(prev);
-        }
-
-        function startAuto() {
-          if (slides.length > 1) {
-            intervalId = setInterval(nextSlide, 5000);
-          }
-        }
-
-        function resetAuto() {
-          clearInterval(intervalId);
-          startAuto();
-        }
-
-        if (nextBtn) nextBtn.onclick = () => { nextSlide(); resetAuto(); };
-        if (prevBtn) prevBtn.onclick = () => { prevSlide(); resetAuto(); };
-
-        dots.forEach((dot, i) => {
-          dot.onclick = () => { updateCarousel(i); resetAuto(); };
-        });
-
-        startAuto();
-      });
-    </script>
-
-    </section>
-
-    <!-- Categories / Topics Section -->
-    <section style="margin-bottom: 80px; max-width: 1400px; margin-left: auto; margin-right: auto; width: 95%;">
-      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px;">
-        <div>
-          <h2 <section
-            style="margin-bottom: 80px; max-width: var(--max-width); margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box; padding: 0 var(--spacing-unit);">
-            <div
-              style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;">
-              <h2 style="font-size: var(--font-size-h3); margin: 0; color: #fff;">Browse Topics</h2>
-              <a href="books.html"
-                style="color: var(--color-accent); font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px;">
-                <span>📂</span> Explore All Topics →
-              </a>
-            </div>
-            <div id="topics-container"
-              style="display: grid; grid-template-columns: repeat(auto-fit, minmax(clamp(250px, 30%, 400px), 1fr)); gap: 24px;">
-              <!-- Dynamic Topics injected here -->
-              <a href="books.html?cat=mindset" class="category-card-home hover-lift glass">
-                <span class="icon">🧠</span>
-                <div>
-                  <h3>Mindset Mastery</h3>
-                  <p>Rewire your brain for peak performance and wealth attraction.</p>
-                </div>
-              </a>
-              <a href="books.html?cat=success" class="category-card-home hover-lift glass">
-                <span class="icon">📈</span>
-                <div>
-                  <h3>Success Systems</h3>
-                  <p>Proven frameworks and daily habits of elite high-performers.</p>
-                </div>
-              </a>
-              <a href="books.html?cat=growth" class="category-card-home hover-lift glass">
-                <span class="icon">🚀</span>
-                <div>
-                  <h3>Empire Building</h3>
-                  <p>Strategies for sustainable wealth and legacy creation.</p>
-                </div>
-              </a>
-            </div>
-    </section>
-
-    <style>
-      .category-card-home {
+      style="display: grid; grid-template-columns: repeat(auto-fit, minmax(clamp(250px, 30%, 400px), 1fr)); gap: 24px;">< !-- Dynamic Topics injected here --><a href="books.html?cat=mindset" class="category-card-home hover-lift glass"><span class="icon">🧠</span><div><h3>Mindset Mastery</h3><p>Rewire your brain for peak performance and wealth attraction.</p></div></a><a href="books.html?cat=success" class="category-card-home hover-lift glass"><span class="icon">📈</span><div><h3>Success Systems</h3><p>Proven frameworks and daily habits of elite high-performers.</p></div></a><a href="books.html?cat=growth" class="category-card-home hover-lift glass"><span class="icon">🚀</span><div><h3>Empire Building</h3><p>Strategies for sustainable wealth and legacy creation.</p></div></a></div></section><style>.category-card-home {
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.05);
         padding: 25px;
@@ -989,13 +720,20 @@
       </div>
 
       <style>
+        <style>.marquee-track {
+          transform: translate3d(0, 0, 0);
+          /* Force GPU acceleration */
+          will-change: transform;
+        }
+
         @keyframes scrollMarquee {
           0% {
-            transform: translateX(0);
+            transform: translate3d(0, 0, 0);
           }
 
           100% {
-            transform: translateX(min(-100%, -2100px));
+            transform: translate3d(calc(-50% - 10px), 0, 0);
+            /* Scroll half the duplicated width */
           }
         }
 
@@ -1021,7 +759,7 @@
 
     </div>
     </div>
-    <div id="custom-sections-area"></div>
+    <div id="dynamic-home-sections"></div>
   </main>
 
   <footer
@@ -1049,368 +787,7 @@
     </div>
   </footer>
 
-  <script>
-    // Background Music Control
-    const audio = document.getElementById('bg-music');
-    const musicBtn = document.getElementById('music-toggle');
-    const musicStatus = musicBtn.querySelector('.music-status-text');
-
-    function toggleMusic() {
-      if (audio.paused) {
-        audio.play().then(() => {
-          musicBtn.classList.add('playing');
-          musicStatus.textContent = 'Music: ON';
-        }).catch(err => {
-          alert("Click anywhere on the page first to enable audio playing.");
-        });
-      } else {
-        audio.pause();
-        musicBtn.classList.remove('playing');
-        musicStatus.textContent = 'Music: OFF';
-      }
-    }
-
-    // Auto-pause if user leaves tab
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden && !audio.paused) {
-        audio.pause();
-        musicBtn.classList.remove('playing');
-        musicStatus.textContent = 'Music: OFF';
-      }
-    });
-    // --- Global Row Scrolling Helper ---
-    function scrollRow(id, direction) {
-      const el = document.getElementById(id);
-      if (el) {
-        const amount = el.clientWidth * 0.8;
-        el.scrollBy({ left: amount * direction, behavior: 'smooth' });
-      }
-    }
-
-    // --- Dynamic Content Loader ---
-    document.addEventListener('DOMContentLoaded', async () => {
-
-      function renderHomeImages(imgConfig) {
-        // 1. Carousel
-        if (imgConfig.carousel && Array.isArray(imgConfig.carousel)) {
-          const track = document.getElementById('carousel-track');
-          if (track) {
-            const validSlides = imgConfig.carousel.filter(s => s && s.img);
-            if (validSlides.length > 0) {
-              track.innerHTML = '';
-              validSlides.forEach(slide => {
-                const badgeStyle = slide.color ? `border-color: ${slide.color}; color: ${slide.color};` : '';
-                const html = `
-                      <div class="carousel-slide" style="min-width: 100%; position: relative;">
-                        <img src="${slide.img}" style="width:100%; height:100%; object-fit:cover;" alt="${slide.title || 'Banner'}">
-                        <div class="carousel-overlay">
-                          ${slide.badge ? `<span class="premium-badge" style="margin-bottom: 15px; ${badgeStyle}">${slide.badge}</span>` : ''}
-                          <h2 style="font-size: 2.8rem; color: #fff; margin: 10px 0; font-weight: 800;">${slide.title}</h2>
-                          <p style="color: #cbd5e1; font-size: 1.2rem; max-width: 600px; opacity: 0.9;">${slide.desc}</p>
-                        </div>
-                      </div>
-                    `;
-                track.innerHTML += html;
-              });
-            }
-          }
-        }
-
-        // 2. Wide Bottom Banners (Gallery Marquee)
-        const marqueeSection = document.querySelector('.gallery-marquee-outer');
-        const marqueeTrack = document.getElementById('bottom-banner-marquee');
-
-        let banners = [];
-        if (imgConfig.bottomBanners && Array.isArray(imgConfig.bottomBanners)) {
-          banners = imgConfig.bottomBanners.filter(url => url && url.trim() !== '');
-        } else if (imgConfig.bottomBanner && imgConfig.bottomBanner.trim() !== '') {
-          banners = [imgConfig.bottomBanner];
-        }
-
-        if (banners.length === 0) {
-          banners = [
-            'assets/carousel-1.png',
-            'assets/carousel-2.png',
-            'assets/logo-new.png'
-          ];
-        }
-
-        if (banners.length > 0) {
-          if (marqueeTrack) {
-            marqueeTrack.innerHTML = '';
-            const repeatCount = Math.max(10, Math.ceil(20 / banners.length));
-            for (let i = 0; i < repeatCount; i++) {
-              banners.forEach(url => {
-                const img = document.createElement('img');
-                img.src = url;
-                img.style.cssText = 'height: 250px; width: 400px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);';
-                img.alt = 'Bottom Banner';
-                marqueeTrack.appendChild(img);
-              });
-            }
-            if (marqueeSection) marqueeSection.style.display = 'block';
-          }
-        } else {
-          if (marqueeSection) marqueeSection.style.display = 'none';
-        }
-      }
-
-      // Initial Render from LocalStorage
-      const savedImgConfig = localStorage.getItem('siteImageConfig');
-      if (savedImgConfig) {
-        try { renderHomeImages(JSON.parse(savedImgConfig)); } catch (e) { console.error(e); }
-      }
-
-      let library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
-      let config = JSON.parse(localStorage.getItem('siteHomepageConfig') || '{"exclusive":[],"popular":[],"stories":[],"topics":[],"tips":["","",""]}');
-
-      // If Supabase is configured, try to fetch from cloud
-      if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured()) {
-        try {
-          // Fetch Books
-          const { data: libData } = await supabaseClient.from('books').select('id, title, cover_image, description, detail_settings');
-          if (libData && libData.length > 0) {
-            library = libData.map(item => ({
-              id: item.id,
-              title: item.title,
-              image: item.cover_image,
-              description: item.description,
-              detailSettings: item.detail_settings || {}
-            }));
-          }
-
-          // Fetch Homepage Config
-          const { data: cfgData, error: cfgError } = await supabaseClient.from('homepage_settings').select('*').eq('id', '00000000-0000-0000-0000-000000000001').maybeSingle();
-          if (cfgData) {
-            // Apply Hero Text
-            if (cfgData.hero_title) {
-              const titleEl = document.getElementById('hero-title');
-              if (titleEl) titleEl.textContent = cfgData.hero_title;
-            }
-            if (cfgData.hero_subtitle) {
-              const subtitleEl = document.getElementById('hero-subtitle');
-              if (subtitleEl) subtitleEl.textContent = cfgData.hero_subtitle;
-            }
-
-            // Update Config
-            config = {
-              exclusive: cfgData.exclusive_collection || [],
-              popular: cfgData.popular_books || [],
-              stories: cfgData.success_stories || [],
-              topics: cfgData.browse_topics || [],
-              tips: cfgData.micro_lessons || ["", "", ""],
-              tipHeadings: cfgData.micro_lesson_headings || ["", "", ""],
-              customSections: cfgData.custom_sections || []
-            };
-
-            // Update Images (Carousel & Banner)
-            const newImgConfig = {
-              carousel: cfgData.slider_images || [],
-              bottomBanners: cfgData.bottom_banners || []
-            };
-            renderHomeImages(newImgConfig);
-            localStorage.setItem('siteImageConfig', JSON.stringify(newImgConfig));
-          }
-        } catch (e) {
-          console.warn("Supabase load failed, using local fallback", e);
-        }
-      }
-
-      // Apply Hero Text from config
-      if (config.heroTitle || config.hero_title) {
-        const titleEl = document.getElementById('hero-title');
-        if (titleEl) titleEl.textContent = config.heroTitle || config.hero_title;
-      }
-      if (config.heroSubtitle || config.hero_subtitle) {
-        const subtitleEl = document.getElementById('hero-subtitle');
-        if (subtitleEl) subtitleEl.textContent = config.heroSubtitle || config.hero_subtitle;
-      }
-
-      // 1. Render Exclusive Collection
-      const exclusiveContainer = document.getElementById('collection-scroll');
-      if (exclusiveContainer && config.exclusive.length > 0) {
-        exclusiveContainer.innerHTML = '';
-        config.exclusive.forEach(id => {
-          const book = library.find(b => b.id === id);
-          if (book) {
-            const design = book.coverDesign || {};
-            const bTop = design.badgeTop || 'VOLUME I';
-            const bBottom = design.badgeBottom || 'EXCLUSIVE';
-            const bTopColor = design.badgeTopColor || '#0d9488';
-            const bBottomColor = design.badgeBottomColor || '#000000';
-            const displayTitle = design.title || book.title;
-
-            exclusiveContainer.innerHTML += `
-              <div class="premium-book-card" onclick="window.location.href='book-detail.html?id=${book.id}'">
-                <img src="${design.url || book.cover || book.image || 'assets/logo-new.png'}" alt="${displayTitle}">
-                <div class="badge-container">
-                  <span class="chapter-badge" style="background: ${bTopColor}">${bTop}</span>
-                  <span class="volume-badge" style="background: ${bBottomColor}">${bBottom}</span>
-                </div>
-              </div>
-            `;
-          }
-        });
-      }
-
-      // 2. Render Popular Books
-      const popularContainer = document.getElementById('popular-scroll');
-      if (popularContainer && config.popular.length > 0) {
-        popularContainer.innerHTML = '';
-        config.popular.forEach(id => {
-          const book = library.find(b => b.id === id);
-          if (book) {
-            const design = book.coverDesign || {};
-            const bTop = design.badgeTop || 'PART I';
-            const bBottom = design.badgeBottom || 'POPULAR';
-            const bTopColor = design.badgeTopColor || '#0d9488';
-            const bBottomColor = design.badgeBottomColor || '#000000';
-            const displayTitle = design.title || book.title;
-
-            popularContainer.innerHTML += `
-              <div class="premium-book-card" onclick="window.location.href='book-detail.html?id=${book.id}'">
-                <img src="${design.url || book.cover || book.image || 'assets/logo-new.png'}" alt="${displayTitle}">
-                <div class="badge-container">
-                  <span class="chapter-badge" style="background: ${bTopColor}">${bTop}</span>
-                  <span class="volume-badge" style="background: ${bBottomColor}">${bBottom}</span>
-                </div>
-                <div class="item-overlay"
-                  style="position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(transparent, rgba(6, 11, 25, 0.9)); color: #fff;">
-                  <h4 style="margin: 0; font-size: 1rem; font-weight: 700;">${displayTitle}</h4>
-                </div>
-              </div>
-            `;
-          }
-        });
-      }
-
-      // 3. Render Success Stories
-      const storiesContainer = document.getElementById('stories-scroll');
-      if (storiesContainer && config.stories.length > 0) {
-        storiesContainer.innerHTML = '';
-        config.stories.forEach(id => {
-          const book = library.find(b => b.id === id);
-          if (book) {
-            const design = book.coverDesign || {};
-            const bTop = design.badgeTop || 'SUCCESS';
-            const bBottom = design.badgeBottom || 'STORY';
-            const bTopColor = design.badgeTopColor || '#0d9488';
-            const bBottomColor = design.badgeBottomColor || '#000000';
-            const displayTitle = design.title || book.title;
-
-            storiesContainer.innerHTML += `
-              <div class="premium-book-card" onclick="window.location.href='book-detail.html?id=${book.id}'">
-                <div class="badge-container">
-                  <span class="chapter-badge" style="background: ${bTopColor}">${bTop}</span>
-                  <span class="volume-badge" style="background: ${bBottomColor}">${bBottom}</span>
-                </div>
-                <div style="padding: 30px; height: 100%; display: flex; flex-direction: column; justify-content: center; background: rgba(255,255,255,0.05);">
-                  <h3 style="color: #fff; margin-bottom: 10px; font-size: 1.2rem;">${displayTitle}</h3>
-                  <p style="font-size: 0.85rem; opacity: 0.6;">${book.description ? book.description.substring(0, 60) + '...' : 'An inspirational journey.'}</p>
-                </div>
-              </div>
-            `;
-          }
-        });
-      }
-
-      // 3.5 Render Custom Sections
-      if (config.customSections && config.customSections.length > 0) {
-        const dynamicContainer = document.getElementById('dynamic-home-sections');
-        if (dynamicContainer) {
-          dynamicContainer.innerHTML = '';
-          config.customSections.forEach(sec => {
-            if (!sec.items || sec.items.length === 0) return;
-
-            // Build HTML for items
-            let itemsHtml = '';
-            sec.items.forEach(id => {
-              const book = library.find(b => b.id === id);
-              if (book) {
-                const design = book.coverDesign || {};
-                const bTop = design.badgeTop || 'PART I';
-                const bBottom = design.badgeBottom || 'FEATURED';
-                const bTopColor = design.badgeTopColor || '#0d9488';
-                const bBottomColor = design.badgeBottomColor || '#000000';
-                const displayTitle = design.title || book.title;
-
-                itemsHtml += `
-                            <div class="premium-book-card" onclick="window.location.href='book-detail.html?id=${book.id}'">
-                                <img src="${design.url || book.cover || book.image || 'assets/logo-new.png'}" alt="${displayTitle}">
-                                <div class="badge-container">
-                                  <span class="chapter-badge" style="background: ${bTopColor}">${bTop}</span>
-                                  <span class="volume-badge" style="background: ${bBottomColor}">${bBottom}</span>
-                                </div>
-                                <div class="item-overlay" style="position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(transparent, rgba(6, 11, 25, 0.9)); color: #fff;">
-                                  <h4 style="margin: 0; font-size: 1rem; font-weight: 700;">${displayTitle}</h4>
-                                </div>
-                            </div>
-                          `;
-              }
-            });
-
-            // Inject Section with proper layout structure
-            const scrollId = `scroll-custom-${sec.id}`;
-            dynamicContainer.innerHTML += `
-                    <section style="margin-bottom: 80px; max-width: 1400px; margin-left: auto; margin-right: auto; width: 95%;">
-                      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px;">
-                        <div>
-                          <h2 style="font-size: 2.2rem; margin: 0; display: flex; align-items: center; gap: 15px; color: #fff;">
-                            <span style="background: rgba(37, 99, 235, 0.1); padding: 10px; border-radius: 12px;">${sec.icon}</span> ${sec.title}
-                          </h2>
-                        </div>
-                      </div>
-                      <div class="section-scroll-wrapper">
-                        <button class="row-nav-btn prev" onclick="document.getElementById('${scrollId}').scrollBy({left: -300, behavior: 'smooth'})">❮</button>
-                        <button class="row-nav-btn next" onclick="document.getElementById('${scrollId}').scrollBy({left: 300, behavior: 'smooth'})">❯</button>
-                        <div class="horizontal-scroll-list" id="${scrollId}">
-                          ${itemsHtml}
-                        </div>
-                      </div>
-                    </section>
-                  `;
-          });
-        }
-      }
-
-      // 4. Update Micro Lessons
-      if (config.tips) {
-        for (let i = 1; i <= 3; i++) {
-          const tipHead = document.getElementById(`tip-head-${i}`);
-          const tipContent = document.getElementById(`tip-content-${i}`);
-          if (tipHead && config.tipHeadings && config.tipHeadings[i - 1]) {
-            tipHead.textContent = config.tipHeadings[i - 1];
-          }
-          if (tipContent && config.tips[i - 1]) {
-            tipContent.textContent = config.tips[i - 1];
-          }
-        }
-      }
-
-      // 5. Update Browse Topics
-      if (config.topics && config.topics.length > 0) {
-        const topicsGrid = document.querySelector('section div[style*="repeat(auto-fit, minmax(320px, 1fr))"]');
-        if (topicsGrid) {
-          topicsGrid.innerHTML = '';
-          const catIcons = { mindset: '🧠', success: '📈', growth: '🚀', finance: '💰', business: '💼', habits: '🔄' };
-          const catSubtitles = { mindset: 'Rewire your brain for success.', success: 'Daily routines of high performers.', growth: 'Become the best version of yourself.', finance: 'Master your money game.', business: 'Build your own empire.', habits: 'Small wins every day.' };
-
-          config.topics.forEach(cat => {
-            const catKey = cat.toLowerCase();
-            const displayName = cat.charAt(0).toUpperCase() + cat.slice(1);
-            topicsGrid.innerHTML += `
-                    <a href="books.html?cat=${catKey}" class="category-card-home premium-glow-hover">
-                      <span class="icon">${catIcons[catKey] || '📂'}</span>
-                      <div>
-                        <h3>${displayName}</h3>
-                        <p>${catSubtitles[catKey] || 'Explore our collection of ' + displayName + '.'}</p>
-                      </div>
-                    </a>
-                  `;
-          });
-        }
-      }
-    });
+  <script src="js/script.js"></script>
   </script>
 
 </body>

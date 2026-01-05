@@ -14,12 +14,11 @@ async function initLibrary() {
     // Load Taxonomy
     let taxonomy = JSON.parse(localStorage.getItem('siteTaxonomy') || '{}');
     const defaultTaxonomy = {
-        'book': { icon: '📘' },
-        'story': { icon: '📖' },
-        'guide': { icon: '🧭' },
-        'laws': { icon: '⚖️' },
-        'chapter': { icon: '📝' },
-        'quotes': { icon: '📄' }
+        'book': { icon: '📚', genres: ['Inspiration', 'Education', 'Finance', 'Psychology', 'Business', 'Self-Help', 'Biography'] },
+        'story': { icon: '📖', genres: ['Inspirational', 'Motivational', 'Success Story', 'Biographical', 'Classic', 'Fictional'] },
+        'guide': { icon: '🧭', genres: ['Wealth Management', 'Personal Growth', 'Study Guide', 'Technical', 'How-To'] },
+        'laws': { icon: '⚖️', genres: ['Finance Laws', 'Legal Rights', 'Property Laws', 'Tax Code', 'General'] },
+        'custom': { icon: '✨', genres: ['General', 'Special', 'Misc'] }
     };
 
     // Load stored items (Fallback only)
@@ -32,13 +31,15 @@ async function initLibrary() {
     // If Supabase is configured, try to fetch from cloud
     if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured()) {
         try {
-            // Fetch Taxonomy
-            const { data: taxData, error: taxError } = await supabaseClient.from('site_taxonomy').select('*');
-            if (taxData && taxData.length > 0) {
-                taxonomy = {};
-                taxData.forEach(t => {
-                    taxonomy[t.category_name] = { icon: t.icon, genres: t.genres };
-                });
+            // Fetch Taxonomy from admin_settings
+            const { data: settingsData, error: settingsError } = await supabaseClient
+                .from('admin_settings')
+                .select('content_types')
+                .limit(1)
+                .maybeSingle();
+
+            if (settingsData && settingsData.content_types) {
+                taxonomy = settingsData.content_types;
             }
 
             // Fetch Books (Light data only, but include detail_settings for customization)
@@ -150,6 +151,14 @@ async function initLibrary() {
         const select = document.getElementById('library-type-filter');
         if (select) {
             select.value = filter;
+        }
+    }
+
+    const searchQuery = params.get('q');
+    if (searchQuery) {
+        const searchInput = document.getElementById('library-global-search');
+        if (searchInput) {
+            searchInput.value = searchQuery;
         }
     }
 

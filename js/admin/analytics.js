@@ -17,6 +17,17 @@ window.initCharts = async function () {
     await loadRealTimeActivity();
     await loadTopPerformingBooks();
     await loadAdPerformance();
+
+    // Setup Polling (60s)
+    if (!window.analyticsPollingInterval) {
+        window.analyticsPollingInterval = setInterval(() => {
+            if (window.currentActiveSection === 'site-analytics') {
+                updateAnalyticsMetrics();
+                loadRealTimeActivity();
+                console.log("Analytics: Polled latest data.");
+            }
+        }, 60000);
+    }
 };
 
 window.updateAnalyticsMetrics = async function () {
@@ -30,26 +41,19 @@ window.updateAnalyticsMetrics = async function () {
     try {
         if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured() && window.supabaseClient) {
 
-            // 1. Total Unique Visitors (by IP in last 30 days for performance)
-            const { count: userCount } = await supabaseClient
-                .from('user_activity')
-                .select('ip_address', { count: 'exact', head: true })
-                .gt('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()); // Approx unique for efficiency
+            // 1. Total Unique Visitors (Accurate from site_visitors table)
+            const { count: visitorCount } = await supabaseClient
+                .from('site_visitors')
+                .select('*', { count: 'exact', head: true });
 
-            // Note: Accurate unique count requires distinct query which supabase-js simple count doesn't do easily without RPC.
-            // For now, we use a raw count of sessions or simple approximation if table is huge.
-            // Better: Use a dedicated "visitors" table or RPC. Here we'll just show total activity count as proxy or keep it simple.
-            // Let's stick to unique IPs from a small sample or just total rows for "Activity" if scaling is issue.
-            const { data: uniqueIps } = await supabaseClient
-                .from('user_activity')
-                .select('ip_address')
-                .range(0, 1000); // Sample based unique count for speed
-
-            if (uniqueIps) {
-                const uniqueSet = new Set(uniqueIps.map(a => a.ip_address));
-                // Multiplier for estimation if > 1000
-                totalUsersEl.textContent = (uniqueSet.size > 900 ? "1000+" : uniqueSet.size.toLocaleString());
+            if (visitorCount !== null) {
+                totalUsersEl.textContent = visitorCount.toLocaleString() + (visitorCount >= 1000 ? "+" : "");
             }
+
+
+            // Update timestamp
+            const ts = document.getElementById('analytics-last-update');
+            if (ts) ts.textContent = `Last sync: ${new Date().toLocaleTimeString()}`;
 
 
             // 2. Total Page Views
@@ -103,12 +107,23 @@ async function renderTrafficChart() {
 
     try {
         if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured() && window.supabaseClient) {
+            const dateRange = document.getElementById('analytics-date-range')?.value || '7';
+            const daysToFetch = parseInt(dateRange === 'custom' ? '30' : dateRange);
             const today = new Date();
-            for (let i = 6; i >= 0; i--) {
+
+            labels = [];
+            visitorData = [];
+
+            for (let i = daysToFetch - 1; i >= 0; i--) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);
                 const dateStr = date.toISOString().split('T')[0];
-                labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+
+                // Only show weekday for 7 days, otherwise date
+                const label = daysToFetch <= 7
+                    ? date.toLocaleDateString('en-US', { weekday: 'short' })
+                    : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                labels.push(label);
 
                 const { count } = await supabaseClient
                     .from('user_activity')
@@ -126,6 +141,7 @@ async function renderTrafficChart() {
         labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
         visitorData = [120, 190, 150, 220, 280, 310, 350]; // Demo
     }
+
 
     if (trafficChartInstance) trafficChartInstance.destroy();
     const trafficCtx = trafficCanvas.getContext('2d');
@@ -237,21 +253,32 @@ window.loadRealTimeActivity = async function () {
         if (error) throw error;
 
         container.innerHTML = data.map(act => {
+            const typeIcons = {
+                'page_view': '📄',
+                'ad_click': '💰',
+                'chapter_read': '📖',
+                'cookie_accept': '🛡️'
+            };
             const typeLabels = {
                 'page_view': '<span style="color:#3b82f6">Page View</span>',
                 'ad_click': '<span style="color:#f59e0b">Ad Click</span>',
                 'chapter_read': '<span style="color:#a855f7">Chapter Read</span>',
                 'cookie_accept': '<span style="color:#10b981">Cookie Consent</span>'
             };
+            const icon = typeIcons[act.activity_type] || '⚡';
             const label = typeLabels[act.activity_type] || act.activity_type;
-            const detail = act.page_url ? act.page_url.split('/').pop() : 'N/A';
-            const location = act.metadata?.ad_location ? `(${act.metadata.ad_location})` : '';
+            const fullUrl = act.page_url || '#';
+            const pageName = act.page_url ? act.page_url.split('/').pop().split('?')[0] || 'Home' : 'N/A';
+            const detailLink = `<a href="${fullUrl}" target="_blank" style="color: #60a5fa; text-decoration: none; display: flex; align-items: center; gap: 5px;">
+                <span>🔗</span> ${pageName}
+            </a>`;
+            const location = act.metadata?.ad_location ? `<span style="font-size: 0.75rem; opacity: 0.7;">[${act.metadata.ad_location}]</span>` : '';
 
             return `
             <tr style="border-bottom: 1px solid #1e293b; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
                 <td style="padding: 12px; font-family: monospace; color: #94a3b8;">${new Date(act.created_at).toLocaleTimeString()}</td>
-                <td style="padding: 12px; font-weight: 600;">${label}</td>
-                <td style="padding: 12px; color: #cbd5e1;">${detail} ${location}</td>
+                <td style="padding: 12px; font-weight: 600;">${icon} ${label}</td>
+                <td style="padding: 12px; color: #cbd5e1;">${detailLink} ${location}</td>
                 <td style="padding: 12px; font-family: monospace; color: #64748b;">${act.ip_address}</td>
             </tr>
         `}).join('');
@@ -335,4 +362,30 @@ async function loadAdPerformance() {
 
     tbody.innerHTML = `<tr><td colspan="3" style="padding: 20px; text-align: center; color: #64748b;">No ad clicks recorded yet.</td></tr>`;
 }
+
+// CSV Export Utility
+window.exportAnalyticsToCSV = function (tableId, filename) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+
+    let csv = [];
+    const rows = table.querySelectorAll('tr');
+
+    for (let i = 0; i < rows.length; i++) {
+        const row = Array.from(rows[i].querySelectorAll('th, td')).map(cell => {
+            let text = cell.innerText.replace(/"/g, '""');
+            return `"${text}"`;
+        }).join(',');
+        csv.push(row);
+    }
+
+    const csvContent = "data:text/csv;charset=utf-8," + csv.join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", filename || "analytics_export.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
 

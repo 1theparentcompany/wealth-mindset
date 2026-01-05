@@ -7,12 +7,11 @@ window.currentChapterIndex = 0;
 window.currentEditId = null;
 
 window.categoryMap = {
-    'book': { icon: '📔', genres: ['Inspiration', 'Education', 'Finance', 'Psychology', 'Business', 'Self-Help'] },
-    'story': { icon: '📖', genres: ['Inspirational', 'Motivational', 'Success Story', 'Biographical', 'Classic'] },
-    'guide': { icon: '🧭', genres: ['Wealth Management', 'Personal Growth', 'Study Guide', 'Technical'] },
-    'laws': { icon: '⚖️ ', genres: ['Finance Laws', 'Legal Rights', 'Property Laws', 'General'] },
-    'chapter': { icon: '📄 ', genres: ['Snippet', 'Short Reading', 'Quote'] },
-    'quates': { icon: '📄', genres: ['General'] }
+    'book': { icon: '📚', genres: ['Inspiration', 'Education', 'Finance', 'Psychology', 'Business', 'Self-Help', 'Biography'] },
+    'story': { icon: '📖', genres: ['Inspirational', 'Motivational', 'Success Story', 'Biographical', 'Classic', 'Fictional'] },
+    'guide': { icon: '🧭', genres: ['Wealth Management', 'Personal Growth', 'Study Guide', 'Technical', 'How-To'] },
+    'laws': { icon: '⚖️', genres: ['Finance Laws', 'Legal Rights', 'Property Laws', 'Tax Code', 'General'] },
+    'custom': { icon: '✨', genres: ['General', 'Special', 'Misc'] }
 };
 
 // --- NAVIGATION ---
@@ -79,6 +78,7 @@ window.initTaxonomy = function () {
             Object.assign(categoryMap, parsed);
         } catch (e) { console.error("Taxonomy parse failed", e); }
     }
+    initializeContentTypeDropdown();
 };
 window.startNewContent = function () {
     window.currentEditId = null;
@@ -97,6 +97,9 @@ window.startNewContent = function () {
         chaptersDiv.innerHTML = '<p style="color: #64748b; font-size: 0.9rem;">Chapters will appear here after splitting.</p>';
     }
 
+    // Initialize content type dropdown
+    initializeContentTypeDropdown();
+
     if (typeof updateSubcategories === 'function') updateSubcategories();
 
     const publishBtn = document.querySelector('.split-results-panel .btn-success');
@@ -111,4 +114,26 @@ window.startNewContent = function () {
     showSection('manage-content');
     if (typeof updateLineNumbers === 'function') updateLineNumbers();
     if (typeof saveDraft === 'function') saveDraft();
+};
+
+// New helper function to initialize content type dropdown
+window.initializeContentTypeDropdown = function () {
+    const typeSelect = document.getElementById('content-type');
+    if (!typeSelect) return;
+
+    // Clear existing options
+    typeSelect.innerHTML = '';
+
+    // Populate with categoryMap entries
+    Object.keys(categoryMap).forEach(key => {
+        const opt = document.createElement('option');
+        opt.value = key;
+        opt.textContent = `${categoryMap[key].icon} ${key.charAt(0).toUpperCase() + key.slice(1)}`;
+        typeSelect.appendChild(opt);
+    });
+
+    // Set default to 'book'
+    if (categoryMap['book']) {
+        typeSelect.value = 'book';
+    }
 };
