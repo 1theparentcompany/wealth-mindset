@@ -24,6 +24,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Mobile Menu Logic ---
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+    const mobileMenuBackdrop = document.getElementById('menu-backdrop');
+    const closeMobileMenuBtn = document.getElementById('close-mobile-menu');
+
+    function toggleMobileMenu() {
+        if (!mobileMenuOverlay) return;
+        const isActive = mobileMenuOverlay.classList.contains('active');
+        if (isActive) {
+            mobileMenuOverlay.classList.remove('active');
+            if (mobileMenuBackdrop) mobileMenuBackdrop.classList.remove('active');
+            document.body.style.overflow = '';
+        } else {
+            mobileMenuOverlay.classList.add('active');
+            if (mobileMenuBackdrop) mobileMenuBackdrop.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+    }
+
+    if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+    if (closeMobileMenuBtn) closeMobileMenuBtn.addEventListener('click', toggleMobileMenu);
+    if (mobileMenuBackdrop) mobileMenuBackdrop.addEventListener('click', toggleMobileMenu);
+
     if (toggleBtn) {
         toggleBtn.addEventListener('click', () => {
             const isDark = body.classList.contains('dark-mode') || body.classList.contains('home-theme');
@@ -344,6 +368,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const sectionId = `custom-sec-${idx}`;
             const iconHtml = sec.icon ? `<span style="margin-right: 10px;">${sec.icon}</span>` : '';
 
+            // Use popup for view all, fallback to library if no items
+            const viewAllAction = `openSectionModal('custom', ${idx}); return false;`;
+
             const html = `
                 <section style="margin-bottom: 80px; max-width: var(--max-width); margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box; padding: 0 var(--spacing-unit);">
                   <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px;">
@@ -351,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${iconHtml}
                         ${sec.title}
                     </h2>
-                    <a href="books.html" style="color: var(--color-accent); font-weight: 700; text-decoration: none;">View All →</a>
+                    <a href="#" onclick="${viewAllAction}" style="color: var(--color-accent); font-weight: 700; text-decoration: none;">View All →</a>
                   </div>
                   <div class="section-scroll-wrapper">
                     <button class="row-nav-btn prev" onclick="scrollRow('${sectionId}', -1)">❮</button>
@@ -365,10 +392,97 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Section Modal Logic ---
+    window.openSectionModal = function (type, customIndex = -1) {
+        const modal = document.getElementById('section-modal');
+        const grid = document.getElementById('section-modal-grid');
+        const titleEl = document.getElementById('section-modal-title');
+        const badgeEl = document.getElementById('section-modal-badge');
+
+        if (!modal || !grid) return;
+
+        // Load Data
+        const homepageConfig = JSON.parse(localStorage.getItem('siteHomepageConfig') || '{}');
+        const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+
+        let items = [];
+        let title = "Collection";
+        let icon = "📚";
+
+        if (type === 'exclusive') {
+            title = "Exclusive Collection";
+            icon = "📚";
+            items = homepageConfig.exclusive || [];
+        } else if (type === 'popular') {
+            title = "Popular Picks";
+            icon = "🔥";
+            items = homepageConfig.popular || [];
+        } else if (type === 'custom' && customIndex >= 0) {
+            const sec = homepageConfig.customSections[customIndex];
+            if (sec) {
+                title = sec.title;
+                icon = sec.icon || "✨";
+                items = sec.items || [];
+            }
+        }
+
+        // Update Header
+        titleEl.textContent = title;
+        badgeEl.textContent = `${icon} Collection`;
+
+        // Render Grid
+        grid.innerHTML = '';
+        if (items.length === 0) {
+            grid.innerHTML = `<p style="color: #94a3b8; grid-column: 1/-1; text-align: center;">No items found in this collection.</p>`;
+        } else {
+            items.forEach(id => {
+                const book = library.find(b => b.id === id);
+                if (!book) return;
+
+                const cover = window.getSupabaseImageUrl ? window.getSupabaseImageUrl(book.image) : (book.image || 'assets/logo-new.png');
+                let badge1 = (book.chapters && book.chapters.length > 0) ? `${book.chapters.length} CHAPTERS` : '0 CHAPTERS';
+                let badge2 = book.author ? book.author.toUpperCase() : 'AUTHOR';
+
+                const card = `
+                    <div class="premium-book-card" onclick="window.location.href='book-detail.html?id=${book.id}'" style="cursor: pointer;">
+                        <img src="${cover}" alt="${book.title}" loading="lazy">
+                        <div class="badge-container">
+                            <span class="chapter-badge">${badge1}</span>
+                            <span class="volume-badge">${badge2}</span>
+                        </div>
+                        <div style="padding: 15px;">
+                            <h4 style="color: #fff; margin: 0; font-size: 0.95rem;">${book.title}</h4>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += card;
+            });
+        }
+
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    };
+
+    window.closeSectionModal = function () {
+        const modal = document.getElementById('section-modal');
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    };
+
+    // Close on click outside
+    document.addEventListener('click', (e) => {
+        const modal = document.getElementById('section-modal');
+        if (modal && e.target === modal) {
+            window.closeSectionModal();
+        }
+    });
+
     // --- Global Search Logic ---
     window.handleGlobalSearch = function (e) {
         if (e && e.preventDefault) e.preventDefault();
-        const searchInput = document.querySelector('.search-bar-section input, #library-global-search, .site-main input[type="text"]');
+        const searchInput = document.querySelector('.search-bar-section input, .site-main input[type="text"]');
         if (!searchInput) return;
 
         const query = searchInput.value.trim();
@@ -385,7 +499,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    const searchInputs = document.querySelectorAll('.search-bar-section input, #library-global-search, .site-main input[type="text"]');
+    const searchInputs = document.querySelectorAll('.search-bar-section input, .site-main input[type="text"]');
     searchInputs.forEach(input => {
         input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -406,10 +520,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!book) return;
 
             const cover = window.getSupabaseImageUrl ? window.getSupabaseImageUrl(book.image) : (book.image || 'assets/logo-new.png');
-            let badge1 = 'PREMIUM';
-            let badge2 = 'BOOK';
-            if (book.chapters && book.chapters.length > 0) badge1 = `${book.chapters.length} CHAPTERS`;
-            if (book.author) badge2 = book.author.toUpperCase();
+            let badge1 = (book.chapters && book.chapters.length > 0) ? `${book.chapters.length} CHAPTERS` : '0 CHAPTERS';
+            let badge2 = book.author ? book.author.toUpperCase() : 'AUTHOR';
 
             const html = `
                 <div class="premium-book-card" onclick="window.location.href='book-detail.html?id=${book.id}'">

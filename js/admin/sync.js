@@ -126,6 +126,12 @@ window.syncToCloud = async function (type, data, identifier = null) {
                         }
                     }
                 }
+
+                // Clear detail page cache to ensure updates are visible immediately
+                if (typeof CacheUtils !== 'undefined') {
+                    CacheUtils.clear(`book_detail_${savedBook.id}`);
+                    console.log(`[Sync] Cleared detail cache for: ${savedBook.id}`);
+                }
                 break;
             case 'library_delete':
                 await supabaseClient.from('books').delete().eq('id', identifier);

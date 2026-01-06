@@ -686,3 +686,29 @@
             /* Warning Red */
             box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
         }
+
+        /* Generic Tab Buttons */
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+            font-size: 0.95rem;
+            font-weight: 700;
+            padding: 10px 24px;
+            border-radius: 100px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        .tab-btn.active {
+            background: #3b82f6;
+            color: #fff;
+            border-color: #3b82f6;
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+        }

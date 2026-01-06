@@ -336,12 +336,26 @@ window.editLibraryItem = function (id) {
     showToast(`Editing: ${item.title}`);
 };
 
+// Initial Tab State
+window.currentFeedbackTab = 'feedback';
+
+window.switchFeedbackTab = function (tab) {
+    window.currentFeedbackTab = tab;
+
+    // Update UI
+    document.querySelectorAll('#feedback-inbox .tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(`tab-btn-${tab}`).classList.add('active');
+
+    // Reload Data
+    renderFeedbackTable();
+};
+
 window.renderFeedbackTable = async function () {
     const tbody = document.getElementById('feedback-table-body');
     const emptyMsg = document.getElementById('feedback-empty-msg');
     if (!tbody) return;
 
-    tbody.innerHTML = '<tr><td colspan="5" style="padding: 40px; text-align: center; color: #64748b;">Loading feedback...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="padding: 40px; text-align: center; color: #64748b;">Loading...</td></tr>';
 
     let feedback = [];
 
@@ -365,16 +379,88 @@ window.renderFeedbackTable = async function () {
         feedback = JSON.parse(localStorage.getItem('siteFeedback') || '[]');
     }
 
+    // 3. Filter based on active tab
+    const filteredFeedback = feedback.filter(item => {
+        let isReport = item.topic === 'content_report' || item.type === 'content_report';
+
+        // Robust check: inspect JSON message if not already identified
+        if (!isReport && item.message && typeof item.message === 'string' && item.message.trim().startsWith('{')) {
+            try {
+                const payload = JSON.parse(item.message);
+                if (payload.type === 'content_report' || payload.topic === 'content_report') {
+                    isReport = true;
+                }
+            } catch (e) {
+                // Not JSON
+            }
+        }
+
+        if (window.currentFeedbackTab === 'report') {
+            return isReport;
+        } else {
+            return !isReport;
+        }
+    });
+
     tbody.innerHTML = '';
-    if (feedback.length === 0) {
-        if (emptyMsg) emptyMsg.style.display = 'block';
+    if (filteredFeedback.length === 0) {
+        if (emptyMsg) {
+            emptyMsg.style.display = 'block';
+            const msg = window.currentFeedbackTab === 'report' ? 'No reported content found.' : 'No feedback messages found.';
+            emptyMsg.querySelector('p').textContent = msg;
+        }
         return;
     }
     if (emptyMsg) emptyMsg.style.display = 'none';
 
-    feedback.forEach(item => {
+    filteredFeedback.forEach(item => {
         const dateStr = item.created_at ? new Date(item.created_at).toLocaleString() : (item.date || 'Unknown');
         const isRead = item.status === 'read';
+
+        let badgeColor = '#94a3b8';
+        let badgeText = (item.topic || 'General').toUpperCase();
+        let displayMessage = item.message;
+        let extraInfo = '';
+
+        let isReportItem = item.topic === 'content_report' || item.type === 'content_report';
+
+        if (!isReportItem && item.message && typeof item.message === 'string' && item.message.trim().startsWith('{')) {
+            try {
+                const p = JSON.parse(item.message);
+                if (p.type === 'content_report' || p.topic === 'content_report') isReportItem = true;
+            } catch (e) { }
+        }
+
+        // Check if report (legacy type or new topic)
+        if (isReportItem) {
+            badgeColor = '#ef4444';
+            badgeText = 'REPORTED';
+
+            // Try to parse message for JSON payload
+            try {
+                if (item.message && item.message.startsWith('{')) {
+                    const payload = JSON.parse(item.message);
+                    if (payload.reason) {
+                        displayMessage = `Reason: ${payload.reason}`;
+
+                        // Extract metadata from payload if not in item
+                        const meta = payload.metadata || item.metadata;
+                        if (meta) {
+                            const source = meta.source ? meta.source.replace('_', ' ') : 'Unknown';
+                            const url = meta.url || '#';
+                            extraInfo = `<br><span style="font-size:0.75rem; color:#64748b;">Source: ${source} • <a href="${url}" target="_blank" style="color:#3b82f6; text-decoration:none;">View Page</a></span>`;
+                        }
+                    }
+                } else if (item.metadata) {
+                    // Legacy format support
+                    const source = item.metadata.source ? item.metadata.source.replace('_', ' ') : 'Unknown';
+                    const url = item.metadata.url || '#';
+                    extraInfo = `<br><span style="font-size:0.75rem; color:#64748b;">Source: ${source} • <a href="${url}" target="_blank" style="color:#3b82f6; text-decoration:none;">View Page</a></span>`;
+                }
+            } catch (e) {
+                // Keep original message if parse fails
+            }
+        }
 
         const tr = document.createElement('tr');
         tr.style.borderBottom = '1px solid #1e293b';
@@ -384,15 +470,16 @@ window.renderFeedbackTable = async function () {
             <td style="padding: 15px; color: #64748b; font-size: 0.85rem;">${dateStr}</td>
             <td style="padding: 15px; color: white; font-weight: 500;">
                 ${item.name || 'Anonymous'}<br>
-                <small style="color:#64748b">${item.email || 'No email'}</small>
+                <small style="color:#64748b">${item.email || 'No contact info'}</small>
             </td>
             <td style="padding: 15px;">
-                <span style="background:rgba(30, 41, 59, 0.5); padding:4px 10px; border-radius:100px; font-size:0.75rem; color:#94a3b8; border: 1px solid rgba(255,255,255,0.05);">
-                    ${(item.topic || 'General').toUpperCase()}
+                <span style="background:rgba(30, 41, 59, 0.5); padding:4px 10px; border-radius:100px; font-size:0.75rem; color:${badgeColor}; border: 1px solid rgba(255,255,255,0.05); font-weight: 700;">
+                    ${badgeText}
                 </span>
             </td>
             <td style="padding: 15px; max-width: 400px; line-height: 1.5; color: #cbd5e1;">
-                ${item.message}
+                ${displayMessage}
+                ${extraInfo}
             </td>
             <td style="padding: 15px; white-space: nowrap;">
                 <div style="display: flex; gap: 10px; align-items: center;">

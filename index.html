@@ -141,9 +141,24 @@
         <a href="about.html" class="nav-about">About</a>
         <a href="contact.html" class="nav-contact">Contact</a>
         <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+        <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Open menu">⋮</button>
       </nav>
     </div>
   </header>
+
+  <!-- Mobile Menu Overlay -->
+  <div class="menu-backdrop" id="menu-backdrop"></div>
+  <div class="mobile-menu-overlay" id="mobile-menu-overlay">
+    <div class="mobile-menu-header">
+      <button class="close-mobile-menu" id="close-mobile-menu">×</button>
+    </div>
+    <nav class="mobile-nav-links">
+      <a href="index.html">Home</a>
+      <a href="books.html">Library</a>
+      <a href="about.html">About</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
   <script src="js/script.js" defer></script>
 
   <audio id="bg-music" loop preload="auto">
@@ -206,13 +221,13 @@
     </section>
 
     <!-- Search Bar Section -->
-    <div style="max-width: 800px; margin: 0 auto 60px;">
-      <div class="glass"
+    <div class="home-search-container" style="max-width: 800px; margin: 0 auto 60px;">
+      <div class="glass home-search-box"
         style="position: relative; border-radius: 20px; padding: 6px; display: flex; align-items: center; gap: 10px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
-        <span style="padding-left: 20px; font-size: 1.2rem; opacity: 0.7;">🔍</span>
-        <input type="text" placeholder="Search for books, wisdom, or strategies..."
+        <span class="search-icon" style="padding-left: 20px; font-size: 1.2rem; opacity: 0.7;">🔍</span>
+        <input type="text" class="search-input" placeholder="Search for books, wisdom, or strategies..."
           style="flex: 1; background: transparent; border: none; color: #fff; padding: 16px 0; font-size: 1.1rem; outline: none; font-family: var(--font-primary); font-weight: 500;">
-        <button class="hover-lift"
+        <button class="search-btn hover-lift"
           style="background: var(--color-accent); border: none; color: #fff; padding: 14px 28px; border-radius: 12px; font-weight: 700; margin-right: 5px; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);">Search</button>
       </div>
     </div>
@@ -306,11 +321,7 @@
       }
 
 
-      </section>< !-- Hero Carousel Removed -->< !-- Hero Carousel Navigation Placeholder --><script> // Navigation is now handled by the unified script below
-      </script></section>< !-- Categories / Topics Section --><section style="margin-bottom: 80px; max-width: 1400px; margin-left: auto; margin-right: auto; width: 95%;"><div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px;"><div><h2 <section style="margin-bottom: 80px; max-width: var(--max-width); margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box; padding: 0 var(--spacing-unit);"><div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;"><h2 style="font-size: var(--font-size-h3); margin: 0; color: #fff;">Browse Topics</h2><a href="books.html"
-      style="color: var(--color-accent); font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px;"><span>📂</span>Explore All Topics → </a></div><div id="topics-container"
-
-      style="display: grid; grid-template-columns: repeat(auto-fit, minmax(clamp(250px, 30%, 400px), 1fr)); gap: 24px;">< !-- Dynamic Topics injected here --><a href="books.html?cat=mindset" class="category-card-home hover-lift glass"><span class="icon">🧠</span><div><h3>Mindset Mastery</h3><p>Rewire your brain for peak performance and wealth attraction.</p></div></a><a href="books.html?cat=success" class="category-card-home hover-lift glass"><span class="icon">📈</span><div><h3>Success Systems</h3><p>Proven frameworks and daily habits of elite high-performers.</p></div></a><a href="books.html?cat=growth" class="category-card-home hover-lift glass"><span class="icon">🚀</span><div><h3>Empire Building</h3><p>Strategies for sustainable wealth and legacy creation.</p></div></a></div></section><style>.category-card-home {
+      </script></section>< !-- Categories / Topics Section --><section style="margin-bottom: 80px; max-width: 1400px; margin-left: auto; margin-right: auto; width: 95%;"><div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;"><h2 style="font-size: var(--font-size-h3); margin: 0; color: #fff;">Browse Topics</h2><a href="books.html" style="color: var(--color-accent); font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px;"><span>📂</span>Explore All Topics → </a></div><div id="topics-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(clamp(250px, 30%, 400px), 1fr)); gap: 24px;">< !-- Dynamic Topics injected here --></div></section><style>.category-card-home {
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.05);
         padding: 25px;
@@ -413,7 +424,7 @@
           <span style="background: rgba(13, 148, 136, 0.1); padding: 12px; border-radius: 12px;">📚</span> Exclusive
           Collection
         </h2>
-        <a href="books.html"
+        <a href="#" onclick="openSectionModal('exclusive'); return false;"
           style="color: var(--color-accent); font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px;">
           <span>📋</span> View All →
         </a>
@@ -424,48 +435,6 @@
         <button class="scroll-nav-btn next" id="collection-next" aria-label="Scroll right">❯</button>
         <div class="book-scroll-container" id="exclusive-scroll-container">
           <!-- Dynamic Content injected here -->
-          <!-- Vol 5 -->
-          <div class="premium-book-card" onclick="window.location.href='book-detail.html?id=al-mizan-5'">
-            <img src="assets/al_mizan_cover.png" alt="Al-Mizan Volume 5" loading="lazy">
-            <div class="badge-container">
-              <span class="chapter-badge">CHAPTER 3 (1 - 41)</span>
-              <span class="volume-badge">VOLUME 5</span>
-            </div>
-          </div>
-          <!-- Vol 6 -->
-          <div class="premium-book-card" onclick="window.location.href='book-detail.html?id=al-mizan-6'">
-            <img src="assets/al_mizan_cover.png" alt="Al-Mizan Volume 6" loading="lazy">
-            <div class="badge-container">
-              <span class="chapter-badge">CHAPTER 3 (42 - 120)</span>
-              <span class="volume-badge">VOLUME 6</span>
-            </div>
-          </div>
-          <!-- Vol 7 -->
-          <div class="premium-book-card" onclick="window.location.href='book-detail.html?id=al-mizan-7'">
-            <img src="assets/al_mizan_cover.png" alt="Al-Mizan Volume 7" loading="lazy">
-            <div class="badge-container">
-              <span class="chapter-badge" style="background: #15803d;">CHAPTER 3 (121 - 200)</span>
-              <span class="chapter-badge">CHAPTER 4 (1 - 10)</span>
-              <span class="volume-badge">VOLUME 7</span>
-            </div>
-          </div>
-          <!-- Vol 8 -->
-          <div class="premium-book-card" onclick="window.location.href='book-detail.html?id=al-mizan-8'">
-            <img src="assets/al_mizan_cover.png" alt="Al-Mizan Volume 8" loading="lazy">
-            <div class="badge-container">
-              <span class="chapter-badge">CHAPTER 4 (11 - 76)</span>
-              <span class="volume-badge">VOLUME 8</span>
-            </div>
-          </div>
-          <!-- Vol 9 -->
-          <div class="premium-book-card" onclick="window.location.href='book-detail.html?id=al-mizan-9'">
-            <img src="assets/al_mizan_cover.png" alt="Al-Mizan Volume 9" loading="lazy">
-            <div class="badge-container">
-              <span class="chapter-badge" style="background: #15803d;">CHAPTER 4 (77 - 176)</span>
-              <span class="chapter-badge">CHAPTER 5 (1 - 3)</span>
-              <span class="volume-badge">VOLUME 9</span>
-            </div>
-          </div>
         </div>
       </div>
     </section>
@@ -502,7 +471,7 @@
           <p style="margin: 12px 0 0; color: #94a3b8; font-size: 1.05rem;">Hand-selected titles trending in our
             community.</p>
         </div>
-        <a href="books.html" class="hover-lift"
+        <a href="#" onclick="openSectionModal('popular'); return false;" class="hover-lift"
           style="color: var(--color-accent); font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px; background: rgba(37, 99, 235, 0.1); padding: 10px 20px; border-radius: 100px; font-size: 0.9rem;">
           View All →
         </a>
@@ -676,7 +645,7 @@
       </div>
 
       <style>
-        <style>.marquee-track {
+        .marquee-track {
           transform: translate3d(0, 0, 0);
           /* Force GPU acceleration */
           will-change: transform;
@@ -747,6 +716,36 @@
   </script>
 
 </body>
+
+<!-- SECTION LIST MODAL -->
+<div id="section-modal" class="daily-modal-overlay">
+  <div class="daily-modal-content" style="max-width: 900px; width: 95%;">
+    <!-- Section Header -->
+    <div class="daily-header"
+      style="flex-direction: row; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px;">
+      <div>
+        <span class="daily-badge" id="section-modal-badge" style="background: var(--color-accent); color: white;">📚
+          Collection</span>
+        <h2 id="section-modal-title" style="margin-top: 10px;">Popular Picks</h2>
+      </div>
+      <button class="close-modal-btn" onclick="closeSectionModal()" style="position: static; margin: 0;">×</button>
+    </div>
+
+    <!-- Scrollable List -->
+    <div class="daily-body" style="padding-top: 20px;">
+      <div id="section-modal-grid"
+        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+        <!-- Items injected via JS -->
+        <div class="premium-book-card">
+          <div
+            style="height: 280px; background: rgba(255,255,255,0.05); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+            <span style="opacity: 0.5;">Loading...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- DAILY MINDSET MODAL -->
 <div id="daily-modal" class="daily-modal-overlay">

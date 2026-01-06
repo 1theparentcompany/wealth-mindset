@@ -198,3 +198,56 @@ window.customPrompt = (message, defaultValue = '', title = 'Input Required', ico
         areaEl.addEventListener('keydown', onEnter);
     });
 };
+
+window.customReport = (title = 'Report Content', icon = '🚩') => {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('report-modal');
+        const titleEl = document.getElementById('report-title');
+        const iconEl = document.getElementById('report-icon');
+        const nameInput = document.getElementById('report-name');
+        const reasonInput = document.getElementById('report-reason');
+        const okBtn = document.getElementById('report-ok-btn');
+        const cancelBtn = document.getElementById('report-cancel-btn');
+
+        if (!modal) {
+            const name = prompt("Enter your name:", "");
+            const reason = prompt("Enter reason for reporting:", "");
+            if (name && reason) resolve({ name, reason });
+            else resolve(null);
+            return;
+        }
+
+        titleEl.textContent = title;
+        iconEl.textContent = icon;
+        nameInput.value = '';
+        reasonInput.value = '';
+
+        modal.style.display = 'flex';
+        setTimeout(() => nameInput.focus(), 100);
+
+        const handleResolve = (val) => {
+            modal.style.display = 'none';
+            cleanup();
+            resolve(val);
+        };
+
+        const onCancel = () => handleResolve(null);
+        const onConfirm = () => {
+            const name = nameInput.value.trim();
+            const reason = reasonInput.value.trim();
+            if (!name || !reason) {
+                if (window.showToast) window.showToast('Please fill in both fields', 'warning');
+                else alert('Please fill in both fields');
+                return;
+            }
+            handleResolve({ name, reason });
+        };
+
+        const cleanup = () => {
+            okBtn.removeEventListener('click', onConfirm);
+            cancelBtn.removeEventListener('click', onCancel);
+        };
+        okBtn.addEventListener('click', onConfirm);
+        cancelBtn.addEventListener('click', onCancel);
+    });
+};

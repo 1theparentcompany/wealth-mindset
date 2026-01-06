@@ -39,8 +39,24 @@
             <a href="about.html">About</a>
             <a href="contact.html">Contact</a>
             <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+            <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Open menu">⋮</button>
         </nav>
+        </div>
     </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="menu-backdrop" id="menu-backdrop"></div>
+    <div class="mobile-menu-overlay" id="mobile-menu-overlay">
+        <div class="mobile-menu-header">
+            <button class="close-mobile-menu" id="close-mobile-menu">×</button>
+        </div>
+        <nav class="mobile-nav-links">
+            <a href="index.html">Home</a>
+            <a href="books.html">Library</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+        </nav>
+    </div>
     <script src="js/script.js" defer></script>
     <script src="js/books.js" defer></script>
 
@@ -81,7 +97,7 @@
                     <div id="library-main-view">
                         <header style="margin-bottom: 50px;">
                             <h1 class="premium-gradient-text"
-                                style="font-size: 4rem; margin-bottom: 12px; font-weight: 800; letter-spacing: -3px; font-family: var(--font-heading); line-height: 1;">
+                                style="font-size: clamp(2.5rem, 8vw, 4rem); margin-bottom: 12px; font-weight: 800; letter-spacing: -3px; font-family: var(--font-heading); line-height: 1;">
                                 The Library</h1>
                             <p
                                 style="opacity: 0.7; font-size: 1.25rem; font-weight: 500; color: var(--color-text); max-width: 600px;">
@@ -96,7 +112,7 @@
                                     style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); opacity: 0.5; color: var(--color-text);">🔍</span>
                                 <input type="text" id="library-global-search" class="search-input-alt"
                                     style="padding-left: 45px;" placeholder="Search library..."
-                                    oninput="handleGlobalSearch()">
+                                    oninput="handleLibrarySearch()">
                             </div>
                             <div class="toolbar-item toolbar-filter">
                                 <select id="library-type-filter" class="search-input-alt"

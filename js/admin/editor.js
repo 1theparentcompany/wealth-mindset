@@ -160,8 +160,8 @@ window.syncScroll = function () {
     if (previewBox && lineNumbers) lineNumbers.scrollTop = previewBox.scrollTop;
 };
 
-window.insertFormatting = function (tag) {
-    const previewBox = document.getElementById('preview-box');
+window.insertFormatting = function (tag, targetId = 'preview-box') {
+    const previewBox = document.getElementById(targetId);
     if (!previewBox) return;
 
     const start = previewBox.selectionStart;
@@ -372,55 +372,57 @@ window.splitAtLine = function () {
     }
 };
 
-const fileInput = document.createElement('input');
-fileInput.type = 'file';
-fileInput.accept = '.pdf,.txt';
-fileInput.onchange = e => {
-    const file = e.target.files[0];
-    if (!file) return;
+if (!window.fileInputElement) {
+    window.fileInputElement = document.createElement('input');
+    window.fileInputElement.type = 'file';
+    window.fileInputElement.accept = '.pdf,.txt';
+    window.fileInputElement.onchange = e => {
+        const file = e.target.files[0];
+        if (!file) return;
 
-    const reader = new FileReader();
-    const status = document.getElementById('extraction-status');
+        const reader = new FileReader();
+        const status = document.getElementById('extraction-status');
 
-    if (file.type === "application/pdf") {
-        if (status) status.textContent = "Extracting text from PDF... Please wait.";
-        reader.onload = async function () {
-            const typedarray = new Uint8Array(this.result);
-            if (typeof pdfjsLib !== 'undefined') {
-                const pdf = await pdfjsLib.getDocument(typedarray).promise;
-                let fullText = "";
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    fullText += textContent.items.map(item => item.str).join(" ") + "\n";
+        if (file.type === "application/pdf") {
+            if (status) status.textContent = "Extracting text from PDF... Please wait.";
+            reader.onload = async function () {
+                const typedarray = new Uint8Array(this.result);
+                if (typeof pdfjsLib !== 'undefined') {
+                    const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                    let fullText = "";
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        fullText += textContent.items.map(item => item.str).join(" ") + "\n";
+                    }
+                    if (typeof window.initContent === 'function') window.initContent(fullText);
+                    if (status) {
+                        status.textContent = `File Loaded: ${file.name}`;
+                        status.style.color = "#10b981";
+                    }
                 }
-                if (typeof window.initContent === 'function') window.initContent(fullText);
+            };
+            reader.readAsArrayBuffer(file);
+        } else {
+            if (status) status.textContent = "Reading text file...";
+            reader.onload = function () {
+                if (typeof window.initContent === 'function') window.initContent(this.result);
                 if (status) {
                     status.textContent = `File Loaded: ${file.name}`;
                     status.style.color = "#10b981";
                 }
-            }
-        };
-        reader.readAsArrayBuffer(file);
-    } else {
-        if (status) status.textContent = "Reading text file...";
-        reader.onload = function () {
-            if (typeof window.initContent === 'function') window.initContent(this.result);
-            if (status) {
-                status.textContent = `File Loaded: ${file.name}`;
-                status.style.color = "#10b981";
-            }
-        };
-        reader.readAsText(file);
-    }
-};
+            };
+            reader.readAsText(file);
+        }
+    };
+}
 
 window.triggerUpload = function () {
-    fileInput.click();
+    if (window.fileInputElement) window.fileInputElement.click();
 };
 
 window.handleDroppedFile = function (file) {
-    fileInput.onchange({ target: { files: [file] } });
+    if (window.fileInputElement) window.fileInputElement.onchange({ target: { files: [file] } });
 };
 
 // --- Restored Chapter Editor & Assistant Functions ---
@@ -908,4 +910,167 @@ window.previewChapter = function () {
 
     previewWindow.document.write(html);
     previewWindow.document.close();
+};
+
+// --- Original Content Management ---
+
+window.openOriginalEditor = function () {
+    if (window.currentEditorBookId === null) {
+        showToast('Please select a book first', 'warning');
+        return;
+    }
+
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const book = library.find(item => item.id === currentEditorBookId);
+    if (!book) return;
+
+    // Load existing original content if any
+    const fields = {
+        'original-edit-title': book.originalTitle,
+        'original-edit-content': book.originalContent,
+        'original-edit-bg': book.originalBg,
+        'original-edit-music': book.originalMusic,
+        'original-edit-volume': book.originalMusicVolume || 30,
+        'original-edit-desc': book.originalDesc,
+        'original-edit-custom-css': book.originalCustomCss
+    };
+
+    for (const [id, val] of Object.entries(fields)) {
+        const el = document.getElementById(id);
+        if (el) el.value = val || (id === 'original-edit-volume' ? 30 : '');
+    }
+
+    const loopBtn = document.getElementById('original-edit-music-loop');
+    if (loopBtn) loopBtn.checked = book.originalMusicLoop !== false;
+
+    const volumeDisplay = document.getElementById('original-volume-display');
+    if (volumeDisplay) volumeDisplay.textContent = (book.originalMusicVolume || 30) + '%';
+
+    updateOriginalLineNumbers();
+
+    const modal = document.getElementById('original-content-modal');
+    if (modal) modal.style.display = 'block';
+};
+
+window.closeOriginalEditor = function () {
+    const modal = document.getElementById('original-content-modal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.saveOriginalContent = function () {
+    const title = document.getElementById('original-edit-title').value.trim();
+    const content = document.getElementById('original-edit-content').value.trim();
+
+    if (!currentEditorBookId) {
+        showToast('Selection error. Please reload.', 'error');
+        return;
+    }
+
+    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+    const bookIndex = library.findIndex(item => item.id === currentEditorBookId);
+
+    if (bookIndex === -1) {
+        showToast('Error saving original content', 'error');
+        return;
+    }
+
+    const getValue = (id, fallback = '') => {
+        const el = document.getElementById(id);
+        return el ? el.value : fallback;
+    };
+
+    // Update book with original content and metadata
+    const book = library[bookIndex];
+    book.originalTitle = title;
+    book.originalContent = content;
+    book.originalBg = getValue('original-edit-bg');
+    book.originalMusic = getValue('original-edit-music');
+    book.originalMusicVolume = parseInt(getValue('original-edit-volume', '30'));
+
+    const loopBtn = document.getElementById('original-edit-music-loop');
+    book.originalMusicLoop = loopBtn ? loopBtn.checked : true;
+
+    book.originalDesc = getValue('original-edit-desc');
+    book.originalCustomCss = getValue('original-edit-custom-css');
+    book.lastModified = new Date().toISOString();
+
+    localStorage.setItem('siteLibrary', JSON.stringify(library));
+
+    if (typeof syncToCloud === 'function') {
+        syncToCloud('library', library[bookIndex]);
+    }
+
+    showToast('Original book content saved successfully!', 'success');
+    closeOriginalEditor();
+};
+
+window.updateOriginalLineNumbers = function () {
+    const editorTextArea = document.getElementById('original-edit-content');
+    const editorLineNumbers = document.getElementById('original-editor-line-numbers');
+    if (!editorTextArea || !editorLineNumbers) return;
+
+    const lines = editorTextArea.value.split('\n').length;
+    let lineStr = "";
+    for (let i = 1; i <= lines; i++) {
+        lineStr += i + "\n";
+    }
+    editorLineNumbers.textContent = lineStr;
+};
+
+// Line numbering system for the Original Editor
+const originalTextArea = document.getElementById('original-edit-content');
+const originalLineNumbers = document.getElementById('original-editor-line-numbers');
+if (originalTextArea && originalLineNumbers) {
+    originalTextArea.addEventListener('input', updateOriginalLineNumbers);
+    originalTextArea.addEventListener('scroll', () => {
+        originalLineNumbers.scrollTop = originalTextArea.scrollTop;
+    });
+}
+
+window.insertOriginalAssistantHeading = function () {
+    const headingText = document.getElementById('original-assistant-heading-text').value.trim();
+    const type = document.getElementById('original-assistant-heading-type').value;
+    const font = document.getElementById('original-assistant-heading-font').value;
+    const weight = document.getElementById('original-assistant-heading-weight').value;
+
+    if (!headingText) {
+        showToast('Please enter heading text', 'warning');
+        return;
+    }
+
+    const style = `font-family: ${font}; font-weight: ${weight}; margin-top: 25px; margin-bottom: 15px; color: #fff; line-height: 1.4; display: block;`;
+    const html = `<${type} style="${style}">${headingText}</${type}>\n`;
+
+    smartInsertIntoOriginalContent(html);
+    document.getElementById('original-assistant-heading-text').value = '';
+};
+
+window.insertOriginalAssistantImage = function () {
+    const imageUrl = document.getElementById('original-assistant-image-url').value.trim();
+
+    const html = imageUrl
+        ? `\n<div style="text-align:center; margin: 30px 0;">\n    <img src="${imageUrl}" style="max-width:100%; border-radius:12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);" alt="Original Source Image">\n</div>\n`
+        : `\n<div style="text-align:center; margin: 40px 0; padding: 40px; border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px; background: rgba(255,255,255,0.02);">\n    <div style="font-size: 2rem; margin-bottom: 10px; opacity: 0.3;">🖼️</div>\n    <p style="margin: 0; color: #64748b; font-size: 0.9rem;">[ Replace this with your image URL ]</p>\n</div>\n`;
+
+    smartInsertIntoOriginalContent(html);
+    document.getElementById('original-assistant-image-url').value = '';
+};
+
+window.smartInsertIntoOriginalContent = function (html) {
+    const textarea = document.getElementById('original-edit-content');
+    const lineNumInput = document.getElementById('original-assistant-line-num');
+    const lineNum = parseInt(lineNumInput.value);
+
+    if (isNaN(lineNum) || lineNum <= 0) {
+        insertAtCursor(textarea, html);
+    } else {
+        const lines = textarea.value.split('\n');
+        const insertIdx = Math.min(lineNum - 1, lines.length);
+        lines.splice(insertIdx, 0, html);
+        textarea.value = lines.join('\n');
+
+        lineNumInput.value = '';
+        const event = new Event('input', { bubbles: true });
+        textarea.dispatchEvent(event);
+    }
 };

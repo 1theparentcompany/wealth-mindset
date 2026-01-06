@@ -1,4 +1,4 @@
-// Metadata Management for Admin Panel - Comprehensive Redesign
+﻿// Metadata Management for Admin Panel - Comprehensive Redesign
 if (typeof window.currentMetaFilter === 'undefined') {
     window.currentMetaFilter = 'book';
 }
@@ -34,7 +34,7 @@ window.renderMetadataItemList = function () {
 
     const mkBtn = (type) => {
         const isActive = currentMetaFilter === type;
-        const info = categoryMap[type] || { icon: '📄', label: type };
+        const info = categoryMap[type] || { icon: 'ðŸ“„', label: type };
         const label = info.icon + ' ' + (type.charAt(0).toUpperCase() + type.slice(1)) + 's';
 
         return `<button onclick="setMetaFilter('${type}')" style="padding: 8px 12px; border-radius: 6px; border: 1px solid ${isActive ? '#3b82f6' : 'rgba(255,255,255,0.1)'}; background: ${isActive ? 'rgba(59, 130, 246, 0.1)' : 'transparent'}; color: ${isActive ? '#3b82f6' : '#64748b'}; cursor: pointer; font-weight: 700; transition: all 0.2s; font-size: 0.8rem; white-space: nowrap;">${label}</button>`;
@@ -85,7 +85,7 @@ window.renderMetadataItemList = function () {
         };
         div.onclick = () => selectMetadataItem(item.id);
 
-        const typeInfo = categoryMap[currentMetaFilter] || { icon: '📄' };
+        const typeInfo = categoryMap[currentMetaFilter] || { icon: 'ðŸ“„' };
         const icon = typeInfo.icon;
         div.innerHTML = `
             <span style="font-size: 1.2rem;">${icon}</span>
@@ -161,14 +161,14 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
     // -- Initialize Stats if not present --
     if (!settings.stats) {
         settings.stats = (item.type === 'book' || !item.type) ? [
-            { label: 'Avg Rating', value: `⭐ ${item.rating || '0.0'} / 5.0` },
-            { label: 'Likes Score', value: `👍 ${item.likes_percent || '0'}% Liked` },
-            { label: 'Reviews', value: `💬 ${item.reviews_count || '0'} Reviews` },
-            { label: 'Chapter Count', value: `📖 ${item.chapters_count || (Array.isArray(item.chapters) ? item.chapters.length : '0')} Chapters` }
+            { label: 'Avg Rating', value: `â­ ${item.rating || '0.0'} / 5.0` },
+            { label: 'Likes Score', value: `ðŸ‘ ${item.likes_percent || '0'}% Liked` },
+            { label: 'Reviews', value: `ðŸ’¬ ${item.reviews_count || '0'} Reviews` },
+            { label: 'Chapter Count', value: `ðŸ“– ${item.chapters_count || (Array.isArray(item.chapters) ? item.chapters.length : '0')} Chapters` }
         ] : [
-            { label: 'Read Time', value: `⏱️ ${item.read_time || '0 min'}` },
-            { label: 'Source', value: `🔗 ${item.original_source || 'Unknown'}` },
-            { label: 'Status', value: `🚀 ${item.status || 'Draft'}` }
+            { label: 'Read Time', value: `â±ï¸ ${item.read_time || '0 min'}` },
+            { label: 'Source', value: `ðŸ”— ${item.original_source || 'Unknown'}` },
+            { label: 'Status', value: `ðŸš€ ${item.status || 'Draft'}` }
         ];
         // Save defaults
         item.detailSettings = settings;
@@ -195,10 +195,10 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
                         <div style="display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px;">
                             <span style="background: #fbbf24; color: #000; font-size: 0.65rem; font-weight: 900; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px;">PREMIUM</span>
                             <span style="background: #3b82f6; color: #fff; font-size: 0.65rem; font-weight: 900; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 4px;">
-                                <span>${(categoryMap[item.type] && categoryMap[item.type].icon) || '📚'}</span>
+                                <span>${(categoryMap[item.type] && categoryMap[item.type].icon) || 'ðŸ“š'}</span>
                                 ${item.type ? item.type.toUpperCase() : 'BOOK'}
                             </span>
-                            <span onclick="editMetadataField('${item.id}', 'type', 'Classification (book/story/laws/guide/custom)')" style="color: #64748b; cursor: pointer; font-size: 0.8rem; margin-left: 10px;">✎ ${item.type || 'book'}</span>
+                            <span onclick="editMetadataField('${item.id}', 'type', 'Classification (book/story/laws/guide/custom)')" style="color: #64748b; cursor: pointer; font-size: 0.8rem; margin-left: 10px;">âœŽ ${item.type || 'book'}</span>
                         </div>
                         
                         <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 15px;">
@@ -210,19 +210,19 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
                         
                         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 25px; font-size: 1.15rem; color: #94a3b8;">
                             <span onclick="editMetadataField('${item.id}', 'author', 'Author Name')" style="cursor: pointer; color: #fff; font-weight: 600;">${item.author || 'Author Name'}</span>
-                            <span>•</span>
-                            <span style="color: #fbbf24; font-weight: 700;">⭐ ${item.rating || '0.0'} / 5.0</span>
-                            <span onclick="editMetadataField('${item.id}', 'rating', 'Rating (0-5)')" style="color: #3b82f6; cursor: pointer; font-size: 0.8rem;">✎</span>
+                            <span>â€¢</span>
+                            <span style="color: #fbbf24; font-weight: 700;">â­ ${item.rating || '4.8'} / 5.0</span>
+                            <span onclick="editMetadataField('${item.id}', 'rating', 'Rating (0-5)')" style="color: #3b82f6; cursor: pointer; font-size: 0.8rem;">âœŽ</span>
                             <span style="margin-left: 10px; color: #10b981; font-weight: 700; background: rgba(16, 185, 129, 0.1); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; text-transform: uppercase;">
                                 ${item.category || 'General'}
                             </span>
-                            <span onclick="editMetadataField('${item.id}', 'category', 'Category')" style="color: #3b82f6; cursor: pointer; font-size: 0.8rem;">✎</span>
+                            <span onclick="editMetadataField('${item.id}', 'category', 'Category')" style="color: #3b82f6; cursor: pointer; font-size: 0.8rem;">âœŽ</span>
                         </div>
 
                         <!-- Stats Row -->
                         <div style="display: flex; gap: 20px; margin-bottom: 35px;">
                             <div style="display: flex; flex-direction: column; gap: 5px;">
-                                <div style="font-size: 1.5rem; font-weight: 800; color: #10b981;">${item.likes_percent || '0'}%</div>
+                                <div style="font-size: 1.5rem; font-weight: 800; color: #10b981;">${item.likes_percent || '85'}%</div>
                                 <div style="font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 700;">Community Score</div>
                                 <div onclick="editMetadataField('${item.id}', 'likes_percent', 'Likes %')" style="color: #3b82f6; cursor: pointer; font-size: 0.7rem;">Edit %</div>
                             </div>
@@ -264,28 +264,28 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
                                 ${item.type === 'book' || !item.type ? `
                                     <div>
                                         <label style="display:block; color:#64748b; font-size:0.7rem; font-weight:800; margin-bottom:4px;">PUBLISHER</label>
-                                        <div onclick="editMetadataField('${item.id}', 'detailSettings.publisher', 'Publisher Name')" style="color:#e2e8f0; font-size:0.9rem; cursor:pointer;">${settings.publisher || '--'} ✎</div>
+                                        <div onclick="editMetadataField('${item.id}', 'detailSettings.publisher', 'Publisher Name')" style="color:#e2e8f0; font-size:0.9rem; cursor:pointer;">${settings.publisher || '--'} âœŽ</div>
                                     </div>
                                     <div>
                                         <label style="display:block; color:#64748b; font-size:0.7rem; font-weight:800; margin-bottom:4px;">ISBN / ID</label>
-                                        <div onclick="editMetadataField('${item.id}', 'detailSettings.isbn', 'ISBN')" style="color:#e2e8f0; font-size:0.9rem; cursor:pointer;">${settings.isbn || '--'} ✎</div>
+                                        <div onclick="editMetadataField('${item.id}', 'detailSettings.isbn', 'ISBN')" style="color:#e2e8f0; font-size:0.9rem; cursor:pointer;">${settings.isbn || '--'} âœŽ</div>
                                     </div>
                                     <div>
                                         <label style="display:block; color:#64748b; font-size:0.7rem; font-weight:800; margin-bottom:4px;">PUBLICATION YEAR</label>
-                                        <div onclick="editMetadataField('${item.id}', 'detailSettings.pubYear', 'Year')" style="color:#e2e8f0; font-size:0.9rem; cursor:pointer;">${settings.pubYear || '--'} ✎</div>
+                                        <div onclick="editMetadataField('${item.id}', 'detailSettings.pubYear', 'Year')" style="color:#e2e8f0; font-size:0.9rem; cursor:pointer;">${settings.pubYear || '--'} âœŽ</div>
                                     </div>
                                 ` : `
                                     <div>
                                         <label style="display:block; color:#64748b; font-size:0.7rem; font-weight:800; margin-bottom:4px;">SOURCE DOMAIN</label>
-                                        <div onclick="editMetadataField('${item.id}', 'detailSettings.sourceDomain', 'Source Domain')" style="color:#e2e8f0; font-size:0.9rem; cursor:pointer;">${settings.sourceDomain || 'original.com'} ✎</div>
+                                        <div onclick="editMetadataField('${item.id}', 'detailSettings.sourceDomain', 'Source Domain')" style="color:#e2e8f0; font-size:0.9rem; cursor:pointer;">${settings.sourceDomain || 'original.com'} âœŽ</div>
                                     </div>
                                     <div>
                                         <label style="display:block; color:#64748b; font-size:0.7rem; font-weight:800; margin-bottom:4px;">ORIGINAL URL</label>
-                                        <div onclick="editMetadataField('${item.id}', 'detailSettings.sourceUrl', 'Original URL')" style="color:#e2e8f0; font-size:0.9rem; cursor:pointer; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${settings.sourceUrl || 'https://...'} ✎</div>
+                                        <div onclick="editMetadataField('${item.id}', 'detailSettings.sourceUrl', 'Original URL')" style="color:#e2e8f0; font-size:0.9rem; cursor:pointer; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${settings.sourceUrl || 'https://...'} âœŽ</div>
                                     </div>
                                     <div>
                                         <label style="display:block; color:#64748b; font-size:0.7rem; font-weight:800; margin-bottom:4px;">PUBLICATION DATE</label>
-                                        <div onclick="editMetadataField('${item.id}', 'detailSettings.pubDate', 'Publication Date')" style="color:#e2e8f0; font-size:0.9rem; cursor:pointer;">${settings.pubDate || 'Jan 01, 2025'} ✎</div>
+                                        <div onclick="editMetadataField('${item.id}', 'detailSettings.pubDate', 'Publication Date')" style="color:#e2e8f0; font-size:0.9rem; cursor:pointer;">${settings.pubDate || 'Jan 01, 2025'} âœŽ</div>
                                     </div>
                                 `}
                             </div>
@@ -311,7 +311,7 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
                 <div style="padding: 30px 6%; background: rgba(59, 130, 246, 0.03); border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                         <h4 style="margin: 0; color: #fff; font-size: 1.1rem; font-weight: 800;">Article Body Content</h4>
-                        <button onclick="editMetadataField('${item.id}', 'content', 'Full Content', true)" style="background: #10b981; color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 700; cursor: pointer;">✎ Edit Content</button>
+                        <button onclick="editMetadataField('${item.id}', 'content', 'Full Content', true)" style="background: #10b981; color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 700; cursor: pointer;">âœŽ Edit Content</button>
                     </div>
                     <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); max-height: 200px; overflow-y: auto; color: #94a3b8; font-size: 0.9rem; line-height: 1.6;">
                         ${item.content ? item.content.substring(0, 500) + '...' : '<i>No content added yet. Click edit to add content.</i>'}
@@ -329,7 +329,7 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
                                 style="padding: 10px 25px; background: ${tab.name === activeTabName ? 'rgba(59, 130, 246, 0.1)' : 'transparent'}; color: ${tab.name === activeTabName ? '#3b82f6' : '#64748b'}; border-radius: 6px; font-weight: 800; font-size: 0.9rem; cursor: pointer; border-bottom: 2px solid ${tab.name === activeTabName ? '#3b82f6' : 'transparent'};">
                                 ${tab.name}
                             </span>
-                            <div onclick="removeMetaTab('${item.id}', ${idx})" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; z-index: 10;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">✕</div>
+                            <div onclick="removeMetaTab('${item.id}', ${idx})" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; z-index: 10;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">âœ•</div>
                         </div>
                     `).join('')}
                     <button onclick="addMetaTab('${item.id}')" style="background: rgba(59, 130, 246, 0.05); border: 1px dashed rgba(59, 130, 246, 0.3); color: #3b82f6; border-radius: 6px; padding: 8px 18px; font-size: 0.8rem; font-weight: 800; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(59, 130, 246, 0.1)'" onmouseout="this.style.background='rgba(59, 130, 246, 0.05)'">+ ADD TAB</button>
@@ -348,8 +348,8 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
                                     <div style="color: #64748b; font-size: 0.65rem; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; margin-bottom: 8px;">${stat.label}</div>
                                     <div style="font-weight: 700; font-size: 0.95rem; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${stat.value}</div>
                                     <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 8px;">
-                                        <div onclick="editStat('${item.id}', ${idx})" style="color: #3b82f6; cursor: pointer; font-size: 1rem;" title="Edit">✏️</div>
-                                        <div onclick="removeStat('${item.id}', ${idx})" style="color: #ef4444; cursor: pointer; font-size: 1rem;" title="Remove">🗑️</div>
+                                        <div onclick="editStat('${item.id}', ${idx})" style="color: #3b82f6; cursor: pointer; font-size: 1rem;" title="Edit">âœï¸</div>
+                                        <div onclick="removeStat('${item.id}', ${idx})" style="color: #ef4444; cursor: pointer; font-size: 1rem;" title="Remove">ðŸ—‘ï¸</div>
                                     </div>
                                 </div>
                             `).join('')}
@@ -367,7 +367,7 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
                                     ${genres.split(',').map(g => g.trim()).filter(g => g).map(tag => `
                                         <span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); padding: 4px 10px; border-radius: 100px; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
                                             ${tag}
-                                            <span onclick="removeMetaGenre('${item.id}', '${tag}')" style="cursor: pointer; opacity: 0.6; font-size: 0.7rem; display: flex; align-items: center;">✕</span>
+                                            <span onclick="removeMetaGenre('${item.id}', '${tag}')" style="cursor: pointer; opacity: 0.6; font-size: 0.7rem; display: flex; align-items: center;">âœ•</span>
                                         </span>
                                     `).join('') || '<span style="opacity: 0.5; font-size: 0.8rem;">No tags set</span>'}
                                 </div>
@@ -378,117 +378,40 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
                             <div style="background: rgba(59, 130, 246, 0.05); padding: 25px; border-radius: 16px; border: 1px solid rgba(59, 130, 246, 0.1);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                    <h4 style="margin: 0; color: #fff; font-size: 1rem; font-weight: 800;">🚀 Key Takeaways</h4>
+                                    <h4 style="margin: 0; color: #fff; font-size: 1rem; font-weight: 800;">ðŸš€ Key Takeaways</h4>
                                     <button onclick="editMetadataField('${item.id}', 'detailSettings.takeaways', 'Key Takeaways', true)" style="background: none; border: 1px solid #3b82f6; color: #3b82f6; padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">Edit</button>
                                 </div>
                                 <div style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap;">${settings.takeaways || 'List the core lessons readers will learn...'}</div>
                             </div>
                             <div style="background: rgba(16, 185, 129, 0.05); padding: 25px; border-radius: 16px; border: 1px solid rgba(16, 185, 129, 0.1);">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                                    <h4 style="margin: 0; color: #fff; font-size: 1rem; font-weight: 800;">🎯 Who This Is For</h4>
+                                    <h4 style="margin: 0; color: #fff; font-size: 1rem; font-weight: 800;">ðŸŽ¯ Who This Is For</h4>
                                     <button onclick="editMetadataField('${item.id}', 'detailSettings.targetAudience', 'Target Audience', true)" style="background: none; border: 1px solid #10b981; color: #10b981; padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; cursor: pointer;">Edit</button>
                                 </div>
                                 <div style="color: #94a3b8; font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap;">${settings.targetAudience || 'Describe the ideal reader for this content...'}</div>
                             </div>
                         </div>
                     </div>
-                ` : ''}
 
-                <!-- Author Tab Enhancement -->
-                ${activeTabName === 'Author' ? `
-                    <div style="margin-bottom: 50px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                            <h3 style="font-size: 1.4rem; font-weight: 800; margin: 0; color: #fff;">Author Identity & Brand</h3>
+                <!-- Author Section -->
+                <div style="margin-bottom: 50px; background: rgba(59, 130, 246, 0.03); border: 1px solid rgba(59, 130, 246, 0.1); border-radius: 16px; padding: 40px;">
+                    <h3 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 25px; color: #fff;">Author Spotlight</h3>
+                    <div style="display: flex; gap: 35px; align-items: flex-start;">
+                        <div style="width: 140px; height: 140px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 4px solid #3b82f6; position: relative; cursor: pointer;" onclick="editMetadataField('${item.id}', 'authorPhoto', 'Author Photo URL')">
+                            <img src="${authorPhoto}" style="width: 100%; height: 100%; object-fit: cover;">
                         </div>
-                        
-                        <div style="display: grid; grid-template-columns: 240px 1fr; gap: 40px; background: rgba(59, 130, 246, 0.03); border: 1px solid rgba(59, 130, 246, 0.1); border-radius: 16px; padding: 35px;">
-                            <!-- Author Photo -->
-                            <div style="text-align: center;">
-                                <div style="width: 200px; height: 200px; border-radius: 50%; overflow: hidden; border: 4px solid #3b82f6; margin: 0 auto 20px; position: relative; cursor: pointer;" onclick="editMetadataField('${item.id}', 'authorPhoto', 'Author Photo URL')">
-                                    <img src="${authorPhoto}" style="width: 100%; height: 100%; object-fit: cover;">
-                                    <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 40%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
-                                        <i class="fas fa-camera" style="color: white; font-size: 1.2rem;"></i>
-                                    </div>
-                                </div>
-                                <button onclick="editMetadataField('${item.id}', 'authorPhoto', 'Author Photo URL')" style="background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; color: #3b82f6; padding: 6px 15px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer;">Change Photo</button>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                                <h4 style="font-size: 1.8rem; font-weight: 800; margin: 0; color: #fff;">${item.author || 'Unknown Author'}</h4>
+                                <span onclick="editMetadataField('${item.id}', 'author', 'Author Name')" style="color: #3b82f6; cursor: pointer;"><i class="fas fa-pen"></i></span>
                             </div>
-
-                            <!-- Author Details -->
-                            <div>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
-                                    <div>
-                                        <label style="display:block; color:#64748b; font-size:0.7rem; font-weight:800; margin-bottom:6px; text-transform:uppercase;">Author Name</label>
-                                        <div onclick="editMetadataField('${item.id}', 'author', 'Author Name')" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; color: #fff; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
-                                            ${item.author || 'Set Name...'}
-                                            <i class="fas fa-pen" style="font-size: 0.7rem; opacity: 0.5;"></i>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label style="display:block; color:#64748b; font-size:0.7rem; font-weight:800; margin-bottom:6px; text-transform:uppercase;">Professional Title</label>
-                                        <div onclick="editMetadataField('${item.id}', 'detailSettings.authorTitle', 'Professional Title')" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; color: #3b82f6; font-weight: 700; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
-                                            ${settings.authorTitle || 'e.g. Success Architect'}
-                                            <i class="fas fa-pen" style="font-size: 0.7rem; opacity: 0.5;"></i>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div style="margin-bottom: 25px;">
-                                    <label style="display:block; color:#64748b; font-size:0.7rem; font-weight:800; margin-bottom:6px; text-transform:uppercase;">Author Biography</label>
-                                    <div onclick="editMetaAuthorBio('${item.id}')" style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; color: #94a3b8; line-height: 1.6; font-size: 0.9rem; cursor: pointer; min-height: 100px;">
-                                        ${authorBio || 'Write a compelling biography for the author...'}
-                                    </div>
-                                </div>
-
-                                <!-- Social Links -->
-                                <div>
-                                    <label style="display:block; color:#64748b; font-size:0.7rem; font-weight:800; margin-bottom:10px; text-transform:uppercase;">Social Presence</label>
-                                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                                        ${['website', 'twitter', 'linkedin', 'instagram', 'facebook'].map(platform => {
-        const val = (settings.social && settings.social[platform]) || "";
-        const icon = platform === 'website' ? 'globe' : platform;
-        return `
-                                                <div onclick="editMetadataField('${item.id}', 'detailSettings.social.${platform}', '${platform.charAt(0).toUpperCase() + platform.slice(1)} URL')" style="background: ${val ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255,255,255,0.03)'}; border: 1px solid ${val ? '#3b82f6' : 'rgba(255,255,255,0.1)'}; padding: 8px 15px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.2s;">
-                                                    <i class="fab fa-${icon}" style="color: ${val ? '#3b82f6' : '#64748b'};"></i>
-                                                    <span style="font-size: 0.8rem; color: ${val ? '#fff' : '#64748b'}; font-weight: 600;">${platform.toUpperCase()}</span>
-                                                </div>
-                                            `;
-    }).join('')}
-                                    </div>
-                                </div>
-                            </div>
+                            <p style="color: #94a3b8; line-height: 1.8; font-size: 1rem; margin-bottom: 20px;">
+                                ${authorBio}
+                            </p>
+                            <button onclick="editMetaAuthorBio('${item.id}')" style="background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; color: #3b82f6; border-radius: 8px; padding: 10px 20px; font-weight: 700; cursor: pointer;">Edit Author Bio</button>
                         </div>
                     </div>
-                ` : ''}
-
-                <!-- About Tab's Author Spotlight (Synced) -->
-                ${(activeTabName === 'About' || activeTabName === 'Overview') ? `
-                    <div style="margin-bottom: 50px; background: rgba(59, 130, 246, 0.03); border: 1px solid rgba(59, 130, 246, 0.1); border-radius: 16px; padding: 40px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                            <h3 style="font-size: 1.4rem; font-weight: 800; margin: 0; color: #fff;">Author Spotlight</h3>
-                            <button onclick="renderMetadataPreview('${item.id}', 'Author')" style="background: none; border: 1px solid #3b82f6; color: #3b82f6; padding: 6px 15px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer;">MANAGE AUTHOR</button>
-                        </div>
-                        <div style="display: flex; gap: 35px; align-items: flex-start;">
-                            <div style="width: 140px; height: 140px; border-radius: 50%; overflow: hidden; flex-shrink: 0; border: 4px solid #3b82f6; position: relative;">
-                                <img src="${authorPhoto}" style="width: 100%; height: 100%; object-fit: cover;">
-                            </div>
-                            <div>
-                                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 5px;">
-                                    <h4 style="font-size: 1.8rem; font-weight: 800; margin: 0; color: #fff;">${item.author || 'Unknown Author'}</h4>
-                                </div>
-                                <div style="color: #3b82f6; font-weight: 700; font-size: 0.9rem; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;">${settings.authorTitle || 'Professional Title'}</div>
-                                <p style="color: #94a3b8; line-height: 1.8; font-size: 1rem; margin-bottom: 20px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
-                                    ${authorBio}
-                                </p>
-                                <div style="display: flex; gap: 15px;">
-                                    ${Object.entries(settings.social || {}).map(([platform, url]) => {
-        if (!url) return '';
-        const icon = platform === 'website' ? 'globe' : platform;
-        return `<i class="fab fa-${icon}" style="color: #64748b; font-size: 1.2rem;"></i>`;
-    }).join('')}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                </div>
 
                 <!-- Related Content Editor -->
                 <div>
@@ -497,7 +420,7 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
                         <button onclick="editRelatedBooks('${item.id}')" style="background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; color: #3b82f6; border-radius: 8px; padding: 10px 25px; font-size: 0.9rem; font-weight: 800; cursor: pointer;">MANAGE RELATED</button>
                      </div>
                      <div style="display: flex; gap: 20px; overflow-x: auto; padding-bottom: 25px; scrollbar-width: none;">
-                        ${(item.detailSettings && item.detailSettings.relatedItems && item.detailSettings.relatedItems.length > 0) ? (item.detailSettings.relatedItems.map(rid => {
+                        ${(item.relatedItems || []).length > 0 ? (item.relatedItems.map(rid => {
         const rel = library.find(x => x.id === rid) || { title: 'Not Found', image: 'assets/logo-new.png' };
         return `
                                 <div style="width: 160px; flex-shrink: 0; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); padding: 12px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
@@ -505,7 +428,7 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
                                         <img src="${rel.image || rel.cover || 'assets/logo-new.png'}" style="width: 100%; height: 100%; object-fit: cover;">
                                     </div>
                                     <div style="font-weight: 800; font-size: 0.85rem; color: #fff; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${rel.title}</div>
-                                    <div style="font-size: 0.75rem; color: #64748b; font-weight: 600;">ID: ${rid}</div>
+                                    <div style="font-size: 0.7rem; color: #64748b; font-weight: 600;">ID: ${rid}</div>
                                 </div>
                             `;
     }).join('')) : `
@@ -581,8 +504,8 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
                                             </div>
                                         </div>
                                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                                            <button onclick="editChapterExcerpt('${item.id}', ${chapterNum})" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85rem;">✎ EDIT EXCERPT</button>
-                                            <a href="reader.html?id=${item.id}&chapter=${chapterNum}" target="_blank" style="background: #10b981; color: #fff; text-align: center; padding: 10px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.85rem;">👁️ READ FULL</a>
+                                            <button onclick="editChapterExcerpt('${item.id}', ${chapterNum})" style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85rem;">âœŽ EDIT EXCERPT</button>
+                                            <a href="reader.html?id=${item.id}&chapter=${chapterNum}" target="_blank" style="background: #10b981; color: #fff; text-align: center; padding: 10px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.85rem;">ðŸ‘ï¸ READ FULL</a>
                                         </div>
                                     </div>
                                 `;
@@ -604,8 +527,8 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
                                     <div style="font-weight: 800; color: #fff; font-size: 1.1rem;">${sec.title}</div>
                                     <div style="display: flex; gap: 10px;">
-                                        <button onclick="editTabSection('${item.id}', '${activeTabName}', ${idx})" style="background: none; border: none; color: #3b82f6; cursor: pointer;">✎</button>
-                                        <button onclick="removeTabSection('${item.id}', '${activeTabName}', ${idx})" style="background: none; border: none; color: #ef4444; cursor: pointer;">✕</button>
+                                        <button onclick="editTabSection('${item.id}', '${activeTabName}', ${idx})" style="background: none; border: none; color: #3b82f6; cursor: pointer;">âœŽ</button>
+                                        <button onclick="removeTabSection('${item.id}', '${activeTabName}', ${idx})" style="background: none; border: none; color: #ef4444; cursor: pointer;">âœ•</button>
                                     </div>
                                 </div>
                                 <div style="color: #94a3b8; line-height: 1.6; white-space: pre-wrap;">${sec.content}</div>
@@ -648,7 +571,7 @@ window.editMetaAuthorBio = function (itemId) {
     const settings = item.detailSettings || {};
     const current = settings.authorBio || "";
 
-    customPrompt("Edit Author Bio", current, "Edit Bio", "✍️").then((val) => {
+    customPrompt("Edit Author Bio", current, "Edit Bio", "âœï¸").then((val) => {
         if (val === null) return;
         updateItemNestedMetadata(itemId, 'detailSettings.authorBio', val);
     });
@@ -698,7 +621,7 @@ window.removeMetaTab = function (itemId, tabIdx) {
 window.editRelatedBooks = function (itemId) {
     const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
     const currentItem = library.find(b => b.id === itemId);
-    const currentRelated = (currentItem.detailSettings && currentItem.detailSettings.relatedItems) || currentItem.relatedItems || [];
+    const currentRelated = currentItem.relatedItems || [];
 
     // Create modal
     const modal = document.createElement('div');
@@ -758,7 +681,7 @@ window.editRelatedBooks = function (itemId) {
             selected.push(id);
         });
 
-        updateItemNestedMetadata(itemId, 'detailSettings.relatedItems', selected);
+        updateItemMetadata(itemId, 'relatedItems', selected);
         document.body.removeChild(modal);
     };
 
@@ -815,7 +738,7 @@ window.editMetadataField = function (itemId, field, label, isLongText = false) {
     if (field === 'authorPhoto' && !currentValue && item.detailSettings) currentValue = item.detailSettings.authorPhoto;
     if (currentValue === undefined || currentValue === null) currentValue = "";
 
-    customPrompt(`Edit ${label}`, currentValue, label, "✎", isLongText).then((newValue) => {
+    customPrompt(`Edit ${label}`, currentValue, label, "âœŽ", isLongText).then((newValue) => {
         if (newValue !== null && newValue !== currentValue) {
             if (field.includes('.')) {
                 updateItemNestedMetadata(itemId, field, newValue);
@@ -980,7 +903,7 @@ window.removeStat = function (itemId, idx) {
 window.addTabSection = function (itemId, tabName) {
     customPrompt("Section Title", "").then(title => {
         if (!title) return;
-        customPrompt("Section Content (HTML/Text)", "", "Content", "📝").then(content => {
+        customPrompt("Section Content (HTML/Text)", "", "Content", "ðŸ“").then(content => {
             if (!content) return;
 
             const item = getMetaItem(itemId);
@@ -1017,40 +940,6 @@ window.removeTabSection = function (itemId, tabName, idx) {
         item.detailSettings.tabContent[tabName].splice(idx, 1);
         saveMetaItem(item);
         renderMetadataPreview(itemId, tabName);
-    });
-};
-
-// Helpers
-function getMetaItem(id) {
-    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
-    return library.find(b => b.id === id);
-}
-
-function saveMetaItem(item) {
-    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
-    const idx = library.findIndex(b => b.id === item.id);
-    if (idx !== -1) {
-        library[idx] = item;
-        localStorage.setItem('siteLibrary', JSON.stringify(library));
-        if (typeof syncToCloud === 'function') syncToCloud('library', item);
-    }
-}
-// Removed legacy addCustomStat/editCustomStat/removeCustomStat as they are superceded by the unified stats.
-
-window.editChapterExcerpt = function (itemId, chapterNum) {
-    const item = getMetaItem(itemId);
-    const excerpts = (item.detailSettings && item.detailSettings.chapterExcerpts) || {};
-    const current = excerpts[chapterNum] || "";
-    customPrompt(`Edit Excerpt for Chapter ${chapterNum}`, current, "Chapter Excerpt", "📝", true).then((val) => {
-        if (val === null) return;
-        if (!item.detailSettings) item.detailSettings = {};
-        if (!item.detailSettings.chapterExcerpts) item.detailSettings.chapterExcerpts = {};
-        item.detailSettings.chapterExcerpts[chapterNum] = val;
-        saveMetaItem(item);
-        // Dynamic update of display if possible without full re-render
-        const display = document.getElementById(`excerpt-display-${chapterNum}`);
-        if (display) display.textContent = val || "No excerpt added.";
-        showToast(`Excerpt for Chapter ${chapterNum} updated!`, "success");
     });
 };
 

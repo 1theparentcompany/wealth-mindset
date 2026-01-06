@@ -56,6 +56,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 3. Render
         if (bookData) {
             renderBookUI(bookData, resolveImg);
+            // Trigger related books display
+            if (typeof loadRecommendedBooks === 'function') {
+                loadRecommendedBooks(bookData);
+            }
         }
     }
 
@@ -100,24 +104,55 @@ function renderBookUI(item, resolveImg) {
             detailSettings.stats.forEach(stat => {
                 const div = document.createElement('div');
                 div.className = 'meta-item';
-                div.innerHTML = `<label>${stat.label}</label><span>${stat.value}</span>`;
+
+                // --- DYNAMIC OVERRIDE ---
+                // If the label matches a CORE property, we pull the LIVE value from 'item'
+                // This prevents the 'fixed at some number' problem when data changes.
+                let displayVal = stat.value;
+                const lowerLabel = stat.label.toLowerCase();
+
+                if (lowerLabel.includes('rating')) {
+                    displayVal = `⭐ ${item.rating || '0.0'} / 5.0`;
+                } else if (lowerLabel.includes('likes') || lowerLabel.includes('score')) {
+                    displayVal = `👍 ${item.likes_percent || '0'}% Liked`;
+                } else if (lowerLabel.includes('review')) {
+                    displayVal = `💬 ${item.reviews_count || '0'} Reviews`;
+                } else if (lowerLabel.includes('chapter')) {
+                    const count = item.chapters_count || (Array.isArray(item.chapters) ? item.chapters.length : '0');
+                    displayVal = `📖 ${count} Chapters`;
+                } else {
+                    // For custom stats, just ensure we don't show empty
+                    displayVal = (stat.value !== undefined && stat.value !== null && stat.value !== '') ? stat.value : '0';
+                }
+
+                div.innerHTML = `<label>${stat.label}</label><span>${displayVal}</span>`;
                 statsContainer.appendChild(div);
             });
         }
     } else {
         // Fallback: Populate by ID if they exist (Legacy/Default)
-        if (document.getElementById('stat-rating-stars') && detailSettings.rating) document.getElementById('stat-rating-stars').textContent = detailSettings.rating;
-        if (document.getElementById('stat-likes-pct') && detailSettings.likes) document.getElementById('stat-likes-pct').textContent = detailSettings.likes;
-        if (document.getElementById('stat-reviews-count') && detailSettings.reviews) document.getElementById('stat-reviews-count').textContent = detailSettings.reviews;
-        if (document.getElementById('stat-chapters-count') && detailSettings.chapters) document.getElementById('stat-chapters-count').textContent = detailSettings.chapters;
-        if (document.getElementById('stat-license') && detailSettings.license) document.getElementById('stat-license').textContent = detailSettings.license;
-        if (document.getElementById('stat-lang') && detailSettings.language) document.getElementById('stat-lang').textContent = detailSettings.language;
-        if (document.getElementById('stat-release') && detailSettings.release) document.getElementById('stat-release').textContent = detailSettings.release;
+        // Ensure we show '0' if the key exists but value is empty/null
+        if (document.getElementById('stat-rating-stars')) document.getElementById('stat-rating-stars').textContent = detailSettings.rating || '⭐ 0.0';
+        if (document.getElementById('stat-likes-pct')) document.getElementById('stat-likes-pct').textContent = detailSettings.likes || '👍 0%';
+        if (document.getElementById('stat-reviews-count')) document.getElementById('stat-reviews-count').textContent = detailSettings.reviews || '💬 0';
+        if (document.getElementById('stat-chapters-count')) document.getElementById('stat-chapters-count').textContent = detailSettings.chapters || '0';
+        if (document.getElementById('stat-license')) document.getElementById('stat-license').textContent = detailSettings.license || '--';
+        if (document.getElementById('stat-lang')) document.getElementById('stat-lang').textContent = detailSettings.language || '--';
+        if (document.getElementById('stat-release')) document.getElementById('stat-release').textContent = detailSettings.release || '--';
     }
 
-    // Updated Hero Stats (These are outside the main grid, keep them updated if keys exist)
-    if (document.getElementById('detail-rating-pct') && detailSettings.likes) document.getElementById('detail-rating-pct').textContent = detailSettings.likes;
-    if (document.getElementById('detail-rating-count') && detailSettings.reviews) document.getElementById('detail-rating-count').textContent = detailSettings.reviews + ' >';
+    // Updated Hero Stats (These are outside the main grid, handle missing values)
+    // We prefer the raw data from 'item' for these hero bubbles
+    if (document.getElementById('detail-rating-pct')) {
+        document.getElementById('detail-rating-pct').textContent = item.likes_percent || '0';
+    }
+    if (document.getElementById('detail-rating-count')) {
+        document.getElementById('detail-rating-count').textContent = (item.reviews_count || '0') + ' >';
+    }
+    if (document.getElementById('detail-chapters-count-hero')) {
+        const count = item.chapters_count || (Array.isArray(item.chapters) ? item.chapters.length : '0');
+        document.getElementById('detail-chapters-count-hero').textContent = count;
+    }
 
 
     // Gradient Background

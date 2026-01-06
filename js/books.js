@@ -67,7 +67,7 @@ async function initLibrary() {
             if (libData && libData.length > 0) {
                 stored = libData.map(item => {
                     const stats = ratingMap[item.id];
-                    const avgRating = stats ? (stats.sum / stats.count).toFixed(1) : '4.9';
+                    const avgRating = stats ? (stats.sum / stats.count).toFixed(1) : '0.0'; // Changed default from 4.9 to 0.0
                     const details = item.detail_settings || {};
 
                     return {
@@ -129,7 +129,7 @@ async function initLibrary() {
             volumeColor: bBottomColor,
             chapterColor: bTopColor,
             genre: item.genre || 'General',
-            rating: item.rating || '4.9'
+            rating: item.rating || '0.0' // Changed fallback from 4.9 to 0.0
         };
     });
 
@@ -252,7 +252,7 @@ const debouncedUpdateLibrary = debounce(() => {
 }, 250);
 
 // Proxy search input to debounced function
-function handleGlobalSearch() {
+function handleLibrarySearch() {
     debouncedUpdateLibrary();
 }
 
@@ -334,7 +334,7 @@ function updateLibraryView() {
 
                 // Sanitize all dynamic strings
                 const sTitle = esc(item.title);
-                const sRating = esc(item.rating || '4.9');
+                const sRating = esc(item.rating || '0.0');
                 const sTag = esc(item.tag || 'Read Now');
                 const sChapter = esc(item.chapter);
                 const sVolume = esc(item.volume);
