@@ -60,6 +60,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (typeof loadRecommendedBooks === 'function') {
                 loadRecommendedBooks(bookData);
             }
+            // Initialize interaction status (likes, dislikes, etc.) after rendering
+            if (typeof checkInteractionStatus === 'function') {
+                await checkInteractionStatus(bookData.id);
+            }
+            if (typeof fetchLiveStats === 'function') {
+                await fetchLiveStats(bookData.id);
+            }
         }
     }
 
@@ -108,50 +115,154 @@ function renderBookUI(item, resolveImg) {
                 // --- DYNAMIC OVERRIDE ---
                 // If the label matches a CORE property, we pull the LIVE value from 'item'
                 // This prevents the 'fixed at some number' problem when data changes.
+                // FIX: Only overwrite if LIVE data is valid (non-zero). Otherwise respect the manual 'stat.value'.
                 let displayVal = stat.value;
                 const lowerLabel = stat.label.toLowerCase();
 
-                if (lowerLabel.includes('rating')) {
-                    displayVal = `⭐ ${item.rating || '0.0'} / 5.0`;
-                } else if (lowerLabel.includes('likes') || lowerLabel.includes('score')) {
-                    displayVal = `👍 ${item.likes_percent || '0'}% Liked`;
-                } else if (lowerLabel.includes('review')) {
-                    displayVal = `💬 ${item.reviews_count || '0'} Reviews`;
-                } else if (lowerLabel.includes('chapter')) {
-                    const count = item.chapters_count || (Array.isArray(item.chapters) ? item.chapters.length : '0');
-                    displayVal = `📖 ${count} Chapters`;
-                } else {
-                    // For custom stats, just ensure we don't show empty
-                    displayVal = (stat.value !== undefined && stat.value !== null && stat.value !== '') ? stat.value : '0';
+                if (lowerLabel.includes('chapter') || lowerLabel.includes('content length')) {
+                    // Allow rendering but ensured ID assignment below
                 }
 
-                div.innerHTML = `<label>${stat.label}</label><span>${displayVal}</span>`;
+                if (lowerLabel.includes('rating')) {
+                    const liveRating = item.rating;
+                    if (liveRating && liveRating !== '0.0' && liveRating !== '0') {
+                        displayVal = `⭐ ${liveRating} / 5.0`;
+                    }
+                } else if (lowerLabel.includes('likes') || lowerLabel.includes('score')) {
+                    const liveLikes = item.likes_percent;
+                    if (liveLikes && liveLikes !== '0') {
+                        displayVal = `👍 ${liveLikes}% Liked`;
+                    }
+                } else if (lowerLabel.includes('review')) {
+                    const liveReviews = item.reviews_count;
+                    if (liveReviews && liveReviews !== '0') {
+                        displayVal = `💬 ${liveReviews} Reviews`;
+                    }
+                }
+
+                // Ensure displayVal isn't empty if manual value was empty
+                displayVal = (displayVal !== undefined && displayVal !== null && displayVal !== '') ? displayVal : '0';
+
+                // ID assignment for Live Updates (Crucial fix for FOUC/Zeroing)
+                let spanId = '';
+                if (lowerLabel.includes('rating')) spanId = 'stat-rating-stars';
+                else if (lowerLabel.includes('likes') || lowerLabel.includes('score')) spanId = 'stat-likes-pct';
+                else if (lowerLabel.includes('review')) spanId = 'stat-reviews-count';
+                else if (lowerLabel.includes('chapter') || lowerLabel.includes('content length')) spanId = 'stat-chapters-count';
+
+                div.innerHTML = `<label>${stat.label}</label><span${spanId ? ` id="${spanId}"` : ''}>${displayVal}</span>`;
                 statsContainer.appendChild(div);
             });
         }
     } else {
         // Fallback: Populate by ID if they exist (Legacy/Default)
-        // Ensure we show '0' if the key exists but value is empty/null
-        if (document.getElementById('stat-rating-stars')) document.getElementById('stat-rating-stars').textContent = detailSettings.rating || '⭐ 0.0';
-        if (document.getElementById('stat-likes-pct')) document.getElementById('stat-likes-pct').textContent = detailSettings.likes || '👍 0%';
-        if (document.getElementById('stat-reviews-count')) document.getElementById('stat-reviews-count').textContent = detailSettings.reviews || '💬 0';
-        if (document.getElementById('stat-chapters-count')) document.getElementById('stat-chapters-count').textContent = detailSettings.chapters || '0';
-        if (document.getElementById('stat-license')) document.getElementById('stat-license').textContent = detailSettings.license || '--';
-        if (document.getElementById('stat-lang')) document.getElementById('stat-lang').textContent = detailSettings.language || '--';
-        if (document.getElementById('stat-release')) document.getElementById('stat-release').textContent = detailSettings.release || '--';
+        // FIX: Prefer live data only if non-zero, otherwise use metadata
+        const statRatingEl = document.getElementById('stat-rating-stars');
+        if (statRatingEl) {
+            const liveRating = item.rating;
+            if (liveRating && liveRating !== '0.0' && liveRating !== '0') {
+                statRatingEl.textContent = `⭐ ${liveRating} / 5.0`;
+            } else {
+                // Fallback to metadata
+                let metaRating = detailSettings.rating;
+                if (!metaRating && detailSettings.stats) {
+                    const st = detailSettings.stats.find(s => s.label.toLowerCase().includes('rating'));
+                    if (st) metaRating = st.value;
+                }
+                statRatingEl.textContent = metaRating || '⭐ 0.0 / 5.0';
+            }
+        }
+
+        const statLikesEl = document.getElementById('stat-likes-pct');
+        if (statLikesEl) {
+            const liveLikes = item.likes_percent;
+            if (liveLikes && liveLikes !== '0') {
+                statLikesEl.textContent = `👍 ${liveLikes}% Liked`;
+            } else {
+                let metaLikes = detailSettings.likes;
+                if (!metaLikes && detailSettings.stats) {
+                    const st = detailSettings.stats.find(s => s.label.toLowerCase().includes('likes') || s.label.toLowerCase().includes('score'));
+                    if (st) metaLikes = st.value;
+                }
+                statLikesEl.textContent = metaLikes || '👍 0% Liked';
+            }
+        }
+
+        const statReviewsEl = document.getElementById('stat-reviews-count');
+        if (statReviewsEl) {
+            const liveReviews = item.reviews_count;
+            if (liveReviews && liveReviews !== '0') {
+                statReviewsEl.textContent = `💬 ${liveReviews} Reviews`;
+            } else {
+                let metaReviews = detailSettings.reviews;
+                if (!metaReviews && detailSettings.stats) {
+                    const st = detailSettings.stats.find(s => s.label.toLowerCase().includes('review'));
+                    if (st) metaReviews = st.value;
+                }
+                statReviewsEl.textContent = metaReviews || '💬 0 Reviews';
+            }
+        }
     }
 
-    // Updated Hero Stats (These are outside the main grid, handle missing values)
-    // We prefer the raw data from 'item' for these hero bubbles
+    // Non-dynamic fields - always use metadata
+    // Author
+    if (document.getElementById('detail-author')) document.getElementById('detail-author').textContent = item.author;
+    if (document.getElementById('author-name-tab')) document.getElementById('author-name-tab').textContent = item.author;
+    if (document.getElementById('author-tagline')) document.getElementById('author-tagline').textContent = detailSettings.authorTitle || item.category || 'Wealth & Mindset Author';
+    if (document.getElementById('author-bio') && detailSettings.authorBio) document.getElementById('author-bio').textContent = detailSettings.authorBio;
+    if (document.getElementById('author-avatar') && detailSettings.authorPhoto) document.getElementById('author-avatar').src = resolveImg(detailSettings.authorPhoto);
+
+    if (document.getElementById('stat-license')) document.getElementById('stat-license').textContent = detailSettings.license || 'Wealth & Mindset Press';
+    if (document.getElementById('stat-lang')) document.getElementById('stat-lang').textContent = detailSettings.language || 'English';
+    if (document.getElementById('stat-release')) document.getElementById('stat-release').textContent = detailSettings.release || '--';
+
+    // Hero Stats overrides (Top of page - Big numbers)
     if (document.getElementById('detail-rating-pct')) {
-        document.getElementById('detail-rating-pct').textContent = item.likes_percent || '0';
+        const liveLikes = item.likes_percent;
+        let displayLikes = '0';
+        if (liveLikes && liveLikes !== '0') {
+            displayLikes = liveLikes;
+        } else {
+            let metaLikes = detailSettings.likes;
+            if (!metaLikes && detailSettings.stats) {
+                const st = detailSettings.stats.find(s => s.label.toLowerCase().includes('likes') || s.label.toLowerCase().includes('score'));
+                if (st) metaLikes = st.value;
+            }
+            if (metaLikes) {
+                displayLikes = metaLikes.replace(/[^\d]/g, '') || '0';
+            }
+        }
+        document.getElementById('detail-rating-pct').textContent = displayLikes;
     }
     if (document.getElementById('detail-rating-count')) {
-        document.getElementById('detail-rating-count').textContent = (item.reviews_count || '0') + ' >';
+        let count = item.reviews_count || '0';
+        if (!count || count === '0') {
+            let metaReviews = detailSettings.reviews;
+            if (!metaReviews && detailSettings.stats) {
+                const st = detailSettings.stats.find(s => s.label.toLowerCase().includes('review'));
+                if (st) metaReviews = st.value;
+            }
+            if (metaReviews) {
+                count = metaReviews.replace(/[^\d]/g, '') || '0';
+            }
+        }
+        document.getElementById('detail-rating-count').textContent = count + ' >';
     }
     if (document.getElementById('detail-chapters-count-hero')) {
-        const count = item.chapters_count || (Array.isArray(item.chapters) ? item.chapters.length : '0');
-        document.getElementById('detail-chapters-count-hero').textContent = count;
+        const liveCount = item.chapters_count || (Array.isArray(item.chapters) ? item.chapters.length : 0);
+        let displayCount = liveCount;
+        if (!liveCount || liveCount === 0) {
+            let metaChapters = detailSettings.chapters;
+            if (!metaChapters && detailSettings.stats) {
+                const st = detailSettings.stats.find(s => s.label.toLowerCase().includes('chapter') || s.label.toLowerCase().includes('content length'));
+                if (st) metaChapters = st.value;
+            }
+            if (metaChapters) {
+                const match = metaChapters.match(/\d+/);
+                displayCount = match ? match[0] : '0';
+            }
+        }
+        document.getElementById('detail-chapters-count-hero').textContent = displayCount;
     }
 
 
@@ -186,10 +297,10 @@ function renderBookUI(item, resolveImg) {
 
             // Resolve Tab ID from Name
             let targetTabId = '';
-            const lowerName = tabName.toLowerCase();
+            const lowerName = tabName.toLowerCase().trim();
 
             // 1. Try Standard Mapping
-            if (lowerName === 'about') targetTabId = 'tab-about';
+            if (lowerName === 'about' || lowerName === 'overview') targetTabId = 'tab-about';
             else if (lowerName.includes('chapter')) targetTabId = 'tab-chapters';
             else if (lowerName.includes('review')) targetTabId = 'tab-reviews';
             else if (lowerName.includes('author')) targetTabId = 'tab-author';
@@ -199,14 +310,13 @@ function renderBookUI(item, resolveImg) {
             // Custom tabs usually have IDs like 'custom-tab-0', 'custom-tab-1', etc.
             // But we only have the Name here.
             // We need to find the DOM element that corresponds to this name.
-            if (!targetTabId) {
-                // If the user created a custom tab, renderCustomTabs should have created it.
-                // We might need to look up the tabs array to find the index.
-                if (detailSettings.tabs) {
-                    const tabIndex = detailSettings.tabs.findIndex(t => t.name.replace(/^[^\w]+/, '').trim() === tabName || t.name === tabName);
-                    if (tabIndex !== -1) {
-                        targetTabId = 'custom-tab-' + tabIndex;
-                    }
+            if (!targetTabId && detailSettings.tabs) {
+                const tabIndex = detailSettings.tabs.findIndex(t =>
+                    t.name.toLowerCase().trim() === lowerName ||
+                    t.name.replace(/^[^\w]+/, '').toLowerCase().trim() === lowerName
+                );
+                if (tabIndex !== -1) {
+                    targetTabId = 'custom-tab-' + tabIndex;
                 }
             }
 
@@ -261,3 +371,171 @@ function renderBookUI(item, resolveImg) {
         styleEl.textContent = detailSettings.customCss;
     }
 }
+
+// --- Live Stats Implementation (Antigravity Fix) ---
+window.fetchLiveStats = async function (bookId) {
+    if (typeof supabaseClient === 'undefined') return;
+
+    try {
+        console.log("Fetching live stats for:", bookId);
+
+        // 1. Resolve UUID if needed (Robust Lookup)
+        let resolvedUuid = null;
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookId);
+
+        if (isUuid) {
+            resolvedUuid = bookId;
+        } else {
+            // Try ID lookup first
+            const { data: bData } = await supabaseClient.from('books').select('id').eq('id', bookId).maybeSingle();
+            if (bData) {
+                resolvedUuid = bData.id;
+            } else {
+                // Try Title lookup
+                const titleEl = document.getElementById('detail-title');
+                const title = titleEl ? titleEl.textContent : null;
+                if (title) {
+                    const { data: bData2 } = await supabaseClient.from('books').select('id').eq('title', title).maybeSingle();
+                    if (bData2) resolvedUuid = bData2.id;
+                }
+            }
+        }
+
+        const searchIds = [bookId];
+        if (resolvedUuid && resolvedUuid !== bookId) searchIds.push(resolvedUuid);
+
+        // 2. Fetch Aggregated Counts
+        // Likes/Dislikes from user_activity
+        const activityPromise = supabaseClient
+            .from('user_activity')
+            .select('activity_type')
+            .in('metadata->>book_id', searchIds)
+            .in('activity_type', ['like_book', 'dislike_book', 'like_chapter', 'helpful_review']);
+
+        // Reviews & Ratings
+        let reviewsPromise = Promise.resolve({ data: [], count: 0 });
+        if (resolvedUuid) {
+            reviewsPromise = supabaseClient
+                .from('book_reviews')
+                .select('rating, likes', { count: 'exact' }) // Select rating for average calc
+                .eq('book_id', resolvedUuid);
+        }
+
+        // Community Messages (Comments)
+        let messagesPromise = Promise.resolve({ data: [], count: 0 });
+        if (resolvedUuid) {
+            messagesPromise = supabaseClient
+                .from('book_messages')
+                .select('likes_count', { count: 'exact' })
+                .eq('book_id', resolvedUuid);
+        }
+
+        // Chapters Count
+        let chaptersPromise = Promise.resolve({ count: 0 });
+        if (resolvedUuid) {
+            chaptersPromise = supabaseClient
+                .from('chapters')
+                .select('id', { count: 'exact', head: true })
+                .eq('book_id', resolvedUuid);
+        }
+
+        const [activityRes, reviewsRes, messagesRes, chaptersRes] = await Promise.all([
+            activityPromise,
+            reviewsPromise,
+            messagesPromise,
+            chaptersPromise
+        ]);
+
+        // A. Calculate TOTAL LIKES
+        const globalData = activityRes.data || [];
+        const bookLikes = globalData.filter(a => a.activity_type === 'like_book').length;
+        const chapterLikes = globalData.filter(a => a.activity_type === 'like_chapter').length;
+        const reviewInteractionLikes = globalData.filter(a => a.activity_type === 'helpful_review').length;
+
+        let reviewBaseLikes = 0;
+        if (reviewsRes.data) reviewBaseLikes = reviewsRes.data.reduce((sum, r) => sum + (r.likes || 0), 0);
+
+        let communityLikes = 0;
+        if (messagesRes.data) communityLikes = messagesRes.data.reduce((sum, m) => sum + (m.likes_count || 0), 0);
+
+        const totalLikes = bookLikes + chapterLikes + reviewInteractionLikes + reviewBaseLikes + communityLikes;
+        const totalDislikes = globalData.filter(a => a.activity_type === 'dislike_book').length;
+
+        // Calculate Percentage
+        let likePct = 0;
+        if (totalLikes + totalDislikes > 0) {
+            likePct = Math.round((totalLikes / (totalLikes + totalDislikes)) * 100);
+        } else {
+            // Fallback if no interactions yet: check if we have pure likes but no dislikes recorded
+            if (totalLikes > 0) likePct = 100;
+        }
+
+        // B. Calculate TOTAL REVIEWS/COMMENTS
+        const reviewCount = reviewsRes.count || 0;
+        const messageCount = messagesRes.count || 0;
+        const totalReviews = reviewCount + messageCount;
+
+        // C. Calculate AVERAGE RATING
+        let avgRating = 0;
+        if (reviewsRes.data && reviewsRes.data.length > 0) {
+            const sumRating = reviewsRes.data.reduce((sum, r) => sum + (r.rating || 0), 0);
+            avgRating = (sumRating / reviewsRes.data.length).toFixed(1);
+        }
+
+        // D. Chapters
+        const totalChapters = chaptersRes.count || 0;
+
+
+        // --- UPDATE UI ---
+
+        // 1. Likes / Community Score
+        const statLikesEl = document.getElementById('stat-likes-pct');
+        if (statLikesEl) {
+            // If we have actual data, use it. Otherwise, keep the fallback/metadata value.
+            if (totalLikes > 0 || totalDislikes > 0) {
+                statLikesEl.textContent = `👍 ${likePct}% Liked`;
+            }
+        }
+
+        // Hero Badge
+        const detailRatingPct = document.getElementById('detail-rating-pct');
+        if (detailRatingPct && (totalLikes > 0 || totalDislikes > 0)) {
+            detailRatingPct.textContent = `${likePct}%`;
+        }
+
+
+        // 2. Reviews
+        const statReviewsEl = document.getElementById('stat-reviews-count');
+        if (statReviewsEl) {
+            if (reviewCount > 0) {
+                statReviewsEl.textContent = `💬 ${reviewCount} verified reviews`;
+            } else if (totalReviews > 0) { // If only messages/comments exist
+                statReviewsEl.textContent = `💬 ${totalReviews} Reviews`;
+            }
+        }
+
+        // 3. Average Rating
+        const statRatingEl = document.getElementById('stat-rating-stars');
+        if (statRatingEl && avgRating > 0) {
+            statRatingEl.textContent = `⭐ ${avgRating} / 5.0`;
+        }
+
+        // 4. Chapters Count (Hero & About)
+        // Hero
+        const heroChapters = document.getElementById('detail-chapters-count-hero');
+        if (heroChapters && totalChapters > 0) {
+            heroChapters.textContent = totalChapters;
+        }
+
+        // About Tab Badge (if exists, sometimes it's mapped to ID 'stat-chapters-count')
+        const statChapters = document.getElementById('stat-chapters-count');
+        if (statChapters) {
+            statChapters.textContent = `${totalChapters} Chapters`;
+        }
+
+        console.log("Live Stats Updated: Likes", totalLikes, "Reviews", reviewCount, "Rating", avgRating, "Chapters", totalChapters);
+
+    } catch (e) {
+        console.error("Error fetching live stats:", e);
+    }
+};

@@ -3,66 +3,79 @@ document.addEventListener('DOMContentLoaded', () => {
     const body = document.body;
 
     // --- Theme Toggling ---
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const isHomePage = body.classList.contains('home-theme');
+    const getStoredTheme = () => localStorage.getItem('theme');
+    const getSystemTheme = () => window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
-    if (savedTheme === 'dark') {
-        body.classList.add('dark-mode');
-        if (isHomePage) body.classList.add('home-theme');
-        if (toggleBtn) toggleBtn.textContent = '☀️';
-    } else if (savedTheme === 'light') {
-        body.classList.remove('dark-mode');
-        body.classList.remove('home-theme');
-        if (toggleBtn) toggleBtn.textContent = '🌙';
-    } else {
-        if (isHomePage || prefersDark) {
+    function applyTheme(theme, save = false) {
+        const isDark = theme === 'dark';
+        const isHomePage = body.classList.contains('home-theme') || ['/', '/index.html'].includes(window.location.pathname);
+
+        if (isDark) {
+            body.classList.add('dark-mode');
+            if (isHomePage) body.classList.add('home-theme');
             if (toggleBtn) toggleBtn.textContent = '☀️';
-            if (!isHomePage && prefersDark) body.classList.add('dark-mode');
         } else {
+            body.classList.remove('dark-mode');
+            body.classList.remove('home-theme');
             if (toggleBtn) toggleBtn.textContent = '🌙';
         }
-    }
 
-    // --- Mobile Menu Logic ---
-    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-    const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
-    const mobileMenuBackdrop = document.getElementById('menu-backdrop');
-    const closeMobileMenuBtn = document.getElementById('close-mobile-menu');
-
-    function toggleMobileMenu() {
-        if (!mobileMenuOverlay) return;
-        const isActive = mobileMenuOverlay.classList.contains('active');
-        if (isActive) {
-            mobileMenuOverlay.classList.remove('active');
-            if (mobileMenuBackdrop) mobileMenuBackdrop.classList.remove('active');
-            document.body.style.overflow = '';
-        } else {
-            mobileMenuOverlay.classList.add('active');
-            if (mobileMenuBackdrop) mobileMenuBackdrop.classList.add('active');
-            document.body.style.overflow = 'hidden';
+        if (save) {
+            localStorage.setItem('theme', theme);
         }
     }
 
-    if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
-    if (closeMobileMenuBtn) closeMobileMenuBtn.addEventListener('click', toggleMobileMenu);
-    if (mobileMenuBackdrop) mobileMenuBackdrop.addEventListener('click', toggleMobileMenu);
+    // Initialize Theme
+    const savedTheme = getStoredTheme();
+    if (savedTheme) {
+        applyTheme(savedTheme);
+    } else {
+        applyTheme(getSystemTheme());
+    }
+
+    // Listen for System Theme Changes
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        if (!getStoredTheme()) {
+            applyTheme(e.matches ? 'dark' : 'light');
+        }
+    });
 
     if (toggleBtn) {
         toggleBtn.addEventListener('click', () => {
-            const isDark = body.classList.contains('dark-mode') || body.classList.contains('home-theme');
-            if (isDark) {
-                body.classList.remove('dark-mode');
-                body.classList.remove('home-theme');
-                localStorage.setItem('theme', 'light');
-                toggleBtn.textContent = '🌙';
-            } else {
-                body.classList.add('dark-mode');
-                if (isHomePage) body.classList.add('home-theme');
-                localStorage.setItem('theme', 'dark');
-                toggleBtn.textContent = '☀️';
-            }
+            const currentTheme = body.classList.contains('dark-mode') || body.classList.contains('home-theme') ? 'dark' : 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme(newTheme, true);
         });
+    }
+
+    // --- Mobile Menu ---
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenuOverlay = document.getElementById('mobile-menu-overlay');
+    const closeMobileMenu = document.getElementById('close-mobile-menu');
+    const menuBackdrop = document.getElementById('menu-backdrop');
+
+    if (mobileMenuBtn && mobileMenuOverlay) {
+        mobileMenuBtn.addEventListener('click', () => {
+            mobileMenuOverlay.classList.add('active');
+            if (menuBackdrop) menuBackdrop.classList.add('active');
+            body.style.overflow = 'hidden';
+        });
+
+        if (closeMobileMenu) {
+            closeMobileMenu.addEventListener('click', () => {
+                mobileMenuOverlay.classList.remove('active');
+                if (menuBackdrop) menuBackdrop.classList.remove('active');
+                body.style.overflow = '';
+            });
+        }
+
+        if (menuBackdrop) {
+            menuBackdrop.addEventListener('click', () => {
+                mobileMenuOverlay.classList.remove('active');
+                menuBackdrop.classList.remove('active');
+                body.style.overflow = '';
+            });
+        }
     }
 
     // --- Background Music Control ---
@@ -100,13 +113,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Load Settings ---
     async function initializeSite() {
-        let settings = JSON.parse(localStorage.getItem('siteSettings') || '{}');
+        let settings = {};
+        try {
+            settings = JSON.parse(localStorage.getItem('siteSettings') || '{}');
+        } catch (e) {
+            console.warn('Failed to parse siteSettings, resetting.', e);
+        }
 
         // If Supabase is configured, try to fetch settings from cloud
         if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured() && window.supabaseClient) {
             try {
                 // 1. Fetch from new V2 admin_settings table
-                const { data: adminData } = await supabaseClient.from('admin_settings').select('*').limit(1).single();
+                const { data: adminData } = await supabaseClient.from('admin_settings').select('*').limit(1).maybeSingle();
                 if (adminData) {
                     settings = {
                         ...settings,
@@ -141,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         microLessons: homeData.micro_lessons || [],
                         microLessonHeadings: homeData.micro_lesson_headings || [],
                         sliderImages: homeData.slider_images || [],
-                        sliderImages: homeData.slider_images || [],
+
                         bottomBanners: homeData.bottom_banners || [],
                         imageManager1: homeData.image_manager_1 || []
                     };
@@ -157,8 +175,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderHomepageContent() {
-        const homepageConfig = JSON.parse(localStorage.getItem('siteHomepageConfig') || '{}');
-        const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+        let homepageConfig = {};
+        try {
+            homepageConfig = JSON.parse(localStorage.getItem('siteHomepageConfig') || '{}');
+        } catch (e) {
+            console.warn('Failed to parse siteHomepageConfig.', e);
+        }
+
+        let library = [];
+        try {
+            library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+        } catch (e) {
+            console.warn('Failed to parse siteLibrary.', e);
+        }
 
         // 0. Render Hero (Carousel removed)
         // renderHeroCarousel(homepageConfig.sliderImages, homepageConfig.hero);
@@ -286,10 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderImageManager1(images) {
         const container = document.getElementById('home-image-layout-1');
-        if (!container) {
-            console.warn("Image Manager: Container #home-image-layout-1 not found.");
-            return;
-        }
+        if (!container) return;
 
         if (!images || images.length === 0) {
             console.log("Image Manager: No images to render.");
@@ -402,8 +428,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!modal || !grid) return;
 
         // Load Data
-        const homepageConfig = JSON.parse(localStorage.getItem('siteHomepageConfig') || '{}');
-        const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+        let homepageConfig = {};
+        try {
+            homepageConfig = JSON.parse(localStorage.getItem('siteHomepageConfig') || '{}');
+        } catch (e) { }
+
+        let library = [];
+        try {
+            library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+        } catch (e) { }
 
         let items = [];
         let title = "Collection";

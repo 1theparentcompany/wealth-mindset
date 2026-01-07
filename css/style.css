@@ -48,7 +48,7 @@ body {
     padding: 0;
     font-size: 17px;
     -webkit-font-smoothing: antialiased;
-    transition: background-color 0.4s ease, color 0.4s ease;
+    transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 a {
@@ -1079,6 +1079,24 @@ footer {
 
     .scroll-wrapper {
         padding: 0 20px;
+    }
+}
+
+/* Modal Grid Specific Card Adjustments */
+#section-modal-grid .premium-book-card {
+    flex: none;
+    width: 100%;
+    margin: 0 auto;
+}
+
+@media (max-width: 600px) {
+    #section-modal-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+        gap: 12px !important;
+    }
+
+    #section-modal-grid .premium-book-card {
+        max-width: 100%;
     }
 }
 

@@ -15,16 +15,23 @@
     <link rel="stylesheet" href="css/books.css">
     <!-- Security: Content Security Policy -->
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://nlgdthlwmagvjvzrubif.supabase.co https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://nlgdthlwmagvjvzrubif.supabase.co wss://nlgdthlwmagvjvzrubif.supabase.co https://api.ipify.org; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; media-src 'self' https://www.soundjay.com; frame-src 'self'; object-src 'none';">
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://nlgdthlwmagvjvzrubif.supabase.co https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://nlgdthlwmagvjvzrubif.supabase.co wss://nlgdthlwmagvjvzrubif.supabase.co https://api.ipify.org https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; media-src 'self' https://www.soundjay.com; frame-src 'self'; object-src 'none';">
 
     <!-- Supabase SDK -->
     <script src="js/lib/supabase-js.js" defer></script>
     <script src="js/supabase-config.js" defer></script>
     <script src="js/image-utils.js" defer></script>
-
 </head>
+<script>
+    (function () {
+        const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        if (theme === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+    })();
+</script>
 
-<body class="home-theme">
+<body>
     <header class="site-header">
         <div class="logo">
             <a href="index.html">
@@ -138,6 +145,10 @@
                         <div class="quick-nav" id="quick-nav-container"></div>
 
                         <!-- Content Sections -->
+                        <div id="loading-indicator" class="library-loader">
+                            <div class="spinner"></div>
+                            <p>Loading library...</p>
+                        </div>
                         <div id="library-sections-container"></div>
                     </div>
                 </div>

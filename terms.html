@@ -12,28 +12,45 @@
     <link rel="stylesheet" href="css/style.css">
     <!-- Security: Content Security Policy -->
     <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://nlgdthlwmagvjvzrubif.supabase.co https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://nlgdthlwmagvjvzrubif.supabase.co wss://nlgdthlwmagvjvzrubif.supabase.co https://api.ipify.org; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; media-src 'self' https://www.soundjay.com; frame-src 'self'; object-src 'none';">
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://nlgdthlwmagvjvzrubif.supabase.co https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://nlgdthlwmagvjvzrubif.supabase.co wss://nlgdthlwmagvjvzrubif.supabase.co https://api.ipify.org https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; media-src 'self' https://www.soundjay.com; frame-src 'self'; object-src 'none';">
 
 </head>
 
 <body>
 
     <header class="site-header">
-        <div class="logo">
-            <a href="index.html">
-                <img src="assets/logo-new.png" alt="Wealth & Mindset" class="logo-img" loading="eager"
-                    fetchpriority="high">
-                <span>Wealth & Mindset</span>
-            </a>
+        <div
+            style="max-width: var(--max-width); width: 100%; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 var(--spacing-unit); box-sizing: border-box;">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="assets/logo-new.png" alt="Wealth & Mindset" class="logo-img" loading="eager"
+                        fetchpriority="high">
+                    <span>Wealth & Mindset</span>
+                </a>
+            </div>
+            <nav class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="books.html">Library</a>
+                <a href="about.html">About</a>
+                <a href="contact.html">Contact</a>
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+                <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Open menu">⋮</button>
+            </nav>
         </div>
-        <nav>
+    </header>
+    <!-- Mobile Menu Overlay -->
+    <div class="menu-backdrop" id="menu-backdrop"></div>
+    <div class="mobile-menu-overlay" id="mobile-menu-overlay">
+        <div class="mobile-menu-header">
+            <button class="close-mobile-menu" id="close-mobile-menu">×</button>
+        </div>
+        <nav class="mobile-nav-links">
             <a href="index.html">Home</a>
             <a href="books.html">Library</a>
             <a href="about.html">About</a>
             <a href="contact.html">Contact</a>
-            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
         </nav>
-    </header>
+    </div>
     <!-- Supabase SDK -->
     <script src="js/lib/supabase-js.js"></script>
     <script src="js/supabase-config.js"></script>

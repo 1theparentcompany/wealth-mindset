@@ -34,14 +34,19 @@ window.saveDetailPageSettings = function () {
             });
         });
 
+        // Merge with existing settings to preserve 'stats' and other non-form data
+        const existingSettings = library[index].detailSettings || {};
+
         const detailSettings = {
+            ...existingSettings, // Preserve existing data (like stats array)
             tabs: tabs,
             genres: document.getElementById('detail-genres').value,
             readers: document.getElementById('detail-readers').value,
-            rating: document.getElementById('detail-rating').value,
-            likes: document.getElementById('detail-likes').value,
-            reviews: document.getElementById('detail-reviews').value,
-            chapters: document.getElementById('detail-chapters-count').value,
+            // Keep existing values for core stats if not in DOM (they are hidden now)
+            rating: document.getElementById('detail-rating')?.value || existingSettings.rating || '',
+            likes: document.getElementById('detail-likes')?.value || existingSettings.likes || '',
+            reviews: document.getElementById('detail-reviews')?.value || existingSettings.reviews || '',
+            chapters: document.getElementById('detail-chapters-count')?.value || existingSettings.chapters || '',
             pages: document.getElementById('detail-pages').value,
             license: document.getElementById('detail-license').value,
             language: document.getElementById('detail-lang').value,

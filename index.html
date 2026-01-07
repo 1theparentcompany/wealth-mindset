@@ -123,86 +123,69 @@
     }
   </style>
 </head>
+<script>(function () {
+    const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 
-<body class="home-theme">
+    if (theme === 'dark') {
+      document.body.classList.add('dark-mode');
 
+      if (window.location.pathname === '/' || window.location.pathname.endsWith('index.html')) {
+        document.body.classList.add('home-theme');
+      }
+    }
+  })();
+</script>
+
+<body>
   <header class="site-header">
     <div
       style="max-width: var(--max-width); width: 100%; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 var(--spacing-unit); box-sizing: border-box;">
-      <div class="logo">
-        <a href="index.html">
-          <img src="assets/logo-new.png" alt="Wealth & Mindset" class="logo-img" loading="eager" decoding="sync">
-          <span>Wealth & Mindset</span>
-        </a>
-      </div>
-      <nav>
-        <a href="index.html">Home</a>
-        <a href="books.html">Library</a>
-        <a href="about.html" class="nav-about">About</a>
-        <a href="contact.html" class="nav-contact">Contact</a>
-        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
-        <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Open menu">⋮</button>
-      </nav>
+      <div class="logo"><a href="index.html"><img src="assets/logo-new.png" alt="Wealth & Mindset" class="logo-img"
+            loading="eager" decoding="sync"><span>Wealth & Mindset</span></a></div>
+      <nav><a href="index.html">Home</a><a href="books.html">Library</a><a href="about.html"
+          class="nav-about">About</a><a href="contact.html" class="nav-contact">Contact</a><button id="theme-toggle"
+          class="theme-toggle" aria-label="Toggle theme">🌙</button><button class="mobile-menu-toggle"
+          id="mobile-menu-btn" aria-label="Open menu">⋮</button></nav>
     </div>
-  </header>
-
-  <!-- Mobile Menu Overlay -->
+  </header><!-- Mobile Menu Overlay -->
   <div class="menu-backdrop" id="menu-backdrop"></div>
   <div class="mobile-menu-overlay" id="mobile-menu-overlay">
-    <div class="mobile-menu-header">
-      <button class="close-mobile-menu" id="close-mobile-menu">×</button>
-    </div>
-    <nav class="mobile-nav-links">
-      <a href="index.html">Home</a>
-      <a href="books.html">Library</a>
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-    </nav>
+    <div class="mobile-menu-header"><button class="close-mobile-menu" id="close-mobile-menu">×</button></div>
+    <nav class="mobile-nav-links"><a href="index.html">Home</a><a href="books.html">Library</a><a
+        href="about.html">About</a><a href="contact.html">Contact</a></nav>
   </div>
-  <script src="js/script.js" defer></script>
-
-  <audio id="bg-music" loop preload="auto">
+  <script src="js/script.js" defer></script><audio id="bg-music" loop preload="auto">
     <source src="https://www.soundjay.com/nature/rain-07.mp3" type="audio/mpeg">
-  </audio>
-
-  <!-- Music Control Toggle -->
-  <button class="music-control" id="music-toggle" onclick="toggleMusic()">
-    <span class="music-status-text">Rain Ambient</span>
+  </audio><!-- Music Control Toggle --><button class="music-control" id="music-toggle" onclick="toggleMusic()"><span
+      class="music-status-text">Rain Ambient</span>
     <div class="icon">🌧️</div>
   </button>
-
-  <main class="site-main">
-    <!-- Hero Section -->
+  <main class="site-main"><!-- Hero Section -->
     <section class="hero-section"
       style="max-width: var(--max-width); width: 100%; margin: 40px auto; position: relative; overflow: hidden; border-radius: 30px; background: radial-gradient(circle at 70% 30%, rgba(37, 99, 235, 0.15) 0%, transparent 60%);">
       <div
         style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 40px; padding: clamp(40px, 8vw, 80px) clamp(20px, 5vw, 80px);">
         <div style="flex: 1; min-width: 300px;">
-          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
-            <span class="premium-badge animate-float">Featured Roadmap</span>
-            <span style="color: #94a3b8; font-size: 0.85rem; font-weight: 600; letter-spacing: 1px;">2026 EDITION</span>
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;"><span
+              class="premium-badge animate-float">Featured Roadmap</span><span
+              style="color: #94a3b8; font-size: 0.85rem; font-weight: 600; letter-spacing: 1px;">2026 EDITION</span>
           </div>
           <h1 id="hero-title" class="premium-gradient-text"
             style="font-size: var(--font-size-h1); line-height: 0.95; margin-bottom: 20px; font-weight: 900;">Wealth
             &<br>Mindset</h1>
           <p id="hero-subtitle"
             style="font-size: var(--font-size-p); color: #94a3b8; max-width: 500px; margin-bottom: 40px; line-height: 1.6;">
-            Master
-            the psychology of success and build a legacy with our curated guides and high-performance strategies.</p>
-          <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-            <a href="books.html" class="btn-primary hover-lift glow-on-hover"
-              style="background: var(--color-accent); color: #fff; padding: 16px 32px; border-radius: 14px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 10px; min-height: 54px;">
-              <span>📚</span> Explore Library
-            </a>
-            <a href="#" onclick="openDailyModal(); return false;" class="glass hover-lift"
-              style="color: #fff; padding: 16px 32px; border-radius: 14px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,0.1); min-height: 54px;">
-              <span>✨</span> Daily Mindset
-            </a>
-          </div>
+            Master the psychology of success and build a legacy with our curated guides and high-performance strategies.
+          </p>
+          <div style="display: flex; gap: 20px; flex-wrap: wrap;"><a href="books.html"
+              class="btn-primary hover-lift glow-on-hover"
+              style="background: var(--color-accent); color: #fff; padding: 16px 32px; border-radius: 14px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 10px; min-height: 54px;"><span>📚</span>Explore
+              Library </a><a href="#" onclick="openDailyModal(); return false;" class="glass hover-lift"
+              style="color: #fff; padding: 16px 32px; border-radius: 14px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,0.1); min-height: 54px;"><span>✨</span>Daily
+              Mindset </a></div>
         </div>
         <div style="flex-shrink: 0; position: relative; margin: 0 auto;">
-          <div class="animate-float" style="position: relative; z-index: 2;">
-            <img src="assets/logo-new.png" alt="Logo"
+          <div class="animate-float" style="position: relative; z-index: 2;"><img src="assets/logo-new.png" alt="Logo"
               style="height: clamp(200px, 30vw, 320px); filter: drop-shadow(0 0 50px rgba(37, 99, 235, 0.4)); transform: rotate(-5deg);">
           </div>
           <div
@@ -211,7 +194,6 @@
         </div>
       </div>
     </section>
-
     <!-- NEW: Image 1 Manager Layout -->
     <section style="max-width: var(--max-width); margin: 0 auto 60px; padding: 0 20px;">
       <div id="home-image-layout-1"
@@ -219,40 +201,32 @@
         <!-- Images injected via JS -->
       </div>
     </section>
-
     <!-- Search Bar Section -->
     <div class="home-search-container" style="max-width: 800px; margin: 0 auto 60px;">
       <div class="glass home-search-box"
         style="position: relative; border-radius: 20px; padding: 6px; display: flex; align-items: center; gap: 10px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
-        <span class="search-icon" style="padding-left: 20px; font-size: 1.2rem; opacity: 0.7;">🔍</span>
-        <input type="text" class="search-input" placeholder="Search for books, wisdom, or strategies..."
-          style="flex: 1; background: transparent; border: none; color: #fff; padding: 16px 0; font-size: 1.1rem; outline: none; font-family: var(--font-primary); font-weight: 500;">
-        <button class="search-btn hover-lift"
+        <span class="search-icon" style="padding-left: 20px; font-size: 1.2rem; opacity: 0.7;">🔍</span><input
+          type="text" class="search-input" placeholder="Search for books, wisdom, or strategies..."
+          style="flex: 1; background: transparent; border: none; color: #fff; padding: 16px 0; font-size: 1.1rem; outline: none; font-family: var(--font-primary); font-weight: 500;"><button
+          class="search-btn hover-lift"
           style="background: var(--color-accent); border: none; color: #fff; padding: 14px 28px; border-radius: 12px; font-weight: 700; margin-right: 5px; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);">Search</button>
       </div>
     </div>
-
     <!-- Content Categories Tabs -->
     <div class="chapters-tabs-outer"
       style="overflow-x: auto; margin-bottom: 60px; border-bottom: 1px solid rgba(255,255,255,0.05); scrollbar-width: none;">
       <div class="chapters-tabs-container" id="home-category-tabs"
-        style="display: flex; justify-content: center; gap: 10px; min-width: max-content; padding-bottom: 2px;">
-        <a href="books.html?filter=book" class="chapter-tab-link">Books</a>
-        <a href="books.html?filter=story" class="chapter-tab-link">Stories</a>
-        <a href="books.html?filter=guide" class="chapter-tab-link">Guides</a>
-        <a href="books.html?filter=laws" class="chapter-tab-link">Laws</a>
-        <a href="books.html?filter=custom" class="chapter-tab-link">Custom</a>
-        <a href="books.html?filter=quotes" class="chapter-tab-link">Quotes</a>
-        <a href="books.html" class="chapter-tab-link browse-all hover-lift">Library</a>
-        <a href="#" onclick="openDailyModal(); return false;" class="chapter-tab-link highlight-tab">
-          <span style="display: flex; align-items: center; gap: 8px;">
-            <span class="pulse-icon" style="width: 8px; height: 8px; background: #fbbf24; border-radius: 50%;"></span>
-            Today's Insight
-          </span>
-        </a>
-      </div>
+        style="display: flex; justify-content: center; gap: 10px; min-width: max-content; padding-bottom: 2px;"><a
+          href="books.html?filter=book" class="chapter-tab-link">Books</a><a href="books.html?filter=story"
+          class="chapter-tab-link">Stories</a><a href="books.html?filter=guide" class="chapter-tab-link">Guides</a><a
+          href="books.html?filter=laws" class="chapter-tab-link">Laws</a><a href="books.html?filter=custom"
+          class="chapter-tab-link">Custom</a><a href="books.html?filter=quotes" class="chapter-tab-link">Quotes</a><a
+          href="books.html" class="chapter-tab-link browse-all hover-lift">Library</a><a href="#"
+          onclick="openDailyModal(); return false;" class="chapter-tab-link highlight-tab"><span
+            style="display: flex; align-items: center; gap: 8px;"><span class="pulse-icon"
+              style="width: 8px; height: 8px; background: #fbbf24; border-radius: 50%;"></span>Today's Insight
+          </span></a></div>
     </div>
-
     <style>
       .chapters-tabs-outer::-webkit-scrollbar {
         display: none;
@@ -319,9 +293,22 @@
       .pulse-icon {
         animation: pulse 2s infinite;
       }
-
-
-      </script></section>< !-- Categories / Topics Section --><section style="margin-bottom: 80px; max-width: 1400px; margin-left: auto; margin-right: auto; width: 95%;"><div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;"><h2 style="font-size: var(--font-size-h3); margin: 0; color: #fff;">Browse Topics</h2><a href="books.html" style="color: var(--color-accent); font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px;"><span>📂</span>Explore All Topics → </a></div><div id="topics-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(clamp(250px, 30%, 400px), 1fr)); gap: 24px;">< !-- Dynamic Topics injected here --></div></section><style>.category-card-home {
+    </style>
+    </section><!-- Categories / Topics Section -->
+    <section style="margin-bottom: 80px; max-width: 1400px; margin-left: auto; margin-right: auto; width: 95%;">
+      <div
+        style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;">
+        <h2 style="font-size: var(--font-size-h3); margin: 0; color: #fff;">Browse Topics</h2><a href="books.html"
+          style="color: var(--color-accent); font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px;"><span>📂</span>Explore
+          All Topics → </a>
+      </div>
+      <div id="topics-container"
+        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(clamp(250px, 30%, 400px), 1fr)); gap: 24px;">
+        <!-- Dynamic Topics injected here -->
+      </div>
+    </section>
+    <style>
+      .category-card-home {
         background: rgba(255, 255, 255, 0.03);
         border: 1px solid rgba(255, 255, 255, 0.05);
         padding: 25px;
@@ -421,7 +408,8 @@
       <div class="collection-header">
         <h2
           style="font-size: 2.5rem; margin: 0; display: flex; align-items: center; gap: 15px; color: var(--color-heading);">
-          <span style="background: rgba(13, 148, 136, 0.1); padding: 12px; border-radius: 12px;">📚</span> Exclusive
+          <span style="background: rgba(13, 148, 136, 0.1); padding: 12px; border-radius: 12px;">📚</span>
+          Exclusive
           Collection
         </h2>
         <a href="#" onclick="openSectionModal('exclusive'); return false;"
@@ -614,21 +602,24 @@
           <h4 id="tip-head-1"
             style="color: #fbbf24; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem;">
             Financial Tip</h4>
-          <p id="tip-content-1" style="margin: 0; font-weight: 600; color: #fff;">Pay yourself first before spending
+          <p id="tip-content-1" style="margin: 0; font-weight: 600; color: #fff;">Pay yourself first before
+            spending
             anything.</p>
         </div>
         <div>
           <h4 id="tip-head-2"
             style="color: #fbbf24; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem;">
             Mindset Tip</h4>
-          <p id="tip-content-2" style="margin: 0; font-weight: 600; color: #fff;">Failure is simply data for your next
+          <p id="tip-content-2" style="margin: 0; font-weight: 600; color: #fff;">Failure is simply data for your
+            next
             attempt.</p>
         </div>
         <div>
           <h4 id="tip-head-3"
             style="color: #fbbf24; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-size: 0.75rem;">
             Success Tip</h4>
-          <p id="tip-content-3" style="margin: 0; font-weight: 600; color: #fff;">Focus on systems, not just end-point
+          <p id="tip-content-3" style="margin: 0; font-weight: 600; color: #fff;">Focus on systems, not just
+            end-point
             goals.</p>
         </div>
       </div>
@@ -672,7 +663,8 @@
     <section
       style="text-align: center; padding: 80px 40px; background: linear-gradient(rgba(26, 115, 232, 0.05), transparent); border-radius: 24px; margin-bottom: 60px;">
       <h2 style="font-size: 2.2rem; margin-bottom: 15px;">Have a book suggestion or feedback?</h2>
-      <p style="font-size: 1.2rem; opacity: 0.7; margin-bottom: 35px;">We're always looking to expand our library with
+      <p style="font-size: 1.2rem; opacity: 0.7; margin-bottom: 35px;">We're always looking to expand our library
+        with
         high-quality content.</p>
       <a href="contact.html" class="nav-btn primary"
         style="padding: 16px 40px; font-size: 1.1rem; display: inline-block;">📩 Share with us</a>
@@ -683,8 +675,6 @@
     </div>
 
     </div>
-    </div>
-    <div id="dynamic-home-sections"></div>
   </main>
 
   <footer
@@ -713,13 +703,12 @@
   </footer>
 
   <script src="js/script.js"></script>
-  </script>
 
 </body>
 
 <!-- SECTION LIST MODAL -->
 <div id="section-modal" class="daily-modal-overlay">
-  <div class="daily-modal-content" style="max-width: 900px; width: 95%;">
+  <div class="daily-modal-content" style="max-width: 900px; width: 95%; flex-direction: column;">
     <!-- Section Header -->
     <div class="daily-header"
       style="flex-direction: row; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px;">
@@ -732,9 +721,9 @@
     </div>
 
     <!-- Scrollable List -->
-    <div class="daily-body" style="padding-top: 20px;">
+    <div class="daily-body" style="padding-top: 20px; overflow-y: auto; flex: 1;">
       <div id="section-modal-grid"
-        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 24px; padding-bottom: 30px;">
         <!-- Items injected via JS -->
         <div class="premium-book-card">
           <div

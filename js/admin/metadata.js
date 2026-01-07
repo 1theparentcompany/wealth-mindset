@@ -173,6 +173,11 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
         // Save defaults
         item.detailSettings = settings;
         saveMetaItem(item);
+
+        // Force immediate sync to ensure these defaults are in Supabase
+        if (typeof syncToCloud === 'function') {
+            syncToCloud('library', item);
+        }
     }
 
     // Exact Re-implementation of Detail Page Layout with LIVE editing
@@ -212,7 +217,6 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
                             <span onclick="editMetadataField('${item.id}', 'author', 'Author Name')" style="cursor: pointer; color: #fff; font-weight: 600;">${item.author || 'Author Name'}</span>
                             <span>•</span>
                             <span style="color: #fbbf24; font-weight: 700;">⭐ ${item.rating || '0.0'} / 5.0</span>
-                            <span onclick="editMetadataField('${item.id}', 'rating', 'Rating (0-5)')" style="color: #3b82f6; cursor: pointer; font-size: 0.8rem;">✎</span>
                             <span style="margin-left: 10px; color: #10b981; font-weight: 700; background: rgba(16, 185, 129, 0.1); padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; text-transform: uppercase;">
                                 ${item.category || 'General'}
                             </span>
@@ -224,7 +228,6 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
                             <div style="display: flex; flex-direction: column; gap: 5px;">
                                 <div style="font-size: 1.5rem; font-weight: 800; color: #10b981;">${item.likes_percent || '0'}%</div>
                                 <div style="font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 700;">Community Score</div>
-                                <div onclick="editMetadataField('${item.id}', 'likes_percent', 'Likes %')" style="color: #3b82f6; cursor: pointer; font-size: 0.7rem;">Edit %</div>
                             </div>
                             <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
                             
@@ -233,7 +236,6 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
                                 <div style="display: flex; flex-direction: column; gap: 5px;">
                                     <div style="font-size: 1.5rem; font-weight: 800; color: #fff;">${item.chapters_count || (Array.isArray(item.chapters) ? item.chapters.length : '0')}</div>
                                     <div style="font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 700;">Chapters</div>
-                                    <div onclick="editMetadataField('${item.id}', 'chapters_count', 'Chapter Count')" style="color: #3b82f6; cursor: pointer; font-size: 0.7rem;">Edit Count</div>
                                 </div>
                                 <div style="width: 1px; background: rgba(255,255,255,0.1);"></div>
                                 <div style="display: flex; flex-direction: column; gap: 5px;">
@@ -343,16 +345,26 @@ window.renderMetadataPreview = function (itemId, activeTabName = "About") {
                              <button onclick="addStat('${item.id}')" style="background: rgba(16, 185, 129, 0.1); border: 1px dashed #10b981; color: #10b981; border-radius: 6px; padding: 6px 15px; font-size: 0.8rem; font-weight: 800; cursor: pointer;">+ ADD STAT</button>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px;">
-                            ${settings.stats.map((stat, idx) => `
+                            ${settings.stats.map((stat, idx) => {
+        const lowerLabel = stat.label.toLowerCase();
+        const isCoreStat = lowerLabel.includes('rating') || lowerLabel.includes('likes') || lowerLabel.includes('review') || lowerLabel.includes('chapter') || lowerLabel.includes('content length');
+
+        // Hide Core Stats from this list as they are now live/auto-calculated
+        if (isCoreStat) return '';
+
+        return `
                                 <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); position: relative; group;">
                                     <div style="color: #64748b; font-size: 0.65rem; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; margin-bottom: 8px;">${stat.label}</div>
                                     <div style="font-weight: 700; font-size: 0.95rem; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${stat.value}</div>
-                                    <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 8px;">
-                                        <div onclick="editStat('${item.id}', ${idx})" style="color: #3b82f6; cursor: pointer; font-size: 1rem;" title="Edit">✏️</div>
-                                        <div onclick="removeStat('${item.id}', ${idx})" style="color: #ef4444; cursor: pointer; font-size: 1rem;" title="Remove">🗑️</div>
-                                    </div>
+                                    ${!isCoreStat ? `
+                                        <div style="position: absolute; top: 10px; right: 10px; display: flex; gap: 8px;">
+                                            <div onclick="editStat('${item.id}', ${idx})" style="color: #3b82f6; cursor: pointer; font-size: 1rem;" title="Edit">✏️</div>
+                                            <div onclick="removeStat('${item.id}', ${idx})" style="color: #ef4444; cursor: pointer; font-size: 1rem;" title="Remove">🗑️</div>
+                                        </div>
+                                    ` : ''}
                                 </div>
-                            `).join('')}
+                            `;
+    }).join('')}
                             
                             <!-- Genre/Tags Special Rendering -->
                             <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); position: relative; grid-column: span 2;">

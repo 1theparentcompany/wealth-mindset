@@ -31,10 +31,10 @@ window.syncToCloud = async function (type, data, identifier = null) {
                     category: book.type || 'book',
                     detail_settings: {
                         ...(book.detailSettings || {}),
-                        coverDesign: book.coverDesign || {},
-                        type: book.type || 'book',
-                        genre: book.genre || (book.detailSettings && book.detailSettings.genres) || '',
-                        relatedItems: book.relatedItems || []
+                        coverDesign: book.coverDesign || (book.detailSettings && book.detailSettings.coverDesign) || {},
+                        type: book.type || (book.detailSettings && book.detailSettings.type) || 'book',
+                        genre: book.genre || (book.detailSettings && book.detailSettings.genre) || (book.detailSettings && book.detailSettings.genres) || '',
+                        relatedItems: (book.detailSettings && book.detailSettings.relatedItems) || book.relatedItems || []
                     },
                     status: book.status || 'published',
                     sort_order: book.sort_order || 100
@@ -216,10 +216,9 @@ window.syncToCloud = async function (type, data, identifier = null) {
                 await supabaseClient.from('site_feedback').insert({
                     name: data.name,
                     email: data.email || '',
-                    topic: data.topic || 'general',
                     message: data.message,
                     status: data.status || 'unread',
-                    secret_code: data.secretCode || ''
+                    secret_code: data.secret_code || data.secretCode || ''
                 });
                 break;
         }

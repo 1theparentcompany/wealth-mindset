@@ -150,91 +150,123 @@
     </style>
 </head>
 
-<body id="original-page-body">
-    <a href="javascript:history.back()" class="back-btn">← Back to Reader</a>
-
-    <div class="original-overlay">
-        <div id="content-display">
-            <!-- Loaded dynamically -->
-            <div class="empty-state">Loading original content...</div>
+<header class="site-header">
+    <div
+        style="max-width: var(--max-width); width: 100%; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 var(--spacing-unit); box-sizing: border-box;">
+        <div class="logo">
+            <a href="index.html">
+                <img src="assets/logo-new.png" alt="Wealth & Mindset" class="logo-img" loading="eager"
+                    fetchpriority="high">
+                <span>Wealth & Mindset</span>
+            </a>
         </div>
+        <nav class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="books.html">Library</a>
+            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+            <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Open menu">⋮</button>
+        </nav>
     </div>
+</header>
+<!-- Mobile Menu Overlay -->
+<div class="menu-backdrop" id="menu-backdrop"></div>
+<div class="mobile-menu-overlay" id="mobile-menu-overlay">
+    <div class="mobile-menu-header">
+        <button class="close-mobile-menu" id="close-mobile-menu">×</button>
+    </div>
+    <nav class="mobile-nav-links">
+        <a href="index.html">Home</a>
+        <a href="books.html">Library</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+    </nav>
+</div>
 
-    <!-- Audio Element -->
-    <audio id="atmosphere-audio"></audio>
+<a href="javascript:history.back()" class="back-btn" style="top: 80px;">← Back to Reader</a>
 
-    <!-- Supabase Config -->
-    <script src="js/lib/supabase-js.js"></script>
-    <script src="js/supabase-config.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const bookId = urlParams.get('id');
+<div class="original-overlay">
+    <div id="content-display">
+        <!-- Loaded dynamically -->
+        <div class="empty-state">Loading original content...</div>
+    </div>
+</div>
 
-            if (!bookId) {
-                showError("No book ID provided.");
+<!-- Audio Element -->
+<audio id="atmosphere-audio"></audio>
+
+<!-- Supabase Config -->
+<script src="js/lib/supabase-js.js"></script>
+<script src="js/supabase-config.js"></script>
+<script src="js/script.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookId = urlParams.get('id');
+
+        if (!bookId) {
+            showError("No book ID provided.");
+            return;
+        }
+
+        try {
+            let book = null;
+
+            if (window.supabaseClient) {
+                const identifier = window.isValidUUID(bookId) ? 'id' : 'id'; // Placeholder for if we ever use numeric lookups in SB
+                const { data, error } = await supabaseClient
+                    .from('library')
+                    .select('*')
+                    .eq('id', bookId)
+                    .single();
+                if (data) book = data;
+            }
+
+            if (!book) {
+                const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
+                book = library.find(item => item.id === bookId);
+            }
+
+            if (!book) {
+                showError("Original content not found.");
                 return;
             }
 
-            try {
-                let book = null;
-
-                if (window.supabaseClient) {
-                    const identifier = window.isValidUUID(bookId) ? 'id' : 'id'; // Placeholder for if we ever use numeric lookups in SB
-                    const { data, error } = await supabaseClient
-                        .from('library')
-                        .select('*')
-                        .eq('id', bookId)
-                        .single();
-                    if (data) book = data;
-                }
-
-                if (!book) {
-                    const library = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
-                    book = library.find(item => item.id === bookId);
-                }
-
-                if (!book) {
-                    showError("Original content not found.");
-                    return;
-                }
-
-                const display = document.getElementById('content-display');
-                if (!book.originalContent) {
-                    display.innerHTML = `
+            const display = document.getElementById('content-display');
+            if (!book.originalContent) {
+                display.innerHTML = `
                         <div class="empty-state">
                             <h2 style="color: #94a3b8;">No Original Text Available</h2>
                             <p>The original source text for this book hasn't been added yet.</p>
                         </div>
                     `;
-                    return;
-                }
+                return;
+            }
 
-                // Apply Visual Settings
-                if (book.originalBg) {
-                    document.body.style.backgroundImage = `url('${book.originalBg}')`;
-                }
+            // Apply Visual Settings
+            if (book.originalBg) {
+                document.body.style.backgroundImage = `url('${book.originalBg}')`;
+            }
 
-                if (book.originalCustomCss) {
-                    document.getElementById('original-dynamic-css').textContent = book.originalCustomCss;
-                }
+            if (book.originalCustomCss) {
+                document.getElementById('original-dynamic-css').textContent = book.originalCustomCss;
+            }
 
-                // Setup Audio
-                if (book.originalMusic) {
-                    const audio = document.getElementById('atmosphere-audio');
-                    audio.src = book.originalMusic;
-                    audio.volume = (book.originalMusicVolume || 30) / 100;
-                    audio.loop = book.originalMusicLoop !== false;
+            // Setup Audio
+            if (book.originalMusic) {
+                const audio = document.getElementById('atmosphere-audio');
+                audio.src = book.originalMusic;
+                audio.volume = (book.originalMusicVolume || 30) / 100;
+                audio.loop = book.originalMusicLoop !== false;
 
-                    // Try to play on first interaction or automatically
-                    const playAudio = () => {
-                        audio.play().catch(e => console.log("Autoplay prevented"));
-                        document.removeEventListener('click', playAudio);
-                    };
-                    document.addEventListener('click', playAudio);
-                }
+                // Try to play on first interaction or automatically
+                const playAudio = () => {
+                    audio.play().catch(e => console.log("Autoplay prevented"));
+                    document.removeEventListener('click', playAudio);
+                };
+                document.addEventListener('click', playAudio);
+            }
 
-                display.innerHTML = `
+            display.innerHTML = `
                     <div class="original-header">
                         <span class="badge">ORIGINAL SOURCE</span>
                         <h1>${book.originalTitle || book.title}</h1>
@@ -246,27 +278,27 @@
                     </div>
                 `;
 
-            } catch (err) {
-                console.error(err);
-                showError("An error occurred while loading content.");
-            }
-        });
-
-        function formatContent(text) {
-            // If it looks like HTML, keep it, otherwise wrap paragraphs
-            if (/<[a-z][\s\S]*>/i.test(text)) return text;
-            return text.split('\n').map(p => p.trim() ? `<p>${p}</p>` : '').join('');
+        } catch (err) {
+            console.error(err);
+            showError("An error occurred while loading content.");
         }
+    });
 
-        function showError(msg) {
-            document.getElementById('content-display').innerHTML = `
+    function formatContent(text) {
+        // If it looks like HTML, keep it, otherwise wrap paragraphs
+        if (/<[a-z][\s\S]*>/i.test(text)) return text;
+        return text.split('\n').map(p => p.trim() ? `<p>${p}</p>` : '').join('');
+    }
+
+    function showError(msg) {
+        document.getElementById('content-display').innerHTML = `
                 <div class="empty-state">
                     <h2 style="color: #ef4444;">Error</h2>
                     <p>${msg}</p>
                 </div>
             `;
-        }
-    </script>
+    }
+</script>
 </body>
 
 </html>

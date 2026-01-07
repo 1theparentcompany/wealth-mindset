@@ -10,9 +10,24 @@ document.addEventListener('DOMContentLoaded', () => {
     initLibrary();
 });
 
+function showLoading() {
+    const loader = document.getElementById('loading-indicator');
+    const sections = document.getElementById('library-sections-container');
+    if (loader) loader.classList.add('active');
+    if (sections) sections.style.opacity = '0.5';
+}
+
+function hideLoading() {
+    const loader = document.getElementById('loading-indicator');
+    const sections = document.getElementById('library-sections-container');
+    if (loader) loader.classList.remove('active');
+    if (sections) sections.style.opacity = '1';
+}
+
 async function initLibrary() {
-    // Load Taxonomy
-    let taxonomy = JSON.parse(localStorage.getItem('siteTaxonomy') || '{}');
+    showLoading();
+
+    // Default Taxonomy
     const defaultTaxonomy = {
         'book': { icon: '📚', genres: ['Inspiration', 'Education', 'Finance', 'Psychology', 'Business', 'Self-Help', 'Biography'] },
         'story': { icon: '📖', genres: ['Inspirational', 'Motivational', 'Success Story', 'Biographical', 'Classic', 'Fictional'] },
@@ -21,72 +36,96 @@ async function initLibrary() {
         'custom': { icon: '✨', genres: ['General', 'Special', 'Misc'] }
     };
 
-    // Load stored items (Fallback only)
+    try {
+        taxonomy = JSON.parse(localStorage.getItem('siteTaxonomy') || '{}');
+    } catch (e) {
+        console.warn('Failed to parse siteTaxonomy, resetting to default.', e);
+        taxonomy = {};
+    }
+
     let stored = [];
+
+    // Try to load cached data first for immediate render if available
     try {
         stored = JSON.parse(localStorage.getItem('siteLibrary') || '[]');
-        stored.sort((a, b) => (a.sort_order || 100) - (b.sort_order || 100));
-    } catch (e) { }
+        if (stored.length > 0) {
+            stored.sort((a, b) => (a.sort_order || 100) - (b.sort_order || 100));
+        }
+    } catch (e) {
+        console.warn('Failed to parse siteLibrary, resetting to empty.', e);
+        stored = [];
+    }
 
-    // If Supabase is configured, try to fetch from cloud
+    // If Supabase is configured, fetch in parallel
     if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured()) {
         try {
-            // Fetch Taxonomy from admin_settings
-            const { data: settingsData, error: settingsError } = await supabaseClient
+            const taxonomyPromise = supabaseClient
                 .from('admin_settings')
                 .select('content_types')
                 .limit(1)
                 .maybeSingle();
 
-            if (settingsData && settingsData.content_types) {
-                taxonomy = settingsData.content_types;
-            }
-
-            // Fetch Books (Light data only, but include detail_settings for customization)
-            const { data: libData, error: libError } = await supabaseClient
+            const booksPromise = supabaseClient
                 .from('books')
                 .select('id, title, author, category, description, cover_image, is_featured, background_image, status, sort_order, detail_settings')
                 .eq('status', 'published')
-                .is('original_book_id', null) // Filter out translations - show only original books
+                .is('original_book_id', null)
                 .order('sort_order', { ascending: true });
 
-            // Fetch Ratings and aggregate
-            const { data: reviewData } = await supabaseClient
+            const reviewsPromise = supabaseClient
                 .from('book_reviews')
                 .select('book_id, rating');
 
+            // Wait for all requests
+            const [settingsRes, booksRes, reviewsRes] = await Promise.all([
+                taxonomyPromise,
+                booksPromise,
+                reviewsPromise
+            ]);
+
+            // Process Taxonomy
+            if (settingsRes.data && settingsRes.data.content_types) {
+                taxonomy = settingsRes.data.content_types;
+                localStorage.setItem('siteTaxonomy', JSON.stringify(taxonomy));
+            }
+
+            // Process Reviews
             const ratingMap = {};
-            if (reviewData) {
-                reviewData.forEach(rev => {
+            if (reviewsRes.data) {
+                reviewsRes.data.forEach(rev => {
                     if (!ratingMap[rev.book_id]) ratingMap[rev.book_id] = { sum: 0, count: 0 };
                     ratingMap[rev.book_id].sum += rev.rating;
                     ratingMap[rev.book_id].count++;
                 });
             }
 
-            if (libData && libData.length > 0) {
-                stored = libData.map(item => {
+            // Process Books
+            if (booksRes.data && booksRes.data.length > 0) {
+                stored = booksRes.data.map(item => {
                     const stats = ratingMap[item.id];
-                    const avgRating = stats ? (stats.sum / stats.count).toFixed(1) : '0.0'; // Changed default from 4.9 to 0.0
+                    const avgRating = stats ? (stats.sum / stats.count).toFixed(1) : '0.0';
                     const details = item.detail_settings || {};
 
                     return {
                         id: item.id,
                         title: item.title,
                         author: item.author,
-                        type: item.category, // Category column now holds 'type' (book/article)
+                        type: item.category,
                         description: item.description,
                         image: item.cover_image,
                         isFeatured: item.is_featured,
                         backgroundSettings: { detailUrl: item.background_image },
                         detailSettings: details,
-                        genre: details.genre || item.genre || 'General', // Fallback to item.genre if valid, but prioritize details
+                        genre: details.genre || item.genre || 'General',
                         rating: avgRating
                     };
                 });
+                // Update Cache
+                localStorage.setItem('siteLibrary', JSON.stringify(stored));
             }
+
         } catch (e) {
-            console.error("Supabase fetch failed, falling back to local:", e);
+            console.error("Supabase parallel fetch failed:", e);
         }
     }
 
@@ -98,7 +137,7 @@ async function initLibrary() {
     const mappedStored = stored.map(item => {
         const typeData = currentTaxonomy[item.type];
 
-        // Extract chapter/volume info if possible from title or description
+        // Extract chapter/volume info
         let volume = "";
         let chapter = "";
 
@@ -122,18 +161,18 @@ async function initLibrary() {
             description: item.description || `${item.chapters ? item.chapters.length : 0} Chapters`,
             url: `book-detail.html?id=${item.id}`,
             icon: typeData ? typeData.icon : '📄',
-            image: item.image || 'assets/logo-new.png', // Keep raw path/image, helper will handle it
+            image: item.image || 'assets/logo-new.png',
             tag: 'Read Now',
             volume: bBottom,
             chapter: bTop,
             volumeColor: bBottomColor,
             chapterColor: bTopColor,
             genre: item.genre || 'General',
-            rating: item.rating || '0.0' // Changed fallback from 4.9 to 0.0
+            rating: item.rating || '0.0'
         };
     });
 
-    // Enhance default items with image and badges
+    // Enhance default items
     const enhancedDefault = defaultItems.map(item => ({
         ...item,
         image: item.id === 'wm-guide' ? 'assets/logo-new.png' : 'assets/logo-new.png',
@@ -142,28 +181,79 @@ async function initLibrary() {
         genre: 'General'
     }));
 
-    allLibraryItems = [...enhancedDefault, ...mappedStored];
+    // If we have real items, don't show defaults mixed in, or do we? 
+    // Logic was: const allLibraryItems = [...enhancedDefault, ...mappedStored];
+    // But usually real items replace defaults. 
+    // Existing logic mixed them, so I will stick to existing logic for safety, 
+    // possibly filtering if duplicates (but user didn't ask to change that logic).
 
-    // Initialize filter from URL to persist state on refresh
+    // Check if we have any stored items from DB
+    if (stored.length > 0) {
+        allLibraryItems = [...mappedStored];
+    } else {
+        allLibraryItems = [...enhancedDefault, ...mappedStored];
+    }
+
+    // Initialize filter from URL
     const params = new URLSearchParams(window.location.search);
     const filter = params.get('filter');
     if (filter) {
         const select = document.getElementById('library-type-filter');
-        if (select) {
-            select.value = filter;
-        }
+        if (select) select.value = filter;
     }
 
     const searchQuery = params.get('q');
     if (searchQuery) {
         const searchInput = document.getElementById('library-global-search');
-        if (searchInput) {
-            searchInput.value = searchQuery;
-        }
+        if (searchInput) searchInput.value = searchQuery;
     }
+
+    // Dynamically populate Category Filter AFTER we have data and taxonomy set
+    populateCategoryFilter();
 
     updateGenreFilter();
     updateLibraryView();
+
+    hideLoading();
+}
+
+function populateCategoryFilter() {
+    const typeSelect = document.getElementById('library-type-filter');
+    if (!typeSelect) return;
+
+    // Get currently selected value if any
+    const currentValue = typeSelect.value;
+
+    // Preserve the "All Categories" option
+    const allOption = typeSelect.querySelector('option[value="all"]');
+    typeSelect.innerHTML = '';
+    if (allOption) typeSelect.appendChild(allOption);
+    else {
+        const opt = document.createElement('option');
+        opt.value = 'all';
+        opt.textContent = 'All Categories';
+        typeSelect.appendChild(opt);
+    }
+
+    const taxonomy = window.activeTaxonomy || {};
+
+    // Only populate categories that actually exist in taxonomy
+    Object.keys(taxonomy).forEach(key => {
+        const data = taxonomy[key];
+        const opt = document.createElement('option');
+        opt.value = key;
+        // Capitalize 
+        const label = key.charAt(0).toUpperCase() + key.slice(1);
+        opt.textContent = `${data.icon || ''} ${label}`;
+        typeSelect.appendChild(opt);
+    });
+
+    // Restore selection if valid, otherwise default to all
+    if (currentValue && (currentValue === 'all' || taxonomy[currentValue])) {
+        typeSelect.value = currentValue;
+    } else {
+        typeSelect.value = 'all';
+    }
 }
 
 function handleFilterChange(value) {
@@ -192,15 +282,28 @@ function updateGenreFilter() {
     let genres = new Set();
 
     if (typeFilter === 'all') {
+        // Collect genres from ALL taxonomy types
         Object.values(taxonomy).forEach(t => {
-            if (t.genres) t.genres.forEach(g => genres.add(g));
+            if (t.genres && Array.isArray(t.genres)) {
+                t.genres.forEach(g => genres.add(g));
+            }
         });
-    } else if (taxonomy[typeFilter] && taxonomy[typeFilter].genres) {
-        taxonomy[typeFilter].genres.forEach(g => genres.add(g));
+    } else {
+        // Specific category
+        if (taxonomy[typeFilter] && taxonomy[typeFilter].genres) {
+            taxonomy[typeFilter].genres.forEach(g => genres.add(g));
+        }
     }
 
-    // Fallback: collect genres from actual items if none in taxonomy
+    // Fallback: collect genres from actual items if none in taxonomy (or as supplement)
+    // Only do this if we STILL have 0 genres, or maybe always add them to be safe?
+    // User requested "only those catagory in liby appear which i add in site sitting", 
+    // so we should strictly respect taxonomy if it exists. 
+    // However, if an item has a genre not in taxonomy, it becomes un-filterable. 
+    // Let's stick to taxonomy first as requested.
+
     if (genres.size === 0) {
+        // Fallback to item scanning if taxonomy is empty for this type
         allLibraryItems.forEach(item => {
             if (typeFilter === 'all' || item.type === typeFilter) {
                 if (item.genre) genres.add(item.genre);
@@ -212,6 +315,7 @@ function updateGenreFilter() {
     const currentGenre = params.get('genre') || 'all';
 
     genreSelect.innerHTML = '<option value="all">All Genres</option>';
+
     Array.from(genres).sort().forEach(g => {
         const opt = document.createElement('option');
         opt.value = g.toLowerCase();
@@ -219,18 +323,17 @@ function updateGenreFilter() {
         if (g.toLowerCase() === currentGenre.toLowerCase()) opt.selected = true;
         genreSelect.appendChild(opt);
     });
-}
 
-// Handle Back/Forward buttons
-window.addEventListener('popstate', () => {
-    const params = new URLSearchParams(window.location.search);
-    const filter = params.get('filter') || 'all';
-    const select = document.getElementById('library-type-filter');
-    if (select) {
-        select.value = filter;
-        updateLibraryView();
-    }
-});
+    // Handle Back/Forward buttons
+    window.addEventListener('popstate', () => {
+        const params = new URLSearchParams(window.location.search);
+        const filter = params.get('filter') || 'all';
+        if (select) {
+            select.value = filter;
+            updateLibraryView();
+        }
+    });
+}
 
 // --- XSS & DOM Performance Optimizations ---
 

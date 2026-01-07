@@ -302,7 +302,12 @@ window.publishChapters = function () {
     if (currentEditId) {
         const index = library.findIndex(item => item.id === currentEditId);
         if (index !== -1) {
-            library[index] = newEntry;
+            // MERGE with existing data to preserve detailSettings, stats, rating, etc.
+            library[index] = {
+                ...library[index],
+                ...newEntry,
+                detailSettings: library[index].detailSettings || {} // Explicitly preserve detailSettings
+            };
             showToast(`Updated "${bookTitle}" successfully!`);
         }
     } else {
