@@ -19,6 +19,12 @@
     <!-- Supabase SDK -->
     <script src="js/lib/supabase-js.js"></script>
     <script src="js/supabase-config.js"></script>
+    <script>
+        (function () {
+            const t = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            if (t === 'dark') document.documentElement.classList.add('dark-mode');
+        })();
+    </script>
 </head>
 
 <body>
@@ -36,8 +42,8 @@
             <nav class="nav-links">
                 <a href="index.html">Home</a>
                 <a href="books.html">Library</a>
-                <a href="about.html">About</a>
-                <a href="contact.html">Contact</a>
+                <a href="about.html" class="nav-about">About</a>
+                <a href="contact.html" class="nav-contact">Contact</a>
                 <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
                 <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Open menu">⋮</button>
             </nav>
@@ -62,30 +68,12 @@
     <main class="site-main">
 
         <div class="page-container">
-            <!-- Left Sidebar Ads -->
-            <aside class="side-sidebar left">
-                <div class="sticky-ads">
-                    <div class="vertical-ad-banner">
-                        <span class="ad-label">Advertisement</span>
-                        <div style="font-weight: bold; margin-bottom: 10px;">[Sidebar Banner 1]</div>
-                        <div style="font-size: 0.7rem; opacity: 0.6;">300 x 600</div>
-                    </div>
-                    <div class="vertical-ad-banner">
-                        <span class="ad-label">Advertisement</span>
-                        <div style="font-weight: bold; margin-bottom: 10px;">[Sidebar Banner 2]</div>
-                        <div style="font-size: 0.7rem; opacity: 0.6;">300 x 600</div>
-                    </div>
-                </div>
-            </aside>
+            <!-- Sidebars removed for form clarity -->
 
 
             <!-- Main Content Area -->
             <div class="main-layout-content">
-                <!-- Ad Space: Top -->
-                <div class="ad-container ad-top">
-                    <span class="ad-label">Advertisement</span>
-                    <div>[Header Banner - 728x90]</div>
-                </div>
+                <!-- Top banner removed for form clarity -->
 
                 <style>
                     .contact-container {
@@ -247,11 +235,7 @@
                         help.wealthandmindset@gmail.com</a>
                     <p class="response-time">Response time: 48–72 hours</p>
 
-                    <!-- AD -->
-                    <div class="intext-ad">
-                        <span>ADVERTISEMENT</span>
-                        <div class="ad-box-small">300 × 250 Ad Space</div>
-                    </div>
+                    <!-- In-text ad removed for form clarity -->
 
                     <h2>Send <span id="admin-trigger" style="cursor: default; user-select: none;">Us</span> Feedback
                     </h2>
@@ -323,43 +307,44 @@
 
                 </div>
 
-                <!-- Ad Space: Bottom -->
-                <div class="ad-container ad-bottom">
-                    <span class="ad-label">Advertisement</span>
-                    <div>[Footer Banner - 728x90]</div>
+                <!-- Minimal Bottom Support Slot -->
+                <div class="ad-container ad-bottom glass">
+                    <div style="font-size: 0.7rem; opacity: 0.4;">[ Support Our Work ]</div>
                 </div>
             </div>
 
-            <!-- Right Sidebar Ads -->
-            <aside class="side-sidebar right">
-                <div class="sticky-ads">
-                    <div class="vertical-ad-banner">
-                        <span class="ad-label">Advertisement</span>
-                        <div style="font-weight: bold; margin-bottom: 10px;">[Sidebar Banner 1]</div>
-                        <div style="font-size: 0.7rem; opacity: 0.6;">300 x 600</div>
-                    </div>
-                    <div class="vertical-ad-banner">
-                        <span class="ad-label">Advertisement</span>
-                        <div style="font-weight: bold; margin-bottom: 10px;">[Sidebar Banner 2]</div>
-                        <div style="font-size: 0.7rem; opacity: 0.6;">300 x 600</div>
-                    </div>
-                </div>
-            </aside>
+            <!-- Sidebars removed for form clarity -->
 
         </div>
     </main>
 
-    <footer>
-        <img src="assets/logo-new.png" alt="Wealth & Mindset" class="footer-logo" loading="lazy">
-        <div class="footer-links">
-            <a href="index.html">Home</a>
-            <a href="about.html">About Us</a>
-            <a href="contact.html">Contact Us</a>
-            <a href="privacy.html">Privacy Policy</a>
-            <a href="terms.html">Terms and Conditions</a>
+    <footer
+        style="padding: clamp(40px, 8vw, 80px) var(--spacing-unit); background: #060b19; border-top: 1px solid rgba(255,255,255,0.05); text-align: center;">
+        <img src="assets/logo-new.png" alt="Wealth & Mindset" class="footer-logo"
+            style="height: 50px; margin-bottom: 30px; filter: grayscale(1) opacity(0.8);">
+        <div class="footer-links"
+            style="display: flex; justify-content: center; gap: clamp(15px, 3vw, 30px); flex-wrap: wrap; margin-bottom: 30px; font-weight: 600; font-size: 0.95rem;">
+            <a href="index.html"
+                style="color: #94a3b8; text-decoration: none; transition: var(--transition-smooth);">Home</a>
+            <a href="about.html"
+                style="color: #94a3b8; text-decoration: none; transition: var(--transition-smooth);">About
+                Us</a>
+            <a href="contact.html"
+                style="color: #94a3b8; text-decoration: none; transition: var(--transition-smooth);">Contact Us</a>
+            <a href="privacy.html"
+                style="color: #94a3b8; text-decoration: none; transition: var(--transition-smooth);">Privacy Policy</a>
+            <a href="terms.html"
+                style="color: #94a3b8; text-decoration: none; transition: var(--transition-smooth);">Terms
+                and Conditions</a>
         </div>
-        <p class="copyright">&copy; 2025 Wealth & Mindset. All rights reserved.</p>
-        <p class="disclaimer">Educational purposes only. This is not professional financial advice.</p>
+        <div style="max-width: 800px; margin: 0 auto;">
+            <p class="copyright" style="color: #64748b; font-size: 0.85rem; margin-bottom: 10px;">&copy; 2026 Wealth &
+                Mindset. All rights reserved.</p>
+            <p class="disclaimer" style="color: #475569; font-size: 0.75rem; line-height: 1.6; font-style: italic;">
+                Educational purposes only. This is not professional financial advice. Performance of past habits does
+                not
+                guarantee future results.</p>
+        </div>
     </footer>
 
     <script>

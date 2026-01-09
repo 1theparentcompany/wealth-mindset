@@ -410,6 +410,19 @@ function updateLibraryView() {
 
             // Render Section
             const section = document.createElement('div');
+
+            // Inject Ad placeholder between segments
+            const sectionsCount = container.querySelectorAll('.library-section').length;
+            if (sectionsCount > 0 && sectionsCount % 2 === 0) {
+                const adDiv = document.createElement('div');
+                adDiv.className = 'ad-container ad-wide glass';
+                adDiv.innerHTML = `
+                <div style="font-weight: 800; color: #fff;">[ Premium Resource Placement ]</div>
+                <div style="font-size: 0.75rem; opacity: 0.5;">Inter-category engaging gap</div>
+              `;
+                container.appendChild(adDiv);
+            }
+
             section.className = 'library-section';
             section.id = `section-${type}`;
 

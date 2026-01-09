@@ -17,6 +17,8 @@ window.initCharts = async function () {
     await loadRealTimeActivity();
     await loadTopPerformingBooks();
     await loadAdPerformance();
+    await loadBookStatistics();
+    await loadCountryStatistics();
 
     // Setup Polling (60s)
     if (!window.analyticsPollingInterval) {
@@ -24,6 +26,7 @@ window.initCharts = async function () {
             if (window.currentActiveSection === 'site-analytics') {
                 updateAnalyticsMetrics();
                 loadRealTimeActivity();
+                loadCountryStatistics();
                 console.log("Analytics: Polled latest data.");
             }
         }, 60000);
@@ -389,3 +392,335 @@ window.exportAnalyticsToCSV = function (tableId, filename) {
     document.body.removeChild(link);
 };
 
+// Book Statistics with Language Breakdown
+window.loadBookStatistics = async function () {
+    const tbody = document.getElementById('book-stats-body');
+    if (!tbody) return;
+
+    try {
+        if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured() && window.supabaseClient) {
+            // Fetch all books from the books table
+            const { data: allBooks, error: booksError } = await supabaseClient
+                .from('books')
+                .select('*')
+                .order('title');
+
+            if (booksError) throw booksError;
+
+            if (!allBooks || allBooks.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #64748b;">No books found.</td></tr>`;
+                return;
+            }
+
+            // Group books by base title (removing language suffix)
+            const bookGroups = {};
+
+            allBooks.forEach(book => {
+                // Extract base title (remove language suffix like "(Spanish)", "(German)", etc.)
+                const baseTitle = book.title.replace(/\s*\([^)]+\)\s*$/g, '').trim();
+
+                if (!bookGroups[baseTitle]) {
+                    bookGroups[baseTitle] = {
+                        mainBook: book,
+                        baseTitle: baseTitle,
+                        versions: []
+                    };
+                }
+                bookGroups[baseTitle].versions.push(book);
+            });
+
+            // Create rows for each book group
+            const rows = await Promise.all(Object.values(bookGroups).map(async (group) => {
+                const mainBook = group.mainBook;
+                const baseTitle = group.baseTitle;
+                const allVersions = group.versions;
+                // Count total chapters (use max across all versions)
+                const chapterCounts = await Promise.all(allVersions.map(async (version) => {
+                    const { count } = await supabaseClient
+                        .from('chapters')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('book_id', version.id);
+                    return count || 0;
+                }));
+                const chapterCount = Math.max(...chapterCounts, 0);
+
+                // Count total languages
+                const languageCount = allVersions.length;
+
+                // Get total readers across all versions
+                const bookIds = allVersions.map(v => v.id);
+                let totalReaders = 0;
+                for (const bookId of bookIds) {
+                    const { count } = await supabaseClient
+                        .from('user_activity')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('activity_type', 'chapter_read')
+                        .eq('metadata->>book_id', bookId);
+                    totalReaders += (count || 0);
+                }
+
+                // Get total likes across all versions
+                let totalLikes = 0;
+                for (const bookId of bookIds) {
+                    try {
+                        // Count book-level likes
+                        const { count: bookLikes } = await supabaseClient
+                            .from('user_activity')
+                            .select('*', { count: 'exact', head: true })
+                            .eq('activity_type', 'like_book')
+                            .eq('metadata->>book_id', bookId);
+
+                        // Count chapter-level likes
+                        const { count: chapterLikes } = await supabaseClient
+                            .from('user_activity')
+                            .select('*', { count: 'exact', head: true })
+                            .eq('activity_type', 'like_chapter')
+                            .eq('metadata->>book_id', bookId);
+
+                        totalLikes += (bookLikes || 0) + (chapterLikes || 0);
+                    } catch (e) {
+                        // Table might not exist - silently continue
+                    }
+                }
+
+                // Get language-specific read counts
+                const languageReads = await Promise.all(allVersions.map(async (version) => {
+                    // Extract language from title
+                    const langMatch = version.title.match(/\(([^)]+)\)$/);
+                    const langName = langMatch ? langMatch[1] : 'English';
+
+                    // Get read count for this specific book version
+                    const { count: reads } = await supabaseClient
+                        .from('user_activity')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('activity_type', 'chapter_read')
+                        .eq('metadata->>book_id', version.id);
+
+                    return {
+                        language: langName,
+                        reads: reads || 0,
+                        bookId: version.id
+                    };
+                }));
+
+                // Sort languages: English first, then by read count
+                languageReads.sort((a, b) => {
+                    if (a.language === 'English') return -1;
+                    if (b.language === 'English') return 1;
+                    return b.reads - a.reads;
+                });
+
+                // Main row
+                const mainRow = `
+                    <tr style="border-bottom: 1px solid #1e293b; cursor:pointer; transition: background 0.2s;" 
+                        onmouseover="this.style.background='rgba(255,255,255,0.02)'" 
+                        onmouseout="this.style.background='transparent'"
+                        onclick="toggleBookLanguages('book-${mainBook.id}')">
+                        <td style="padding: 12px;">
+                            <span id="expand-icon-book-${mainBook.id}" style="display: inline-block; transition: transform 0.3s; font-size: 1.2rem;">▶</span>
+                        </td>
+                        <td style="padding: 12px; font-weight: 600; color: #fff;">${baseTitle}</td>
+                        <td style="padding: 12px; text-align: center; color: #3b82f6; font-weight: 700;">${chapterCount || 0}</td>
+                        <td style="padding: 12px; text-align: center; color: #10b981; font-weight: 700;">${languageCount}</td>
+                        <td style="padding: 12px; text-align: center; color: #a855f7; font-weight: 700;">${totalReaders.toLocaleString()}</td>
+                        <td style="padding: 12px; text-align: center; color: #f59e0b; font-weight: 700;">${totalLikes.toLocaleString()}</td>
+                    </tr>
+                `;
+
+                // Language breakdown rows (hidden by default)
+                const languageRows = languageReads.map(lang => `
+                    <tr id="book-${mainBook.id}-languages" class="language-breakdown" style="display: none; background: rgba(16, 185, 129, 0.05); border-bottom: 1px solid rgba(16, 185, 129, 0.1);">
+                        <td style="padding: 8px 12px; padding-left: 40px;" colspan="2">
+                            <span style="font-size: 0.85rem; color: #94a3b8;">└─ ${lang.language}</span>
+                        </td>
+                        <td style="padding: 8px 12px; text-align: center; font-size: 0.85rem; color: #94a3b8;" colspan="4">
+                            <span style="color: #a855f7; font-weight: 600;">${lang.reads.toLocaleString()}</span> reads
+                        </td>
+                    </tr>
+                `).join('');
+
+                return mainRow + languageRows;
+            }));
+
+            tbody.innerHTML = rows.join('');
+        } else {
+            // Demo data when offline
+            tbody.innerHTML = `
+                <tr style="border-bottom: 1px solid #1e293b; cursor: pointer;" onclick="toggleBookLanguages('book-demo-1')">
+                    <td style="padding: 12px;"><span id="expand-icon-book-demo-1" style="display: inline-block; transition: transform 0.3s; font-size: 1.2rem;">▶</span></td>
+                    <td style="padding: 12px; font-weight: 600; color: #fff;">The Wealth Mindset</td>
+                    <td style="padding: 12px; text-align: center; color: #3b82f6; font-weight: 700;">25</td>
+                    <td style="padding: 12px; text-align: center; color: #10b981; font-weight: 700;">5</td>
+                    <td style="padding: 12px; text-align: center; color: #a855f7; font-weight: 700;">1,240</td>
+                    <td style="padding: 12px; text-align: center; color: #f59e0b; font-weight: 700;">856</td>
+                </tr>
+                <tr id="book-demo-1-languages" class="language-breakdown" style="display: none; background: rgba(16, 185, 129, 0.05); border-bottom: 1px solid rgba(16, 185, 129, 0.1);">
+                    <td style="padding: 8px 12px; padding-left: 40px;" colspan="2"><span style="font-size: 0.85rem; color: #94a3b8;">└─ English</span></td>
+                    <td style="padding: 8px 12px; text-align: center; font-size: 0.85rem; color: #94a3b8;" colspan="4"><span style="color: #a855f7; font-weight: 600;">620</span> reads</td>
+                </tr>
+                <tr id="book-demo-1-languages" class="language-breakdown" style="display: none; background: rgba(16, 185, 129, 0.05); border-bottom: 1px solid rgba(16, 185, 129, 0.1);">
+                    <td style="padding: 8px 12px; padding-left: 40px;" colspan="2"><span style="font-size: 0.85rem; color: #94a3b8;">└─ Spanish</span></td>
+                    <td style="padding: 8px 12px; text-align: center; font-size: 0.85rem; color: #94a3b8;" colspan="4"><span style="color: #a855f7; font-weight: 600;">310</span> reads</td>
+                </tr>
+                <tr id="book-demo-1-languages" class="language-breakdown" style="display: none; background: rgba(16, 185, 129, 0.05); border-bottom: 1px solid rgba(16, 185, 129, 0.1);">
+                    <td style="padding: 8px 12px; padding-left: 40px;" colspan="2"><span style="font-size: 0.85rem; color: #94a3b8;">└─ French</span></td>
+                    <td style="padding: 8px 12px; text-align: center; font-size: 0.85rem; color: #94a3b8;" colspan="4"><span style="color: #a855f7; font-weight: 600;">180</span> reads</td>
+                </tr>
+            `;
+        }
+    } catch (e) {
+        console.warn("Book statistics load failed", e);
+        tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: #ef4444;">Error loading book statistics.</td></tr>`;
+    }
+};
+
+// Toggle language breakdown visibility
+window.toggleBookLanguages = function (bookId) {
+    const languageRows = document.querySelectorAll(`tr[id="${bookId}-languages"]`);
+    const expandIcon = document.getElementById(`expand-icon-${bookId}`);
+
+    if (languageRows.length > 0) {
+        const isVisible = languageRows[0].style.display !== 'none';
+
+        languageRows.forEach(row => {
+            row.style.display = isVisible ? 'none' : 'table-row';
+        });
+
+        if (expandIcon) {
+            expandIcon.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(90deg)';
+        }
+    }
+};
+
+
+
+// Country Statistics aggregation
+window.loadCountryStatistics = async function () {
+    const tbody = document.getElementById('country-stats-body');
+    if (!tbody) return;
+
+    try {
+        if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured() && window.supabaseClient) {
+            // Fetch all chapter_read activities
+            const { data: activities, error: activityError } = await supabaseClient
+                .from('user_activity')
+                .select('metadata')
+                .eq('activity_type', 'chapter_read');
+
+            if (activityError) throw activityError;
+
+            if (!activities || activities.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #64748b;">Waiting for geographic data collection...</td></tr>`;
+                return;
+            }
+
+            // Aggregate data by country
+            const countryMap = {};
+            let totalGlobalReads = 0;
+
+            activities.forEach(act => {
+                const meta = act.metadata || {};
+                const country = meta.country || 'Unknown';
+                const bookTitle = meta.title || 'Untitled Book';
+
+                if (!countryMap[country]) {
+                    countryMap[country] = {
+                        reads: 0,
+                        books: {}
+                    };
+                }
+
+                countryMap[country].reads++;
+                totalGlobalReads++;
+
+                if (!countryMap[country].books[bookTitle]) {
+                    countryMap[country].books[bookTitle] = 0;
+                }
+                countryMap[country].books[bookTitle]++;
+            });
+
+            // Convert to array and calculate popular book
+            const countryList = Object.keys(countryMap).map(countryName => {
+                const stats = countryMap[countryName];
+
+                // Find popular book
+                let popularBook = 'None';
+                let popularReads = 0;
+
+                Object.entries(stats.books).forEach(([title, count]) => {
+                    if (count > popularReads) {
+                        popularReads = count;
+                        popularBook = title;
+                    }
+                });
+
+                return {
+                    country: countryName,
+                    totalReads: stats.reads,
+                    popularBook: popularBook,
+                    bookReads: popularReads,
+                    percentage: (stats.reads / totalGlobalReads * 100).toFixed(1)
+                };
+            });
+
+            // Sort by total reads
+            countryList.sort((a, b) => b.totalReads - a.totalReads);
+
+            // Render rows
+            tbody.innerHTML = countryList.map(item => `
+                <tr style="border-bottom: 1px solid #1e293b; transition: background 0.2s;" 
+                    onmouseover="this.style.background='rgba(255,255,255,0.02)'" 
+                    onmouseout="this.style.background='transparent'">
+                    <td style="padding: 12px; font-weight: 600; color: #fff;">
+                        ${item.country === 'Unknown' ? '🌐 ' : '📍 '}${item.country}
+                    </td>
+                    <td style="padding: 12px; text-align: center; color: #3b82f6; font-weight: 700;">
+                        ${item.totalReads.toLocaleString()}
+                    </td>
+                    <td style="padding: 12px; text-align: center; color: #fff;">
+                        ${item.popularBook}
+                    </td>
+                    <td style="padding: 12px; text-align: center; color: #10b981; font-weight: 700;">
+                        ${item.bookReads.toLocaleString()}
+                    </td>
+                    <td style="padding: 12px; text-align: center;">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <div style="width: 60px; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden;">
+                                <div style="width: ${item.percentage}%; height: 100%; background: var(--color-accent);"></div>
+                            </div>
+                            <span style="font-size: 0.8rem; color: #94a3b8;">${item.percentage}%</span>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        } else {
+            // Demo data if offline
+            const demoData = [
+                { country: 'United States', reads: 1250, book: 'The Science of Getting Rich', bookReads: 450, perc: 45 },
+                { country: 'India', reads: 840, book: 'Think and Grow Rich', bookReads: 310, perc: 30 },
+                { country: 'United Kingdom', reads: 420, book: 'The Richest Man in Babylon', bookReads: 150, perc: 15 },
+                { country: 'Canada', reads: 280, book: 'Power of Habit', bookReads: 90, perc: 10 }
+            ];
+
+            tbody.innerHTML = demoData.map(item => `
+                <tr style="border-bottom: 1px solid #1e293b;">
+                    <td style="padding: 12px; font-weight: 600; color: #fff;">📍 ${item.country}</td>
+                    <td style="padding: 12px; text-align: center; color: #3b82f6; font-weight: 700;">${item.reads.toLocaleString()}</td>
+                    <td style="padding: 12px; text-align: center; color: #fff;">${item.book}</td>
+                    <td style="padding: 12px; text-align: center; color: #10b981; font-weight: 700;">${item.bookReads.toLocaleString()}</td>
+                    <td style="padding: 12px; text-align: center;">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                            <div style="width: 60px; height: 6px; background: #1e293b; border-radius: 3px; overflow: hidden;">
+                                <div style="width: ${item.perc}%; height: 100%; background: var(--color-accent);"></div>
+                            </div>
+                            <span style="font-size: 0.8rem; color: #94a3b8;">${item.perc}%</span>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+    } catch (e) {
+        console.warn("Country statistics load failed", e);
+        tbody.innerHTML = `<tr><td colspan="5" style="padding: 20px; text-align: center; color: #ef4444;">Error loading distribution table.</td></tr>`;
+    }
+};

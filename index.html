@@ -20,119 +20,12 @@
   <script src="js/lib/supabase-js.js" defer></script>
   <script src="js/supabase-config.js" defer></script>
   <script src="js/image-utils.js" defer></script>
-  <style>
-    body {
-      overflow-x: hidden;
-    }
-
-    @media (max-width: 1100px) {
-      .featured-books-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-      }
-    }
-
-    @media (max-width: 650px) {
-      .featured-books-grid {
-        grid-template-columns: 1fr !important;
-      }
-    }
-
-    /* Premium Design Tokens */
-    .premium-badge {
-      display: inline-block;
-      padding: 4px 12px;
-      background: rgba(251, 191, 36, 0.1);
-      border: 1px solid rgba(251, 191, 36, 0.3);
-      color: #fbbf24;
-      font-size: 0.7rem;
-      font-weight: 800;
-      border-radius: 6px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
-
-    .premium-glow-hover:hover {
-      box-shadow: 0 0 30px rgba(37, 99, 235, 0.3);
-      border-color: rgba(37, 99, 235, 0.6) !important;
-    }
-
-    /* Music Toggle Button */
-    .music-control {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      z-index: 1000;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: rgba(15, 23, 42, 0.8);
-      backdrop-filter: blur(12px);
-      padding: 8px 16px;
-      border-radius: 40px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: #94a3b8;
-      font-family: var(--font-heading);
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.3s;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-    }
-
-    .music-control:hover {
-      border-color: var(--color-accent);
-      color: #fff;
-      transform: translateY(-2px);
-    }
-
-    .music-control.playing {
-      color: #fff;
-      border-color: #60a5fa;
-      background: rgba(37, 99, 235, 0.1);
-    }
-
-    .music-control .icon {
-      font-size: 1.2rem;
-      width: 32px;
-      height: 32px;
-      background: #1e293b;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .music-control.playing .icon {
-      background: #2563eb;
-      animation: pulse-music 2s infinite;
-    }
-
-    @keyframes pulse-music {
-      0% {
-        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
-      }
-
-      70% {
-        box-shadow: 0 0 0 10px rgba(37, 99, 235, 0);
-      }
-
-      100% {
-        box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
-      }
-    }
-  </style>
+  <script src="js/popup.js" defer></script>
 </head>
-<script>(function () {
-    const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-
-    if (theme === 'dark') {
-      document.body.classList.add('dark-mode');
-
-      if (window.location.pathname === '/' || window.location.pathname.endsWith('index.html')) {
-        document.body.classList.add('home-theme');
-      }
-    }
+<script>
+  (function () {
+    const t = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    if (t === 'dark') document.documentElement.classList.add('dark-mode');
   })();
 </script>
 
@@ -155,41 +48,37 @@
         href="about.html">About</a><a href="contact.html">Contact</a></nav>
   </div>
   <script src="js/script.js" defer></script><audio id="bg-music" loop preload="auto">
-    <source src="https://www.soundjay.com/nature/rain-07.mp3" type="audio/mpeg">
+    <!-- <source src="https://www.soundjay.com/nature/rain-07.mp3" type="audio/mpeg"> -->
   </audio><!-- Music Control Toggle --><button class="music-control" id="music-toggle" onclick="toggleMusic()"><span
       class="music-status-text">Rain Ambient</span>
     <div class="icon">🌧️</div>
   </button>
   <main class="site-main"><!-- Hero Section -->
     <section class="hero-section"
-      style="max-width: var(--max-width); width: 100%; margin: 40px auto; position: relative; overflow: hidden; border-radius: 30px; background: radial-gradient(circle at 70% 30%, rgba(37, 99, 235, 0.15) 0%, transparent 60%);">
-      <div
-        style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 40px; padding: clamp(40px, 8vw, 80px) clamp(20px, 5vw, 80px);">
-        <div style="flex: 1; min-width: 300px;">
-          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;"><span
-              class="premium-badge animate-float">Featured Roadmap</span><span
-              style="color: #94a3b8; font-size: 0.85rem; font-weight: 600; letter-spacing: 1px;">2026 EDITION</span>
-          </div>
-          <h1 id="hero-title" class="premium-gradient-text"
-            style="font-size: var(--font-size-h1); line-height: 0.95; margin-bottom: 20px; font-weight: 900;">Wealth
-            &<br>Mindset</h1>
-          <p id="hero-subtitle"
-            style="font-size: var(--font-size-p); color: #94a3b8; max-width: 500px; margin-bottom: 40px; line-height: 1.6;">
-            Master the psychology of success and build a legacy with our curated guides and high-performance strategies.
-          </p>
-          <div style="display: flex; gap: 20px; flex-wrap: wrap;"><a href="books.html"
-              class="btn-primary hover-lift glow-on-hover"
-              style="background: var(--color-accent); color: #fff; padding: 16px 32px; border-radius: 14px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 10px; min-height: 54px;"><span>📚</span>Explore
-              Library </a><a href="#" onclick="openDailyModal(); return false;" class="glass hover-lift"
-              style="color: #fff; padding: 16px 32px; border-radius: 14px; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,0.1); min-height: 54px;"><span>✨</span>Daily
-              Mindset </a></div>
-        </div>
-        <div style="flex-shrink: 0; position: relative; margin: 0 auto;">
-          <div class="animate-float" style="position: relative; z-index: 2;"><img src="assets/logo-new.png" alt="Logo"
-              style="height: clamp(200px, 30vw, 320px); filter: drop-shadow(0 0 50px rgba(37, 99, 235, 0.4)); transform: rotate(-5deg);">
-          </div>
+      style="min-height: 70vh; display: flex; align-items: center; background: radial-gradient(circle at center, rgba(37, 99, 235, 0.08) 0%, transparent 70%);">
+      <div class="hero-container" style="max-width: 900px; margin: 0 auto; text-align: center; padding: 60px 20px;">
+        <div class="hero-content" style="max-width: 680px; margin: 0 auto;">
           <div
-            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: clamp(250px, 40vw, 400px); height: clamp(250px, 40vw, 400px); background: radial-gradient(circle, rgba(37, 99, 235, 0.2) 0%, transparent 70%); z-index: 1;">
+            style="display: inline-block; padding: 6px 16px; background: rgba(37, 99, 235, 0.1); border-radius: 100px; margin-bottom: 24px;">
+            <span
+              style="color: var(--color-accent); font-size: 0.8rem; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase;">Build
+              Authority & Wealth</span>
+          </div>
+          <h1 id="hero-title"
+            style="font-size: clamp(2.5rem, 6vw, 4.5rem); line-height: 1.1; font-weight: 900; color: var(--color-heading); margin-bottom: 1.5rem; letter-spacing: -2px;">
+            Wealth & Mindset
+          </h1>
+          <p id="hero-subtitle" style="font-size: 1.25rem; line-height: 1.6; color: #666; margin-bottom: 2.5rem;">
+            Build clarity, discipline, and financial intelligence — one page at a time. Join thousands mastering the
+            psychology of success.
+          </p>
+          <div class="hero-cta" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <a href="books.html" class="btn-primary"
+              style="padding: 18px 36px; border-radius: 12px; font-size: 1.1rem; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);">Start
+              Reading →</a>
+            <a href="books.html" class="glass"
+              style="padding: 18px 36px; border-radius: 12px; font-size: 1.1rem; color: var(--color-text); border: 1px solid rgba(0,0,0,0.1);">Explore
+              Library</a>
           </div>
         </div>
       </div>
@@ -205,9 +94,10 @@
     <div class="home-search-container" style="max-width: 800px; margin: 0 auto 60px;">
       <div class="glass home-search-box"
         style="position: relative; border-radius: 20px; padding: 6px; display: flex; align-items: center; gap: 10px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);">
-        <span class="search-icon" style="padding-left: 20px; font-size: 1.2rem; opacity: 0.7;">🔍</span><input
+        <span class="search-icon"
+          style="padding-left: 20px; font-size: 1.2rem; opacity: 0.7; color: var(--color-text);">🔍</span><input
           type="text" class="search-input" placeholder="Search for books, wisdom, or strategies..."
-          style="flex: 1; background: transparent; border: none; color: #fff; padding: 16px 0; font-size: 1.1rem; outline: none; font-family: var(--font-primary); font-weight: 500;"><button
+          style="flex: 1; background: transparent; border: none; color: var(--color-text); padding: 16px 0; font-size: 1.1rem; outline: none; font-family: var(--font-primary); font-weight: 500;"><button
           class="search-btn hover-lift"
           style="background: var(--color-accent); border: none; color: #fff; padding: 14px 28px; border-radius: 12px; font-weight: 700; margin-right: 5px; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);">Search</button>
       </div>
@@ -224,8 +114,9 @@
           href="books.html" class="chapter-tab-link browse-all hover-lift">Library</a><a href="#"
           onclick="openDailyModal(); return false;" class="chapter-tab-link highlight-tab"><span
             style="display: flex; align-items: center; gap: 8px;"><span class="pulse-icon"
-              style="width: 8px; height: 8px; background: #fbbf24; border-radius: 50%;"></span>Today's Insight
-          </span></a></div>
+              style="width: 8px; height: 8px; background: #fbbf24; border-radius: 50%;"></span>Today's Reading
+          </span></a>
+      </div>
     </div>
     <style>
       .chapters-tabs-outer::-webkit-scrollbar {
@@ -234,7 +125,7 @@
 
       .chapter-tab-link {
         text-decoration: none;
-        color: #94a3b8;
+        color: var(--color-text);
         padding: 15px 25px;
         display: block;
         font-weight: 700;
@@ -247,13 +138,14 @@
       }
 
       .chapter-tab-link:hover {
-        color: #fff;
-        background: rgba(255, 255, 255, 0.03);
+        color: var(--color-heading);
+        background: var(--color-secondary-bg);
       }
 
       .chapter-tab-link.browse-all {
         background: var(--color-accent);
         color: #fff;
+        /* White is fine here as background is accent blue */
         border-bottom: none;
       }
 
@@ -270,7 +162,7 @@
 
       .chapter-tab-link.highlight-tab:hover {
         background: rgba(251, 191, 36, 0.1);
-        color: #fff;
+        color: var(--color-heading);
       }
 
       @keyframes pulse {
@@ -294,11 +186,15 @@
         animation: pulse 2s infinite;
       }
     </style>
-    </section><!-- Categories / Topics Section -->
-    <section style="margin-bottom: 80px; max-width: 1400px; margin-left: auto; margin-right: auto; width: 95%;">
+    <!-- Categories / Topics Section -->
+    <section class="section-container">
       <div
         style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;">
-        <h2 style="font-size: var(--font-size-h3); margin: 0; color: #fff;">Browse Topics</h2><a href="books.html"
+        <div>
+          <h2 style="font-size: var(--font-size-h3); margin: 0; color: var(--color-heading);">Browse Topics</h2>
+          <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 5px;">Curated categories for your growth.</p>
+        </div>
+        <a href="books.html"
           style="color: var(--color-accent); font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 8px;"><span>📂</span>Explore
           All Topics → </a>
       </div>
@@ -307,101 +203,6 @@
         <!-- Dynamic Topics injected here -->
       </div>
     </section>
-    <style>
-      .category-card-home {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        padding: 25px;
-        border-radius: 16px;
-        text-decoration: none;
-        color: #94a3b8;
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-
-      .category-card-home:hover {
-        background: rgba(255, 255, 255, 0.06);
-        border-color: var(--color-accent);
-        transform: translateY(-5px);
-        color: #fff;
-      }
-
-      .category-card-home .icon {
-        font-size: 2.5rem;
-        background: rgba(255, 255, 255, 0.03);
-        width: 70px;
-        height: 70px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 14px;
-      }
-
-      .category-card-home h3 {
-        margin: 0 0 5px;
-        font-size: 1.2rem;
-        color: #fff;
-      }
-
-      .category-card-home p {
-        margin: 0;
-        font-size: 0.9rem;
-        font-weight: 400;
-        font-family: var(--font-primary);
-        color: #cfd8e3;
-      }
-
-      .book-card-featured {
-        background: rgba(15, 23, 42, 0.4);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 20px;
-        overflow: hidden;
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        display: flex;
-        flex-direction: column;
-        position: relative;
-      }
-
-      .book-card-featured:hover {
-        transform: translateY(-12px) scale(1.02);
-        border-color: rgba(37, 99, 235, 0.5);
-        background: rgba(15, 23, 42, 0.7);
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 20px rgba(37, 99, 235, 0.2);
-      }
-
-      .book-img-wrapper {
-        height: 260px;
-        background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-        overflow: hidden;
-      }
-
-      /* Subtle pattern overlay for premium feel */
-      .book-img-wrapper::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-        background-size: 20px 20px;
-        pointer-events: none;
-      }
-
-      .book-tag {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        z-index: 5;
-      }
-    </style>
 
     <!-- Exclusive Premium Collection Scroll -->
     <section class="premium-collection-section">
@@ -446,12 +247,35 @@
       });
     </script>
 
-    <!-- Popular / Featured Books Section -->
-    <section style="margin-bottom: 100px; max-width: 1400px; margin-left: auto; margin-right: auto; width: 95%;">
-      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px;">
+    <!-- Recommended Book for this month (NEW) -->
+    <section class="section-container" id="recommended-section" style="display: none; margin-bottom: 80px;">
+      <div
+        style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;">
         <div>
           <h2
-            style="font-size: 2.25rem; margin: 0; display: flex; align-items: center; gap: 15px; color: #fff; font-weight: 800;">
+            style="font-size: 2.25rem; margin: 0; display: flex; align-items: center; gap: 15px; color: var(--color-heading); font-weight: 800;">
+            <span
+              style="background: rgba(251, 191, 36, 0.1); padding: 14px; border-radius: 16px; font-size: 1.5rem;">⭐</span>
+            Recommended for this month
+          </h2>
+          <p style="margin: 12px 0 0; color: #94a3b8; font-size: 1.05rem;">Our top pick to help you master wealth and
+            mindset this month.</p>
+        </div>
+      </div>
+
+      <div id="recommended-book-container" class="glass"
+        style="display: flex; gap: 40px; padding: 40px; border-radius: 24px; align-items: center; flex-wrap: wrap;">
+        <!-- Content injected via JS -->
+      </div>
+    </section>
+
+    <!-- Popular / Featured Books Section -->
+    <section class="section-container">
+      <div
+        style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;">
+        <div>
+          <h2
+            style="font-size: 2.25rem; margin: 0; display: flex; align-items: center; gap: 15px; color: var(--color-heading); font-weight: 800;">
             <span
               style="background: rgba(16, 185, 129, 0.1); padding: 14px; border-radius: 16px; font-size: 1.5rem;">🔥</span>
             Popular Picks
@@ -537,10 +361,14 @@
       </div>
     </section>
 
+    <div class="ad-container ad-wide glass">
+      <div style="font-weight: 800; color: #fff;">[ Trending Resource Slot ]</div>
+      <div style="font-size: 0.75rem; opacity: 0.5;">Natural break after popular picks</div>
+    </div>
 
-    <!-- 5️⃣ Why This Library? & 6️⃣ How It Works Section -->
-    <section class="info-section-grid"
-      style="display: grid; grid-template-columns: repeat(auto-fit, minmax(clamp(280px, 45%, 600px), 1fr)); gap: clamp(30px, 5vw, 50px); margin-bottom: 80px; align-items: start; background: rgba(255,255,255,0.02); padding: clamp(24px, 5vw, 60px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); max-width: var(--max-width); margin-left: auto; margin-right: auto; width: 100%; box-sizing: border-box;">
+
+    <section class="section-container info-section-grid"
+      style="display: grid; grid-template-columns: repeat(auto-fit, minmax(clamp(280px, 45%, 600px), 1fr)); gap: clamp(30px, 5vw, 50px); align-items: start; background: rgba(255,255,255,0.02); padding: clamp(24px, 5vw, 60px); border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); box-sizing: border-box;">
       <div>
         <h2 style="font-size: var(--font-size-h3); margin-bottom: 25px;">Why This Library?</h2>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
@@ -583,6 +411,49 @@
           </div>
         </div>
       </div>
+
+      <!-- Email Subscription (Full Width) -->
+      <div
+        style="grid-column: 1 / -1; background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(16, 185, 129, 0.1)); padding: 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); text-align: center; margin-top: 10px;">
+        <h3 style="font-size: 1.8rem; margin-bottom: 20px; color: var(--color-heading);">Join the Inner Circle</h3>
+
+        <!-- Preferences Section -->
+        <div style="max-width: 500px; margin: 0 auto 25px;">
+          <p style="color: #fff; font-weight: 600; font-size: 0.95rem; margin-bottom: 15px; text-align: left;">📬 Get
+            Updates About:</p>
+          <div style="display: flex; flex-direction: column; gap: 10px; text-align: left;">
+            <label
+              style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #94a3b8; font-size: 0.9rem;">
+              <input type="checkbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6;">
+              <span>Weekly wealth insights and exclusive book summaries</span>
+            </label>
+            <label
+              style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #94a3b8; font-size: 0.9rem;">
+              <input type="checkbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6;">
+              <span>Pre-release chapters and early access content</span>
+            </label>
+            <label
+              style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #94a3b8; font-size: 0.9rem;">
+              <input type="checkbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6;">
+              <span>New book releases and updates</span>
+            </label>
+            <label
+              style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #94a3b8; font-size: 0.9rem;">
+              <input type="checkbox" style="width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6;">
+              <span>Translation availability (Spanish, French, German, etc.)</span>
+            </label>
+          </div>
+        </div>
+
+        <form onsubmit="event.preventDefault(); alert('Thank you for subscribing! We will be in touch soon.');"
+          style="display: flex; gap: 10px; max-width: 500px; margin: 0 auto; flex-wrap: wrap;">
+          <input type="email" placeholder="Enter your email address" required
+            style="flex: 1; min-width: 250px; padding: 16px 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: #fff; font-size: 1rem; outline: none; transition: 0.3s;">
+          <button type="submit" class="btn-primary hover-lift"
+            style="padding: 16px 32px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; font-size: 1rem;">Subscribe</button>
+        </form>
+        <p style="font-size: 0.8rem; opacity: 0.6; margin-top: 15px;">No spam. Unsubscribe anytime.</p>
+      </div>
     </section>
 
 
@@ -594,7 +465,8 @@
     <!-- 💡 Micro Lessons / Tips Section -->
     <section
       style="margin-bottom: 60px; padding: 40px; background: #161e2f; border-radius: 20px; border: 1px solid rgba(26, 115, 232, 0.2);">
-      <h2 style="font-size: 1.8rem; color: #fff; margin-bottom: 25px; display: flex; align-items: center; gap: 10px;">
+      <h2
+        style="font-size: 1.8rem; color: var(--color-heading); margin-bottom: 25px; display: flex; align-items: center; gap: 10px;">
         <span style="color: #fbbf24;">💡</span> Micro Lessons
       </h2>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px;">
@@ -624,6 +496,11 @@
         </div>
       </div>
     </section>
+
+    <div class="ad-container ad-wide">
+      <div style="font-weight: 800; color: #fff;">[ Financial Mastery Slot ]</div>
+      <div style="font-size: 0.75rem; opacity: 0.5;">Catching engaged readers after micro-lessons</div>
+    </div>
 
 
 
@@ -669,6 +546,11 @@
       <a href="contact.html" class="nav-btn primary"
         style="padding: 16px 40px; font-size: 1.1rem; display: inline-block;">📩 Share with us</a>
     </section>
+
+    <div class="ad-container ad-top glass" style="margin-bottom: 80px;">
+      <div style="font-weight: 800; color: #fff;">[ Footer Gateway Slot ]</div>
+      <div style="font-size: 0.75rem; opacity: 0.5;">Final engagement point</div>
+    </div>
 
     <!-- Main Content Area (Original content maintained below if needed) -->
     <div class="main-layout-content" style="width: 100%; max-width: 1600px; margin: 0 auto; padding: 0;">

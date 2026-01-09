@@ -567,14 +567,17 @@ window.updateEditorLineNumbers = function () {
 };
 
 // Line numbering system for the new Editor
-const editorTextArea = document.getElementById('editor-chapter-content');
-const editorLineNumbers = document.getElementById('editor-line-numbers');
-if (editorTextArea && editorLineNumbers) {
-    editorTextArea.addEventListener('input', updateEditorLineNumbers);
-    editorTextArea.addEventListener('scroll', () => {
-        editorLineNumbers.scrollTop = editorTextArea.scrollTop;
-    });
-}
+// Event listeners for editor line numbers (variables declared in updateEditorLineNumbers function)
+(function () {
+    const editorTextArea = document.getElementById('editor-chapter-content');
+    const editorLineNumbers = document.getElementById('editor-line-numbers');
+    if (editorTextArea && editorLineNumbers) {
+        editorTextArea.addEventListener('input', updateEditorLineNumbers);
+        editorTextArea.addEventListener('scroll', () => {
+            editorLineNumbers.scrollTop = editorTextArea.scrollTop;
+        });
+    }
+})();
 
 // Volume display update
 const editorVolumeInput = document.getElementById('editor-chapter-volume');

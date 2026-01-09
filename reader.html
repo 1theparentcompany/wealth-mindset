@@ -12,6 +12,7 @@
     <script src="js/supabase-config.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script src="js/image-utils.js"></script>
+    <script src="js/popup.js" defer></script>
 
     <style>
         /* [Previous CSS Content - Preserved] */
@@ -21,29 +22,38 @@
         }
 
         .reader-container {
-            max-width: 900px;
+            width: 100%;
+            max-width: 100%;
             margin: 40px auto;
-            padding: 0 20px;
+            padding: 0 40px;
             position: relative;
         }
 
         .reader-content {
-            font-size: 20px;
+            font-size: clamp(1rem, 1.2vw, 1.25rem);
             line-height: 1.8;
             color: var(--color-text);
-            font-family: 'Merriweather', 'Georgia', serif;
-            /* Serif for reading */
+            font-family: var(--font-reading);
+            max-width: 720px;
+            margin: 0 auto;
+            /* Safety: Ensure text is visible */
+            opacity: 1;
+            visibility: visible;
         }
 
         .reader-content p {
-            margin-bottom: 1.5em;
+            margin-bottom: 2rem;
+            text-align: left;
         }
 
         .reader-header {
-            text-align: center;
-            margin-bottom: 60px;
-            padding-bottom: 30px;
+            text-align: left;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
             border-bottom: 1px solid var(--color-border);
+            max-width: 720px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .reader-book-title {
@@ -68,9 +78,10 @@
         .page-container {
             display: flex;
             gap: 40px;
-            max-width: 1600px;
+            width: 100%;
+            max-width: 100%;
             margin: 40px auto;
-            padding: 0 20px;
+            padding: 0 40px;
             justify-content: center;
         }
 
@@ -83,7 +94,6 @@
 
         .main-layout-content {
             flex: 1;
-            max-width: 900px;
             width: 100%;
         }
 
@@ -114,11 +124,16 @@
             color: rgba(255, 255, 255, 0.3);
         }
 
+        .ad-container.ad-middle {
+            max-width: 720px;
+            margin: 40px auto;
+        }
+
         /* Chapter List Sidebar */
         .chapter-list-sidebar {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border);
             border-radius: 16px;
             padding: 20px;
             max-height: 70vh;
@@ -129,7 +144,8 @@
             display: block;
             font-size: 0.8rem;
             text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.5);
+            color: var(--color-text);
+            opacity: 0.5;
             margin-bottom: 15px;
             font-weight: 800;
             letter-spacing: 1px;
@@ -156,7 +172,7 @@
         .sidebar-link.active {
             background: var(--color-accent);
             color: white !important;
-            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 10px 20px rgba(37, 99, 235, 0.15);
         }
 
         /* Navigation & Interactions */
@@ -189,7 +205,8 @@
         .nav-label {
             font-size: 0.75rem;
             text-transform: uppercase;
-            color: rgba(255, 255, 255, 0.5);
+            color: var(--color-text);
+            opacity: 0.5;
             letter-spacing: 1px;
         }
 
@@ -205,10 +222,10 @@
             align-items: center;
             gap: 12px;
             padding: 12px 24px;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--color-secondary-bg);
             backdrop-filter: blur(var(--glass-blur));
             border-radius: 100px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--color-border);
         }
 
         .interaction-btn {
@@ -250,6 +267,58 @@
             background-color: #020617;
             position: relative;
             min-height: 100vh;
+            /* Default for custom bg is dark mode, but we override it per-theme below */
+            --color-text: #e2e8f0;
+            --color-heading: #ffffff;
+            --color-border: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Essential visibility fix for light mode with custom background */
+        .reader-container {
+            color: var(--color-text);
+            transition: color 0.3s ease;
+        }
+
+        body.has-custom-bg .reader-container {
+            --color-text: #1e293b;
+            --color-heading: #0f172a;
+            --color-border: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Specifically force h1, h2, h3 colors inside reader and header */
+        .reader-container h1,
+        .reader-container h2,
+        .reader-container h3,
+        .reader-header h1,
+        .reader-content h1,
+        .reader-content h2,
+        .reader-content h3 {
+            color: var(--color-heading) !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        .dark-mode.has-custom-bg .reader-container,
+        .dark-mode .reader-container {
+            --color-text: #94a3b8;
+            --color-heading: #ffffff;
+            --color-border: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Ensure banner text is readable */
+        #book-title-main,
+        #reading-ch-label {
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        body.has-custom-bg #book-title-main,
+        body.has-custom-bg #reading-ch-label {
+            color: #ffffff;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .dark-mode.has-custom-bg #book-title-main {
+            color: #ffffff;
         }
 
         body.has-custom-bg::before {
@@ -308,8 +377,8 @@
         }
 
         .modal-content {
-            background-color: #1e293b;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: var(--color-secondary-bg);
+            border: 1px solid var(--color-border);
             border-radius: 24px;
             padding: 40px;
             width: 90%;
@@ -386,6 +455,32 @@
             }
         }
 
+        .reader-content blockquote {
+            margin: 2.5rem 0;
+            padding: 2rem;
+            background: var(--color-secondary-bg);
+            border-left: 5px solid var(--color-accent);
+            border-radius: 0 20px 20px 0;
+            font-family: var(--font-heading);
+            font-size: 1.4rem;
+            line-height: 1.4;
+            font-weight: 700;
+            color: var(--color-heading);
+            font-style: italic;
+            position: relative;
+        }
+
+        .reader-content blockquote::before {
+            content: '"';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 4rem;
+            opacity: 0.1;
+            color: var(--color-accent);
+            line-height: 1;
+        }
+
         /* Language Expander */
         .lang-expand-options {
             display: none;
@@ -393,25 +488,23 @@
             top: 100%;
             right: 0;
             min-width: 180px;
-            background: #0f172a;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--color-secondary-bg);
+            border: 1px solid var(--color-border);
             border-radius: 16px;
             padding: 6px;
             z-index: 100;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
     </style>
 </head>
 <script>
     (function () {
-        const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        if (theme === 'dark') {
-            document.documentElement.classList.add('dark-mode');
-        }
+        const t = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        if (t === 'dark') document.documentElement.classList.add('dark-mode');
     })();
 </script>
 
-<body>
+<body class="reader-page">
     <header class="site-header">
         <div
             style="max-width: var(--max-width); width: 100%; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 var(--spacing-unit);">
@@ -427,6 +520,9 @@
             </nav>
         </div>
     </header>
+    <div class="progress-container">
+        <div class="progress-bar" id="reading-progress"></div>
+    </div>
 
     <div class="menu-backdrop" id="menu-backdrop"></div>
     <div class="mobile-menu-overlay" id="mobile-menu-overlay">
@@ -438,7 +534,7 @@
     </div>
 
     <audio id="bg-music" loop preload="auto">
-        <source src="https://www.soundjay.com/nature/rain-07.mp3" type="audio/mpeg">
+        <!-- <source src="https://www.soundjay.com/nature/rain-07.mp3" type="audio/mpeg"> -->
     </audio>
     <button class="music-control" id="music-toggle" onclick="toggleMusic()">
         <span class="music-status-text">Rain Ambient</span>
@@ -446,8 +542,7 @@
     </button>
 
     <main>
-        <section class="book-banner-top"
-            style="max-width: 1400px; margin: 0 auto; padding: 40px var(--spacing-unit) 0;">
+        <section class="book-banner-top" style="max-width: 100%; margin: 0 auto; padding: 40px var(--spacing-unit) 0;">
             <div
                 style="display: flex; justify-content: space-between; align-items: flex-end; gap: 40px; margin-bottom: 30px; flex-wrap: wrap;">
                 <div style="flex: 1; min-width: 300px;">
@@ -458,11 +553,14 @@
                             Reading</span>
                     </div>
                     <h1 id="book-title-main"
-                        style="font-size: var(--font-size-h2); font-weight: 800; color: var(--color-heading); margin: 0; font-family: var(--font-heading);">
+                        style="font-size: var(--font-size-h2); font-weight: 800; color: var(--color-heading); margin: 0; font-family: var(--font-heading); transition: color 0.3s ease;">
                         Book Title</h1>
                 </div>
             </div>
+        </section>
 
+        <section class="reader-controls"
+            style="max-width: var(--max-width); margin: 0 auto; padding: 0 var(--spacing-unit);">
             <div class="top-interactions-wrapper"
                 style="display: flex; flex-direction: column; gap: 20px; margin-bottom: 40px;">
                 <!-- Row 1: Interactions -->
@@ -498,7 +596,7 @@
                 <!-- Row 3: Report & Original -->
                 <div class="action-bar-row" style="display: flex; gap: 15px; align-self: flex-start;">
                     <button class="interaction-btn" id="btn-report-top" onclick="toggleReportReader()" title="Report"
-                        style="width: auto; height: auto; padding: 10px 18px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);">
+                        style="width: auto; height: auto; padding: 10px 18px; border-radius: 12px; background: var(--color-secondary-bg); border: 1px solid var(--color-border);">
                         <svg viewBox="0 0 24 24" style="margin-right: 8px;">
                             <path d="M14.4 6L14 4H5v17h2v-7h5.6l.4 2h7V6z" fill="currentColor" />
                         </svg>
@@ -506,13 +604,19 @@
                     </button>
                     <button class="interaction-btn" id="btn-original-top" onclick="openOriginalContent()"
                         title="Original Text"
-                        style="width: auto; height: auto; padding: 10px 18px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);">
+                        style="width: auto; height: auto; padding: 10px 18px; border-radius: 12px; background: var(--color-secondary-bg); border: 1px solid var(--color-border);">
                         <svg viewBox="0 0 24 24" style="margin-right: 8px;">
                             <path
                                 d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"
                                 fill="currentColor" />
                         </svg>
                         <span class="count">Original Content</span>
+                    </button>
+                    <button class="interaction-btn" id="btn-reading-mode" onclick="toggleReadingMode()"
+                        title="Reading Mode"
+                        style="width: auto; height: auto; padding: 10px 18px; border-radius: 12px; background: rgba(37, 99, 235, 0.1); border: 1px solid var(--color-border); color: var(--color-accent);">
+                        <span style="margin-right: 8px;">📖</span>
+                        <span class="count">Reading Mode</span>
                     </button>
                 </div>
             </div>
@@ -590,8 +694,14 @@
 
             <aside class="side-sidebar right">
                 <div class="sticky-ads">
-                    <div class="vertical-ad-banner"><span class="ad-label">Support Our Platform</span>
-                        <div>[ Premium Slot ]</div>
+                    <div class="ad-container ad-wide glass" style="width: 300px; height: 600px;">
+                        <div style="font-weight: 800; color: var(--color-heading);">[ Premium Slot ]</div>
+                        <div style="font-size: 0.7rem; opacity: 0.5;">300 x 600 - Vertical</div>
+                    </div>
+                    <div class="ad-container glass"
+                        style="width: 100%; height: 250px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 16px; background: var(--glass-bg); border: 1px solid var(--glass-border);">
+                        <div style="font-weight: 800; color: var(--color-heading);">[ Premium Slot ]</div>
+                        <div style="font-size: 0.7rem; opacity: 0.5;">300 x 250 - Sidebar</div>
                     </div>
                 </div>
             </aside>
@@ -639,6 +749,17 @@
     <script src="js/cache-utils.js"></script>
 
     <script>
+        // --- Utils ---
+        function esc(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
         // --- Language Selector ---
         // --- Language Selector ---
         function getLangNameFull(code) {
@@ -687,7 +808,7 @@
                     const langName = getLangNameFull(v.language || 'en');
                     return `
                         <div class="lang-opt ${isCurrent ? 'active' : ''}" onclick="switchReaderLanguage('${v.id}')"
-                             style="padding: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: ${isCurrent ? 'var(--color-accent)' : 'white'};">
+                             style="padding: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: ${isCurrent ? 'var(--color-accent)' : 'var(--color-text)'};">
                             <span>${langName}</span> ${isCurrent ? '✓' : ''}
                         </div>
                     `;
@@ -696,9 +817,9 @@
                 container.innerHTML = `
                     <div class="lang-expand-container" style="position: relative; display: inline-block;">
                         <button class="lang-expand-trigger" onclick="toggleLangOptions(event, '${instanceId}')"
-                                style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: #cbd5e1; padding: 10px 20px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500;">
+                                style="background: var(--color-secondary-bg); border: 1px solid var(--color-border); color: var(--color-text); opacity: 0.8; padding: 10px 20px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500;">
                             <span style="opacity: 0.6; font-size: 0.9em;">Language:</span>
-                            <span style="color: white; font-weight: 700;">${currentLangName}</span>
+                            <span style="color: var(--color-heading); font-weight: 700;">${currentLangName}</span>
                             <span style="opacity: 0.6; font-size: 0.8em;">▼</span>
                         </button>
                         <div id="${instanceId}-options" class="lang-expand-options" style="display: none;">${optionsHtml}</div>
@@ -718,6 +839,51 @@
             const ch = urlParams.get('ch') || '0';
             window.location.href = `reader.html?id=${newId}&ch=${ch}`;
         }
+
+        // --- Engagement Logic ---
+        window.onscroll = function () {
+            let winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            let height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            let scrolled = (winScroll / height) * 100;
+            const bar = document.getElementById("reading-progress");
+            if (bar) bar.style.width = scrolled + "%";
+        };
+
+        function toggleReadingMode() {
+            const isReadingMode = document.body.classList.toggle('reading-mode');
+            localStorage.setItem('reading_mode', isReadingMode);
+
+            const header = document.querySelector('.site-header');
+            const btns = document.querySelectorAll('.action-bar-row, .top-interactions-wrapper');
+
+            if (isReadingMode) {
+                if (header) header.style.display = 'none';
+                document.documentElement.style.fontSize = '1.1em';
+            } else {
+                if (header) header.style.display = 'block';
+                document.documentElement.style.fontSize = '';
+            }
+
+            const btn = document.getElementById('btn-reading-mode');
+            if (btn) {
+                if (isReadingMode) {
+                    btn.style.background = 'var(--color-accent)';
+                    btn.style.color = 'white';
+                    btn.innerHTML = '<span>☀️</span> <span class="count">Exit Reading Mode</span>';
+                } else {
+                    btn.style.background = 'rgba(37, 99, 235, 0.1)';
+                    btn.style.color = 'var(--color-accent)';
+                    btn.innerHTML = '<span>📖</span> <span class="count">Reading Mode</span>';
+                }
+            }
+        }
+
+        // Init reading mode if saved
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('reading_mode') === 'true') {
+                toggleReadingMode();
+            }
+        });
 
         window.onclick = function (event) {
             if (!event.target.closest('.lang-expand-container')) {
@@ -768,9 +934,95 @@
             if (window.fixSupabaseImagesInHtml) content = window.fixSupabaseImagesInHtml(content);
 
             if (!/<[a-z][\s\S]*>/i.test(content)) {
-                content = content.split('\n\n').map(p => `<p>${p}</p>`).join('');
+                // Enhanced Markdown Parser - Robust against whitespace and carriage returns
+                content = content
+                    .replace(/\r/g, '') // Normalize line endings
+                    .replace(/^#{1,3}\s+(.+)$/gm, (match, title) => {
+                        const level = match.trim().split(' ')[0].length;
+                        return `<h${level}>${title.trim()}</h${level}>`;
+                    })
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+                content = content.split('\n').map((line, idx) => {
+                    const cleanLine = line.trim();
+                    if (!cleanLine) return '<br>';
+                    // If it's already a tag, leave it
+                    if (/^<[a-z]/i.test(cleanLine)) return cleanLine;
+
+                    if (cleanLine.startsWith('>')) {
+                        return `<blockquote>${cleanLine.substring(1).trim()}</blockquote>`;
+                    }
+                    if (idx === 0) return `<p class="intro">${cleanLine}</p>`;
+                    return `<p>${cleanLine}</p>`;
+                }).join('');
+            } else {
+                // If it's HTML, try to add intro class to first p if not present
+                content = content.replace(/<p>/, '<p class="intro">');
             }
-            contentDisplay.innerHTML = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(content) : content;
+
+            // Inject Inline Micro-Breaks every 4 paragraphs
+            const paragraphs = content.match(/<p[\s\S]*?<\/p>/g) || [];
+            if (paragraphs.length > 5) {
+                for (let i = 4; i < paragraphs.length; i += 5) {
+                    const isReflect = (i / 5) % 2 === 0;
+                    const breakHtml = isReflect
+                        ? `<div class="inline-break reflect"><span class="break-tag">🧠 Pause & Reflect</span>"How does this principle apply to your current situation?"</div>`
+                        : `<div class="inline-break"><span class="break-tag">💡 Key Idea</span>Focus on the consistency of your actions, not just the magnitude of your goals.</div>`;
+                    paragraphs[i] = breakHtml + paragraphs[i];
+                }
+                content = paragraphs.join('');
+            }
+
+            // Inject Smart Ad Placeholders
+            const adPlaceholder = (label) => `
+                <div class="ad-container" style="margin: 40px auto; padding: 20px; background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; text-align: center;">
+                    <span style="font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Advertisement - ${label}</span>
+                    <div style="height: 100px; display: flex; align-items: center; justify-content: center; color: #475569;">[ Ad Slot ]</div>
+                </div>
+            `;
+
+            // Re-split content to inject ads at natural breaks
+            const finalParagraphs = content.match(/<p[\s\S]*?<\/p>|<div[\s\S]*?<\/div>|<h2[\s\S]*?<\/h2>|<blockquote[\s\S]*?<\/blockquote>/g) || [];
+            if (finalParagraphs.length > 3) {
+                // Top Ad: After the first paragraph (Intro)
+                finalParagraphs.splice(1, 0, adPlaceholder('Top'));
+
+                // Middle Ad: Roughly halfway if long enough
+                if (finalParagraphs.length > 10) {
+                    const midIndex = Math.floor(finalParagraphs.length / 2);
+                    finalParagraphs.splice(midIndex, 0, adPlaceholder('Middle'));
+                }
+                content = finalParagraphs.join('');
+            }
+            content += adPlaceholder('Bottom');
+
+            // Inject Continuation Loop at the end
+            const nextCh = book.chapters[chapterIndex + 1];
+            const continuationHtml = `
+                <div class="continuation-loop" style="margin-top: 80px; padding: 60px 40px; background: var(--color-secondary-bg); border-radius: 30px; border: 1px solid var(--color-border); text-align: center; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -20px; right: -20px; font-size: 8rem; opacity: 0.03; font-weight: 900;">NEXT</div>
+                    <h3 style="font-size: 1.8rem; margin-top: 0; color: var(--color-heading);">You've read this far — keep going.</h3>
+                    <p style="opacity: 0.7; margin-bottom: 35px; font-size: 1.1rem; max-width: 500px; margin-left: auto; margin-right: auto;">The journey to mastery is one chapter at a time. The momentum is already with you.</p>
+                    <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+                        ${nextCh ? `
+                            <div style="flex: 1; min-width: 280px; text-align: left; padding: 25px; background: #fff; border-radius: 20px; border: 1px solid var(--color-border); box-shadow: var(--shadow-premium);">
+                                <small style="color: var(--color-accent); font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">CONTINUE TO CHAPTER ${chapterIndex + 2}</small>
+                                <h4 style="font-size: 1.4rem; margin: 10px 0 20px; color: var(--color-heading); line-height: 1.2;">${esc(nextCh.title)}</h4>
+                                <a href="reader.html?id=${bookId}&ch=${chapterIndex + 1}" class="btn-primary" style="display: inline-block; padding: 12px 24px; border-radius: 10px;">Start Next Chapter →</a>
+                            </div>
+                        ` : ''}
+                        <div style="flex: 1; min-width: 280px; text-align: left; padding: 25px; background: #fff; border-radius: 20px; border: 1px solid var(--color-border); box-shadow: var(--shadow-premium);">
+                            <small style="color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">EXPLORE MORE</small>
+                            <h4 style="font-size: 1.4rem; margin: 10px 0 20px; color: var(--color-heading); line-height: 1.2;">Popular in Library</h4>
+                            <a href="books.html" class="glass" style="display: inline-block; padding: 12px 24px; border-radius: 10px; color: var(--color-text); border: 1px solid rgba(0,0,0,0.1);">Browse Library</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+            content += continuationHtml;
+
+            contentDisplay.innerHTML = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(content, { ADD_ATTR: ['style'] }) : content;
 
             // Navigation Tabs & Sidebar
             const tabsContainer = document.getElementById('chapters-tabs-container');
@@ -783,7 +1035,7 @@
                 const tab = document.createElement('a');
                 tab.href = `reader.html?id=${bookId}&ch=${idx}`;
                 tab.textContent = `${idx + 1}. ${ch.title}`;
-                tab.style.cssText = `padding: 15px 25px; display: inline-block; white-space: nowrap; text-decoration: none; color: ${isCurrent ? 'var(--color-accent)' : '#ccc'}; border-bottom: 2px solid ${isCurrent ? 'var(--color-accent)' : 'transparent'};`;
+                tab.style.cssText = `padding: 15px 25px; display: inline-block; white-space: nowrap; text-decoration: none; color: ${isCurrent ? 'var(--color-accent)' : 'var(--color-text)'}; opacity: ${isCurrent ? 1 : 0.6}; border-bottom: 2px solid ${isCurrent ? 'var(--color-accent)' : 'transparent'};`;
                 if (tabsContainer) tabsContainer.appendChild(tab);
 
                 const link = document.createElement('a');
@@ -809,6 +1061,20 @@
             document.getElementById('next-chapter').href = nextUrl;
             document.getElementById('prev-btn-top').href = prevUrl;
             document.getElementById('next-btn-top').href = nextUrl;
+
+            // Update Save/Bookmark state
+            const saved = JSON.parse(localStorage.getItem('saved_chapters') || '[]');
+            const saveKey = `${bookId}_${chapterIndex}`;
+            const isSaved = saved.some(s => s.id === saveKey);
+            const btnSaveTop = document.getElementById('btn-save-top');
+            const btnSaveBottom = document.getElementById('btn-save-bottom');
+            if (isSaved) {
+                if (btnSaveTop) btnSaveTop.classList.add('active');
+                if (btnSaveBottom) btnSaveBottom.classList.add('active');
+            } else {
+                if (btnSaveTop) btnSaveTop.classList.remove('active');
+                if (btnSaveBottom) btnSaveBottom.classList.remove('active');
+            }
 
             if (chapterIndex === 0) {
                 document.getElementById('prev-chapter').classList.add('disabled');
@@ -864,7 +1130,7 @@
                 const div = document.createElement('a');
                 div.href = `reader.html?id=${book.id}&ch=${idx}`;
                 div.className = 'chapter-item';
-                div.style.cssText = `display: block; padding: 12px; background: ${isActive ? 'var(--color-accent)' : 'rgba(255,255,255,0.05)'}; color: ${isActive ? 'white' : '#ccc'}; text-decoration: none; border-radius: 6px;`;
+                div.style.cssText = `display: block; padding: 12px; background: ${isActive ? 'var(--color-accent)' : 'var(--color-secondary-bg)'}; color: ${isActive ? 'white' : 'var(--color-text)'}; border: 1px solid var(--color-border); text-decoration: none; border-radius: 6px;`;
                 div.textContent = `${idx + 1}. ${ch.title}`;
                 list.appendChild(div);
             });
@@ -980,9 +1246,11 @@
             const chInter = interactions[bookId].chapters[chIndex];
             const wasLiked = chInter.liked;
             const likeEls = document.querySelectorAll('#count-like-top, #count-like-bottom');
+            const dislikeEls = document.querySelectorAll('#count-dislike-top, #count-dislike-bottom');
 
             try {
                 if (wasLiked) {
+                    // Remove like
                     await supabaseClient.from('user_activity').delete()
                         .eq('ip_address', ip).eq('metadata->>book_id', bookId)
                         .eq('metadata->>chapter_index', chIndex).eq('activity_type', 'like_chapter');
@@ -991,11 +1259,18 @@
                     updateInteractionUI('like', false);
                     likeEls.forEach(el => el.textContent = Math.max(0, parseInt(el.textContent || '0') - 1));
                 } else {
-                    // Remove dislike if present
+                    // Remove dislike if present (without calling toggleChapterDislike)
                     if (chInter.disliked) {
-                        await window.toggleChapterDislike();
+                        await supabaseClient.from('user_activity').delete()
+                            .eq('ip_address', ip).eq('metadata->>book_id', bookId)
+                            .eq('metadata->>chapter_index', chIndex).eq('activity_type', 'dislike_chapter');
+
+                        chInter.disliked = false;
+                        updateInteractionUI('dislike', false);
+                        dislikeEls.forEach(el => el.textContent = Math.max(0, parseInt(el.textContent || '0') - 1));
                     }
 
+                    // Add like
                     await supabaseClient.from('user_activity').insert([{
                         ip_address: ip, activity_type: 'like_chapter',
                         metadata: { book_id: bookId, chapter_index: chIndex },
@@ -1025,23 +1300,32 @@
 
             const chInter = interactions[bookId].chapters[chIndex];
             const wasDisliked = chInter.disliked;
-            const disEls = document.querySelectorAll('#count-dislike-top, #count-dislike-bottom');
+            const dislikeEls = document.querySelectorAll('#count-dislike-top, #count-dislike-bottom');
+            const likeEls = document.querySelectorAll('#count-like-top, #count-like-bottom');
 
             try {
                 if (wasDisliked) {
+                    // Remove dislike
                     await supabaseClient.from('user_activity').delete()
                         .eq('ip_address', ip).eq('metadata->>book_id', bookId)
                         .eq('metadata->>chapter_index', chIndex).eq('activity_type', 'dislike_chapter');
 
                     chInter.disliked = false;
                     updateInteractionUI('dislike', false);
-                    disEls.forEach(el => el.textContent = Math.max(0, parseInt(el.textContent || '0') - 1));
+                    dislikeEls.forEach(el => el.textContent = Math.max(0, parseInt(el.textContent || '0') - 1));
                 } else {
-                    // Remove like if present
+                    // Remove like if present (without calling toggleChapterLike)
                     if (chInter.liked) {
-                        await window.toggleChapterLike();
+                        await supabaseClient.from('user_activity').delete()
+                            .eq('ip_address', ip).eq('metadata->>book_id', bookId)
+                            .eq('metadata->>chapter_index', chIndex).eq('activity_type', 'like_chapter');
+
+                        chInter.liked = false;
+                        updateInteractionUI('like', false);
+                        likeEls.forEach(el => el.textContent = Math.max(0, parseInt(el.textContent || '0') - 1));
                     }
 
+                    // Add dislike
                     await supabaseClient.from('user_activity').insert([{
                         ip_address: ip, activity_type: 'dislike_chapter',
                         metadata: { book_id: bookId, chapter_index: chIndex },
@@ -1050,7 +1334,7 @@
 
                     chInter.disliked = true;
                     updateInteractionUI('dislike', true);
-                    disEls.forEach(el => el.textContent = parseInt(el.textContent || '0') + 1);
+                    dislikeEls.forEach(el => el.textContent = parseInt(el.textContent || '0') + 1);
                 }
                 localStorage.setItem('userInteractions', JSON.stringify(interactions));
             } catch (e) { console.error("Dislike error", e); }
@@ -1120,10 +1404,14 @@
                 }
 
                 const ip = await getIpAddress();
-                const { error } = await supabaseClient.from('book_reviews').insert([{
-                    book_id: targetUuid, reviewer_name: name, rating: rating, comment: comment,
-                    ip_address: ip, chapter_number: parseInt(chIndex) + 1, chapter_title: chTitle
-                }]);
+                // Note: Removed chapter_number, chapter_title, and ip_address due to Supabase schema cache issues.
+                // These fields exist in SQL but PostgREST cache seems out of sync or they were never applied.
+                const { error } = await supabaseClient.from('book_reviews').insert({
+                    book_id: targetUuid,
+                    username: name,
+                    rating: rating,
+                    comment: comment
+                });
 
                 if (error) throw error;
 

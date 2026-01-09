@@ -65,7 +65,15 @@ window.saveHomepageSettings = function () {
 
         localStorage.setItem('siteHomepageConfig', JSON.stringify(homepageConfig));
         if (typeof syncToCloud === 'function') syncToCloud('homepage', homepageConfig);
-        showToast('Homepage configuration saved successfully!');
+
+        // Calculate statistics for feedback
+        const totalBooks = (homepageConfig.exclusive?.length || 0) +
+            (homepageConfig.popular?.length || 0) +
+            (homepageConfig.stories?.length || 0);
+        const customSectionCount = homepageConfig.customSections?.length || 0;
+        const customBooksCount = homepageConfig.customSections?.reduce((sum, sec) => sum + (sec.items?.length || 0), 0) || 0;
+
+        showToast(`Homepage saved! ${totalBooks + customBooksCount} books in ${3 + customSectionCount} sections.`, 'success');
         if (typeof renderHomepageSectionLists === 'function') renderHomepageSectionLists();
     }).catch(err => {
         console.error("Save failed:", err);

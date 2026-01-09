@@ -21,33 +21,34 @@
     <script src="js/lib/supabase-js.js" defer></script>
     <script src="js/supabase-config.js" defer></script>
     <script src="js/image-utils.js" defer></script>
+    <script src="js/popup.js" defer></script>
 </head>
 <script>
     (function () {
-        const theme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-        if (theme === 'dark') {
-            document.body.classList.add('dark-mode');
-        }
+        const t = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        if (t === 'dark') document.documentElement.classList.add('dark-mode');
     })();
 </script>
 
 <body>
     <header class="site-header">
-        <div class="logo">
-            <a href="index.html">
-                <img src="assets/logo-new.png" alt="Wealth & Mindset" class="logo-img" loading="eager"
-                    fetchpriority="high">
-                <span>Wealth & Mindset</span>
-            </a>
-        </div>
-        <nav>
-            <a href="index.html">Home</a>
-            <a href="books.html">Library</a>
-            <a href="about.html">About</a>
-            <a href="contact.html">Contact</a>
-            <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
-            <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Open menu">⋮</button>
-        </nav>
+        <div
+            style="max-width: var(--max-width); width: 100%; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 0 var(--spacing-unit); box-sizing: border-box;">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="assets/logo-new.png" alt="Wealth & Mindset" class="logo-img" loading="eager"
+                        fetchpriority="high">
+                    <span>Wealth & Mindset</span>
+                </a>
+            </div>
+            <nav class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="books.html">Library</a>
+                <a href="about.html" class="nav-about">About</a>
+                <a href="contact.html" class="nav-contact">Contact</a>
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+                <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Open menu">⋮</button>
+            </nav>
         </div>
     </header>
 
@@ -69,7 +70,7 @@
 
     <!-- Background Music Element -->
     <audio id="bg-music" loop preload="auto">
-        <source src="https://www.soundjay.com/nature/rain-07.mp3" type="audio/mpeg">
+        <!-- <source src="https://www.soundjay.com/nature/rain-07.mp3" type="audio/mpeg"> -->
     </audio>
 
     <!-- Music Control Toggle -->
@@ -80,24 +81,13 @@
 
     <main style="max-width: 100%; margin: 0 auto; padding: 0;">
         <div class="page-container" id="main-page-container">
-            <!-- Left Sidebar Ads -->
-            <aside class="side-sidebar left">
-                <div class="sticky-ads">
-                    <div class="vertical-ad-banner glass">
-                        <span class="ad-label">Support Our Platform</span>
-                        <div style="font-weight: 800; margin-bottom: 12px; color: var(--color-heading);">[ Premium Slot
-                            1 ]</div>
-                        <div style="font-size: 0.75rem; opacity: 0.5; font-weight: 600;">300 x 600 - Vertical</div>
-                    </div>
-                </div>
-            </aside>
 
             <!-- Main Library Content Area -->
             <div class="main-layout-content">
                 <!-- Ad Space: Top -->
-                <div class="ad-container ad-top">
-                    <span class="ad-label">Advertisement</span>
-                    <div>[Header Banner - 728x90]</div>
+                <div class="ad-container ad-top glass">
+                    <div style="font-weight: 800; color: #fff;">[ Header Banner - 728x90 ]</div>
+                    <div style="font-size: 0.75rem; opacity: 0.5;">Top library placement</div>
                 </div>
 
                 <div class="library-view-container">
@@ -154,9 +144,9 @@
                 </div>
 
                 <!-- Ad Space: Bottom -->
-                <div class="ad-container ad-bottom">
-                    <span class="ad-label">Advertisement</span>
-                    <div>[Footer Banner - 728x90]</div>
+                <div class="ad-container ad-bottom glass">
+                    <div style="font-weight: 800; color: #fff;">[ Footer Banner - 728x90 ]</div>
+                    <div style="font-size: 0.75rem; opacity: 0.5;">Final library engagement</div>
                 </div>
             </div>
 
@@ -173,17 +163,84 @@
         </div>
     </main>
 
-    <footer>
-        <img src="assets/logo-new.png" alt="Wealth & Mindset" class="footer-logo" loading="lazy">
-        <div class="footer-links">
-            <a href="index.html">Home</a>
-            <a href="about.html">About Us</a>
-            <a href="contact.html">Contact Us</a>
-            <a href="privacy.html">Privacy Policy</a>
-            <a href="terms.html">Terms and Conditions</a>
+    <!-- Email Subscription Section -->
+    <div style="max-width: var(--max-width); margin: 40px auto; padding: 0 var(--spacing-unit);">
+        <div
+            style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(16, 185, 129, 0.1)); padding: 40px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); text-align: center;">
+            <h3 style="font-size: 1.8rem; margin-bottom: 20px; color: #fff;">Join the Inner Circle</h3>
+
+            <!-- Preferences Section -->
+            <div style="max-width: 500px; margin: 0 auto 25px;">
+                <p style="color: #fff; font-weight: 600; font-size: 0.95rem; margin-bottom: 15px; text-align: left;">📬
+                    Get Updates About:</p>
+                <div style="display: flex; flex-direction: column; gap: 10px; text-align: left;">
+                    <label
+                        style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #94a3b8; font-size: 0.9rem;">
+                        <input type="checkbox"
+                            style="width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6;">
+                        <span>Weekly wealth insights and exclusive book summaries</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #94a3b8; font-size: 0.9rem;">
+                        <input type="checkbox"
+                            style="width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6;">
+                        <span>Pre-release chapters and early access content</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #94a3b8; font-size: 0.9rem;">
+                        <input type="checkbox"
+                            style="width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6;">
+                        <span>New book releases and updates</span>
+                    </label>
+                    <label
+                        style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: #94a3b8; font-size: 0.9rem;">
+                        <input type="checkbox"
+                            style="width: 18px; height: 18px; cursor: pointer; accent-color: #3b82f6;">
+                        <span>Translation availability (Spanish, French, German, etc.)</span>
+                    </label>
+                </div>
+            </div>
+
+            <form onsubmit="event.preventDefault(); alert('Thank you for subscribing! We will be in touch soon.');"
+                style="display: flex; gap: 10px; max-width: 500px; margin: 0 auto; flex-wrap: wrap;">
+                <input type="email" placeholder="Enter your email address" required
+                    style="flex: 1; min-width: 250px; padding: 16px 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); color: #fff; font-size: 1rem; outline: none; transition: 0.3s;">
+                <button type="submit" class="btn-primary hover-lift"
+                    style="padding: 16px 32px; border-radius: 12px; font-weight: 700; border: none; cursor: pointer; font-size: 1rem; background-color: #3b82f6; color: white;">Subscribe</button>
+            </form>
+            <p style="font-size: 0.8rem; opacity: 0.6; margin-top: 15px; color: #94a3b8;">No spam. Unsubscribe anytime.
+            </p>
         </div>
-        <p class="copyright">&copy; 2025 Wealth & Mindset. All rights reserved.</p>
-        <p class="disclaimer">Educational purposes only. This is not professional financial advice.</p>
+    </div>
+
+
+    <footer
+        style="padding: clamp(40px, 8vw, 80px) var(--spacing-unit); background: #060b19; border-top: 1px solid rgba(255,255,255,0.05); text-align: center;">
+        <img src="assets/logo-new.png" alt="Wealth & Mindset" class="footer-logo"
+            style="height: 50px; margin-bottom: 30px; filter: grayscale(1) opacity(0.8);">
+        <div class="footer-links"
+            style="display: flex; justify-content: center; gap: clamp(15px, 3vw, 30px); flex-wrap: wrap; margin-bottom: 30px; font-weight: 600; font-size: 0.95rem;">
+            <a href="index.html"
+                style="color: #94a3b8; text-decoration: none; transition: var(--transition-smooth);">Home</a>
+            <a href="about.html"
+                style="color: #94a3b8; text-decoration: none; transition: var(--transition-smooth);">About
+                Us</a>
+            <a href="contact.html"
+                style="color: #94a3b8; text-decoration: none; transition: var(--transition-smooth);">Contact Us</a>
+            <a href="privacy.html"
+                style="color: #94a3b8; text-decoration: none; transition: var(--transition-smooth);">Privacy Policy</a>
+            <a href="terms.html"
+                style="color: #94a3b8; text-decoration: none; transition: var(--transition-smooth);">Terms
+                and Conditions</a>
+        </div>
+        <div style="max-width: 800px; margin: 0 auto;">
+            <p class="copyright" style="color: #64748b; font-size: 0.85rem; margin-bottom: 10px;">&copy; 2026 Wealth &
+                Mindset. All rights reserved.</p>
+            <p class="disclaimer" style="color: #475569; font-size: 0.75rem; line-height: 1.6; font-style: italic;">
+                Educational purposes only. This is not professional financial advice. Performance of past habits does
+                not
+                guarantee future results.</p>
+        </div>
     </footer>
 
 

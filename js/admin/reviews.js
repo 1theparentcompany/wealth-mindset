@@ -155,7 +155,6 @@ window.saveReviewEdit = async function () {
 
         // Update both columns for compatibility, but prioritize reviewer_name in schema
         if (name && name.trim()) {
-            updateData.reviewer_name = name;
             updateData.username = name;
         }
 

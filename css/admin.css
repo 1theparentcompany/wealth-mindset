@@ -712,3 +712,238 @@
             border-color: #3b82f6;
             box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
         }
+
+        /* --- VISUAL BUILDER SPLIT SCREEN --- */
+        .visual-builder-layout {
+            display: flex;
+            height: calc(100vh - 120px);
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .builder-sidebar {
+            width: 320px;
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .builder-sidebar-header {
+            padding: 15px;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+        }
+
+        .builder-sidebar-header h4 {
+            margin: 0;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .builder-items-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .draggable-link-item {
+            background: #161e2f;
+            border: 1px solid #334155;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .draggable-link-item:hover {
+            border-color: #3b82f6;
+            background: #1c2539;
+            transform: scale(1.02);
+        }
+
+        .draggable-link-item:active {
+            cursor: grabbing;
+        }
+
+        .builder-preview-area {
+            flex: 1;
+            background: #000;
+            border-radius: 12px;
+            border: 4px solid #1e293b;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .builder-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+
+        /* --- LINKS MANAGER TABLE --- */
+        .links-table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #cbd5e1;
+            font-size: 0.9rem;
+            margin-top: 20px;
+        }
+
+        .links-table th {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid #334155;
+            color: #64748b;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .links-table td {
+            padding: 12px;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .links-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .platform-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .platform-amazon {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .platform-flipkart {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .platform-other {
+            background: rgba(100, 116, 139, 0.2);
+            color: #94a3b8;
+        }
+
+        /* --- VISUAL BUILDER UPDATES (Page Icons & Tabs) --- */
+        .page-icon-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 1.4rem;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            line-height: 1;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .page-icon-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+        }
+
+        .page-icon-btn.active {
+            background: #3b82f6;
+            border-color: #2563eb;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        .sidebar-tab-btn {
+            background: #0f172a;
+            border: none;
+            color: #64748b;
+            padding: 12px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 2px solid transparent;
+            outline: none;
+        }
+
+        .sidebar-tab-btn:hover {
+            color: #94a3b8;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-tab-btn.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .section-item-builder {
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            cursor: move;
+            transition: all 0.2s;
+        }
+
+        .section-item-builder:hover {
+            border-color: #3b82f6;
+            background: #27354a;
+        }
+
+        .section-item-builder .section-title {
+            color: #e2e8f0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-item-builder .section-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .section-item-builder button {
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .section-item-builder button:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .section-item-builder button.delete:hover {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
